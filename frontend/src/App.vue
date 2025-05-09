@@ -1,13 +1,28 @@
 <template>
-  <v-app>
-    <v-app-bar app color="primary" dark>
-      <v-toolbar-title>SIGCAL Cayambe</v-toolbar-title>
-      <v-spacer />
-      <v-btn to="/" text>Inicio</v-btn>
-      <v-btn to="/about" text>Acerca de</v-btn>
-    </v-app-bar>
-    <v-main>
-      <router-view />
-    </v-main>
+  <v-app>    
+    <router-view />    
   </v-app>
 </template>
+
+<script>
+export default {
+  name: "App",
+};
+</script>
+<style>
+.v-application {
+  background-color: #E0E0E0 !important;
+}
+
+
+.v-main {
+  background-color: #E0E0E0 !important;
+}
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+</style>

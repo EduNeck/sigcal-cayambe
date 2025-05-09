@@ -1,19 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import LoginLayout from '../layout/loginLayout.vue'
+import LoginSisteam from '../components/seguridad/LoginSistema.vue'
 
 // Página de inicio básica
 const routes = [
   {
     path: '/',
-    component: {
-      template: '<v-container class="text-center"><h1>Página de Inicio</h1></v-container>'
-    }
+    component: LoginLayout,
+    children: [
+      { path: '', component: LoginSisteam },
+    ]
+
   },
-  {
-    path: '/about',
-    component: {
-      template: '<v-container class="text-center"><h1>Acerca de SIGCAL Cayambe</h1></v-container>'
-    }
-  }
+
 ]
 
 const router = createRouter({
