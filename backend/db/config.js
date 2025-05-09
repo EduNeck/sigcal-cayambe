@@ -24,7 +24,8 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
-// Exportar tanto la función query como el pool por si necesitas operaciones avanzadas
+
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool,

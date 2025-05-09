@@ -21,6 +21,10 @@ app.get('/api/ping', async (req, res) => {
   }
 })
 
+const seguridadRoutes = require('./routes/seguridad');
+app.use('/api', seguridadRoutes);
+
+
 const PORT = 3001
 app.listen(PORT, () => {
   console.log(`Backend corriendo en http://localhost:${PORT}`)

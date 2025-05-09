@@ -2,14 +2,38 @@
 const db = require('../config');
 const bcrypt = require('bcrypt');
 
-// Encriptación de la Contraseña:
-// En la función ingresoUsuario, la contraseña (pswd) se encripta utilizando bcrypt.hash(pswd, 10). 
-// El segundo argumento 10 es el número de rondas de salting, lo que hace que el hash sea más seguro.
-// La contraseña encriptada (hashedPassword) se almacena en la base de datos en lugar de la contraseña en texto plano.
-// En la función actualizarUsuario, la nueva contraseña también se encripta antes de actualizarla en la base de datos.
+// Función para autenticar un usuario
+const autenticarUsuario = async (login, pswd) => {
+  const query = `
+    SELECT login, pswd, name, email, active, activation_code, priv_admin, 
+		date_insert, date_inactivo, priv_rol, priv_tipo, priv_rol_sec, 
+		priv_tipo_sec, val_urbano, val_rural,
+    CASE WHEN photo IS NOT NULL THEN encode(photo, 'base64') ELSE NULL END AS photo
+    FROM public.sec_users
+    WHERE login = $1;
+  `;
+  const values = [login];
+  console.log('Intentando autenticar usuario con login:', login);
+
+  try {
+    const result = await db.query(query, values);
+    const usuario = result.rows[0];
+    console.log('Usuario encontrado:', usuario);
+
+    if (usuario && await bcrypt.compare(pswd, usuario.pswd)) {
+      console.log('Contraseña correcta para el usuario:', login);
+      return usuario;
+    } else {
+      console.log('Credenciales inválidas para el usuario:', login);
+      throw new Error('Credenciales inválidas');
+    }
+  } catch (err) {
+    console.error('Error autenticando usuario:', err.message);
+    throw new Error(`Error autenticando usuario: ${err.message}`);
+  }
+};
 
 // Función para ingresar un nuevo usuario
-
 const ingresoUsuario = async (usuario) => {
   const { login, pswd, name, email, active, priv_admin, photo, priv_rol, priv_tipo, 
     priv_rol_sec, priv_tipo_sec, val_urbano, val_rural } = usuario;
@@ -109,36 +133,6 @@ const obtenerTodosUsuarios = async () => {
   }
 };
 
-// Función para autenticar un usuario
-const autenticarUsuario = async (login, pswd) => {
-  const query = `
-    SELECT login, pswd, name, email, active, activation_code, priv_admin, 
-		date_insert, date_inactivo, priv_rol, priv_tipo, priv_rol_sec, 
-		priv_tipo_sec, val_urbano, val_rural,
-    CASE WHEN photo IS NOT NULL THEN encode(photo, 'base64') ELSE NULL END AS photo
-    FROM public.sec_users
-    WHERE login = $1;
-  `;
-  const values = [login];
-  console.log('Intentando autenticar usuario con login:', login);
-
-  try {
-    const result = await db.query(query, values);
-    const usuario = result.rows[0];
-    console.log('Usuario encontrado:', usuario);
-
-    if (usuario && await bcrypt.compare(pswd, usuario.pswd)) {
-      console.log('Contraseña correcta para el usuario:', login);
-      return usuario;
-    } else {
-      console.log('Credenciales inválidas para el usuario:', login);
-      throw new Error('Credenciales inválidas');
-    }
-  } catch (err) {
-    console.error('Error autenticando usuario:', err.message);
-    throw new Error(`Error autenticando usuario: ${err.message}`);
-  }
-};
 
 // Función para activar o inactivar un usuario
 const cambiarEstadoUsuario = async (login, active) => {
@@ -201,13 +195,14 @@ const cambiarPrivAdmin = async (login, priv_admin) => {
 };
 
 module.exports = {
+  autenticarUsuario,  
   ingresoUsuario,
   eliminacionUsuario,
   actualizarUsuario,
   obtenerUsuario,
   obtenerTodosUsuarios,
-  autenticarUsuario,
   cambiarEstadoUsuario,
-  cambiarPrivAdmin
+  cambiarPrivAdmin,
+
 };
 
