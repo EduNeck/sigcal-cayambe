@@ -5,6 +5,7 @@ import MenuIngreso from '../components/menus/MenuIngreso.vue'
 import SistemaLayout from '../layout/SistemaLayout.vue'
 import MenuPredial from '../components/menus/MenuPredial.vue'
 import MenuAdministracion from '../components/menus/MenuAdministracion.vue'
+import visores from './visores'
 
 // Página de inicio básica
 const routes = [
@@ -23,7 +24,7 @@ const routes = [
       { path: '/menu-ingreso', component: MenuIngreso, meta: { requiresAuth: true } },
       { path: '/menu-predial', component: MenuPredial, meta: { requiresAuth: true } },      
       { path: '/menu-admin', component: MenuAdministracion, meta: { requiresAuth: true } },
-
+      ...visores
 
     ]
   }
