@@ -5,7 +5,7 @@
         <!-- Logo y títulos -->
         <v-card-title class="text-center">
           <v-img
-            src="@/assets/logo_ventana.png"
+            :src="logoSrc"
             height="80"
             width="80"
             class="mb-4 mx-auto"
@@ -31,12 +31,16 @@
   
   <script>
   import { textVariables } from '@/config/textVariables';
-  
+  import logo from '@/assets/logo_ventana.png';
+  import fallbackLogo from '@/assets/logo_ventana.png';
+
   export default {
     name: 'LoginLayout',
     data() {
       return {
-        currentYear: new Date().getFullYear()
+        currentYear: new Date().getFullYear(),
+        logoSrc: logo,
+        fallbackLogo
       };
     },
     computed: {

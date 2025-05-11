@@ -1,0 +1,50 @@
+.full-height-main {
+  height: 100vh; /* Alto completo de la ventana */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title-background {
+  background-color: #494a53; /* Color de fondo (puedes ajustarlo) */
+  color: #F1ECE7; /* Color del texto */
+  padding: 10px; /* Espacio alrededor del texto */
+  border-radius: 4px; /* Esquinas redondeadas */
+  text-align: center;
+  border: 0.5px solid #090909;
+}
+
+.login-card {
+  width: 100%; /* Asegura que el v-card ocupe todo el ancho disponible */
+  max-width: 400px; /* Limita el ancho máximo del v-card */
+}
+
+.mr-3 {
+  margin-right: 2rem; /* Añade un margen a la derecha del icono */
+}
+
+.title-responsive {
+  font-size: 1.2rem; /* Tamaño de fuente por defecto */
+}
+
+@media (min-width: 600px) {
+  .title-responsive {
+    font-size: 1.5rem; /* Tamaño de fuente para pantallas pequeñas */
+  }
+}
+
+@media (min-width: 960px) {
+  .title-responsive {
+    font-size: 1.8rem; /* Tamaño de fuente para pantallas medianas */
+  }
+}
+
+@media (min-width: 1280px) {
+  .title-responsive {
+    font-size: 2rem; /* Tamaño de fuente para pantallas grandes */
+  }
+}
+
+.no-padding {
+  padding: 0 !important;
+}
