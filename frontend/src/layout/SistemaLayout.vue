@@ -9,8 +9,7 @@
             height="40"
             width="40"
             class="ml-3"
-          ></v-img>
-          <span class="app-title ml-2">{{ organizationName }}</span>
+          ></v-img>          
         </div>
         <!-- Contenedor del usuario + logout -->
         <div class="d-flex align-center mr-3">
@@ -54,10 +53,10 @@
     name: 'SistemaLayout',
     data() {
       return {
-        currentYear: new Date().getFullYear(),
-        successMessage: '',      
-        snackbarSuccess: false,  
-        errorMessage: '',        
+        currentYear: new Date().getFullYear(),        
+        successMessage: '',
+        snackbarSuccess: false,
+        errorMessage: '',
         snackbarError: false,
         logoSrc: logo,
         fallbackLogo: logo
@@ -86,6 +85,7 @@
   .background {    
     min-height: 100vh;
   }
+
   .app-bar {
     background-color: #383838;
     color: #000000;
@@ -101,9 +101,8 @@
   }
   .user-name {
     margin-left: 10px;
-    color: #504e4e;
-    font-size: 1.2rem;
-    
+    color: #484e48cc;
+    font-size: 1.1rem;
   }
   .text-center {
     text-align: center;
