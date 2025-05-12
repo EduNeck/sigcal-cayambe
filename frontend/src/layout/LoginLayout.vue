@@ -12,17 +12,13 @@
           ></v-img>
           <h2 class="municipio-name">{{ organizationName }}</h2>
           <h4 class="system-name">{{ systemName }}</h4>
-        </v-card-title>
-  
-        <v-divider></v-divider>
-         
-        <router-view />
-  
-        <v-divider></v-divider>
-  
+        </v-card-title>  
+        <v-divider></v-divider>         
+        <router-view />  
+        <v-divider></v-divider>  
         <!-- Sistema y Año -->
         <v-card-text class="text-center text-caption mt-2">
-          {{ systemName }} © {{ currentYear }}
+          {{ systemName }} © {{ currentYear }}          
         </v-card-text>
   
       </v-card>
