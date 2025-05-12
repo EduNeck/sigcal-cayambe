@@ -2,30 +2,18 @@ const express = require('express');
 const router = express.Router();
 const reporteFichaModel = require('../db/models/reporteFicha');
 
-/////////////////////
-// LISTADO GENERAL //
-/////////////////////
-
 // Obtener listado general de predios
 router.get('/ficha_predio', async (req, res) => {
   try {
-    console.log('📥 Listando predios...');
+    console.log('📥 Query recibida:', req.query);  // <-- importante
     const data = await reporteFichaModel.obtieneDatosPredio(req.query);
-    console.log('📤 Datos obtenidos:', data);
     res.json(data);
   } catch (err) {
     console.error('❌ Error al obtener listado de predios:', err);
-    res.status(500).json({
-      message: 'Server Error',
-      error: err.message,
-      stack: err.stack,
-    });
+    res.status(500).json({ message: 'Server Error', error: err.message });
   }
 });
 
-////////////////////
-// FICHA IMPRESIÓN //
-////////////////////
 
 // Obtener patrimonio urbano por ID de predio
 router.get('/patrimonio-urbano/:id_predio', async (req, res) => {

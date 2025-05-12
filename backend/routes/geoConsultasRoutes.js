@@ -2,15 +2,26 @@ const express = require('express');
 const router = express.Router();
 const geoConsultasModel = require('../db/models/geoConsultas');
 
+// Ruta para obtener el área de un predio a partir de su clave catastral
+router.get('/geo_consultas/area_predio/:codCat', async (req, res) => {
+  const codCat = req.params.codCat;
 
-// Realizar una consulta geográfica
-router.post('/consulta_geografica', async (req, res) => {
+  // Validar clave catastral
+  if (!codCat || typeof codCat !== 'string') {
+    return res.status(400).json({ error: 'Clave catastral inválida o no proporcionada' });
+  }
+
   try {
-    const result = await geoConsultasModel.performGeoQuery(req.body);
-    res.status(200).json(result);
+    const data = await geoConsultasModel.getAreaPredio(codCat);
+
+    if (data) {
+      res.json(data);
+    } else {
+      res.status(404).json({ error: 'Área del predio no encontrada' });
+    }
   } catch (err) {
-    console.error('❌ Error en consulta geográfica:', err);
-    res.status(500).json({ error: err.message });
+    console.error('❌ Error al recuperar área de predio:', err);
+    res.status(500).json({ error: 'Error interno del servidor al consultar área de predio' });
   }
 });
 

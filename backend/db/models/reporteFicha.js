@@ -3,31 +3,45 @@ const db = require('../config');
 
 // Función para obtener los registros de la tabla `listado_predios` con filtros
 const obtieneDatosPredio = async (params) => {
-  const { clave_catastral, clave_catastral_anterior, numero_documento, nombres, id_regimen_propiedad, tipo_predio } = params;
+  const {
+    clave_catastral,
+    clave_catastral_anterior,
+    numero_documento,
+    nombres,
+    id_regimen_propiedad,
+    tipo_predio
+  } = params;
 
   let query = 'SELECT * FROM reporte_ficha.listado_predios WHERE 1=1';
   const queryParams = [];
 
-  if (clave_catastral) {
-    queryParams.push(`%${clave_catastral}%`);
+  // Solo aplica filtros si tienen contenido
+  if (clave_catastral && clave_catastral.trim() !== '') {
+    queryParams.push(`%${clave_catastral.trim()}%`);
     query += ` AND clave_catastral ILIKE $${queryParams.length}`;
   }
-  if (clave_catastral_anterior) {
-    queryParams.push(`%${clave_catastral_anterior}%`);
+
+  if (clave_catastral_anterior && clave_catastral_anterior.trim() !== '') {
+    queryParams.push(`%${clave_catastral_anterior.trim()}%`);
     query += ` AND clave_catastral_anterior ILIKE $${queryParams.length}`;
   }
-  if (numero_documento) {
-    queryParams.push(numero_documento);
+
+  if (numero_documento && numero_documento.trim() !== '') {
+    queryParams.push(numero_documento.trim());
     query += ` AND numero_documento = $${queryParams.length}`;
   }
-  if (nombres) {
-    queryParams.push(`%${nombres}%`);
+
+  if (nombres && nombres.trim() !== '') {
+    queryParams.push(`%${nombres.trim()}%`);
     query += ` AND nombres ILIKE $${queryParams.length}`;
   }
-  if (id_regimen_propiedad) {
-    queryParams.push(id_regimen_propiedad);
+
+  if (id_regimen_propiedad && id_regimen_propiedad.trim() !== '') {
+    queryParams.push(id_regimen_propiedad.trim());
     query += ` AND id_regimen_propiedad = $${queryParams.length}`;
   }
+
+  // tipo_predio siempre debe estar presente
   if (tipo_predio) {
     queryParams.push(tipo_predio);
     query += ` AND tipo_predio = $${queryParams.length}`;
@@ -43,6 +57,7 @@ const obtieneDatosPredio = async (params) => {
     throw err;
   }
 };
+
 
 // Función para obtener la ficha del predio por su ID
 const obtieneFichaPredioPorId = async (id_predio) => {

@@ -1,55 +1,78 @@
 const express = require('express');
 const router = express.Router();
-const catastroTenenciaModel = require('../db/models/catastroTenencia');
+const catastroTenencia = require('../db/models/catastroTenencia');
 
-
-// Insertar una nueva tenencia
+// Insertar nuevo registro en catastro_tenencia
 router.post('/inserta_tenencia', async (req, res) => {
   try {
-    const newRecord = await catastroTenenciaModel.insertCatastroTenencia(req.body);
-    res.status(201).json(newRecord);
+    const newRecordId = await catastroTenencia.insertCatastroTenencia(req.body);
+    res.status(201).json(newRecordId);
   } catch (err) {
-    console.error('❌ Error al insertar tenencia:', err);
+    console.error('Error inserting catastro_tenencia:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Actualizar una tenencia por su ID
-router.put('/actualiza_tenencia_by_id/:id', async (req, res) => {
+// Actualizar un registro de catastro_tenencia por ID
+router.put('/actualiza_tenencia/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const updatedRecord = await catastroTenenciaModel.updateCatastroTenencia(id, req.body);
+    const updatedRecord = await catastroTenencia.updateCatastroTenencia(id, req.body);
     res.json(updatedRecord);
   } catch (err) {
-    console.error('❌ Error al actualizar tenencia:', err);
+    console.error('Error updating catastro_tenencia:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Obtener una tenencia por su ID
+// Obtener un registro de catastro_tenencia por ID
 router.get('/tenencia_by_id/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const data = await catastroTenenciaModel.getCatastroTenenciaById(id);
-    res.json(data);
-  } catch (err) {
-    console.error('❌ Error al obtener tenencia por ID:', err);
-    res.status(500).json({ error: err.message });
+    const tenencia = await catastroTenencia.getCatastroTenenciaById(id);
+    if (tenencia) {
+      res.json(tenencia);
+    } else {
+      res.status(404).send('Tenencia not found');
+    }
+  } catch (error) {
+    console.error('Error fetching tenencia:', error.message, error.stack);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Obtener todas las tenencias de un predio por ID de predio
+router.get('/tenencia_by_predio/:predio', async (req, res) => {
+  const predio = req.params.predio;
+  try {
+    const tenencias = await catastroTenencia.getListadoTenenciaByPredio(predio);
+    if (tenencias) {
+      res.json(tenencias);
+    } else {
+      res.status(404).send('Tenencia not found');
+    }
+  } catch (error) {
+    console.error('Error fetching tenencia:', error.message, error.stack);
+    res.status(500).send('Internal Server Error');
   }
 });
 
 // Eliminar una tenencia por ID
 router.delete('/elimina_tenencia_by_id/:id', async (req, res) => {
   const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ error: 'ID no proporcionado' });
+  }
+
   try {
-    const data = await catastroTenenciaModel.deleteCatastroTenenciaById(id);
+    const data = await catastroTenencia.deleteCatastroTenencia(id);
     if (data) {
       res.json({ message: 'Tenencia eliminada con éxito', data });
     } else {
       res.status(404).json({ error: 'Tenencia no encontrada' });
     }
   } catch (err) {
-    console.error('❌ Error al eliminar tenencia:', err);
+    console.error('Error eliminando tenencia:', err);
     res.status(500).json({ error: 'Error del servidor. Inténtalo de nuevo más tarde.' });
   }
 });
