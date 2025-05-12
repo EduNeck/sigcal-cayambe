@@ -5,7 +5,6 @@ export default [
     { path: '/certificadoCatastralRur', component: () => import('@/components/reportes/CertificadoCatastralRur.vue'), meta: { requiresAuth: true } },
     { path: '/certificadoCatastral', component: () => import('@/components/reportes/CertificadoCatastralUrb.vue'), meta: { requiresAuth: true } },    
     { path: '/certificadoPlusvalia', component: () => import('@/components/reportes/CertificadoPlusvaliaUrb.vue'), meta: { requiresAuth: true } },
-    { path: '/ficha-predial-urbana', component: () => import('@/components/reportes/FichaPredialUrbana.vue'), meta: { requiresAuth: true } },
-    
-    
+    { path: '/impresion-ficha', component: () => import('@/components/reportes/FichaPredialUrbana.vue'), meta: { requiresAuth: true } },
+
   ];

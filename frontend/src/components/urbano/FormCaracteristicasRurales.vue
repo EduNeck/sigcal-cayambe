@@ -449,7 +449,7 @@ export default {
         console.log('Componente montado');
         console.log('ID DEL PREDIO:', this.getIdPredio);
         if (this.getIdPredio) {
-            await this.cargaCaracteristicasRurales();
+            await this.cargaCaracteristicas();
         }
         } catch (error) {
         console.error('Error al montar el componente:', error);

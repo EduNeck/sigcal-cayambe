@@ -433,7 +433,6 @@ export default {
     }
   },
 
-
   // Métodos del componente
   methods: {
     ...mapActions([
@@ -889,7 +888,7 @@ export default {
 
     imprimirFicha() {
       if (this.idPredio) {
-        this.$router.push({ path: '/fichaPredialUrbana', query: { idPredio: this.idPredio } });
+        this.$router.push({ path: '/impresion-ficha', query: { idPredio: this.idPredio } });
       } else {
         this.snackbarError = 'No hay un predio seleccionado para imprimir';
         this.snackbarErrorPush = true;

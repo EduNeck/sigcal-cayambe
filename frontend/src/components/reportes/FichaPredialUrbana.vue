@@ -21,7 +21,7 @@
             <v-row  no-gutters align="center" class="header">
                 <v-col cols="2" class="logo-container">
                     <v-img
-                        src="@/assets/logo_ventana.png"
+                        :src="logo"
                         alt="Logo"
                         class="logo"
                     ></v-img>
@@ -267,10 +267,10 @@
                     <div class="ma-4 d-flex" >
                         <!-- Foto Predio -->
                         <v-img v-if="fotoRecuperadaUrl" :src="fotoRecuperadaUrl" class="custom-img">Foto Predio</v-img>
-                        <v-img v-else :src="require('@/assets/sin-foto.png')" class="custom-img">Sin Foto</v-img>          
+                        <v-img v-else :src="sinFoto" class="custom-img">Sin Foto</v-img>
                         <!-- Croquis Predio -->
-                        <v-img v-if="croquis" :src="require('@/assets/sin-croquis.png')" class="custom-img" >Croquis Predio</v-img>
-                        <v-img v-else :src="require('@/assets/sin-croquis.png')" class="custom-img">Sin Croquis</v-img>        
+                        <v-img v-if="croquis" :src="sinCroquis" class="custom-img" >Croquis Predio</v-img>
+                        <v-img v-else :src="sinCroquis" class="custom-img">Sin Croquis</v-img>
                     </div>
                 </v-card-text>
 
@@ -293,6 +293,9 @@
 import axios from 'axios';
 import { textVariables } from '@/config/textVariables';
 import html2pdf from 'html2pdf.js';
+import logo from '@/assets/logo_ventana.png';
+import sinFoto from '@/assets/sin-foto.png';
+import sinCroquis from '@/assets/sin-croquis.png';
 
 export default {
     name: 'FichaPredialUrbana',
@@ -303,6 +306,9 @@ export default {
             bloquesFicha: [],    
             mejorasFicha: [],
             viasFicha: [],
+            logo: logo,
+            sinFoto: sinFoto,
+            sinCroquis: sinCroquis,
             form: {
                 id_predio: null, 
                 clave_catastral: null, 
@@ -420,7 +426,7 @@ export default {
             fotoRecuperadaUrl: '',
             croquis: '',            
             currentPage: 1,
-            totalPages: 1, // Actualiza este valor dinámicamente si es necesario
+            totalPages: 1, 
         };
     },
     

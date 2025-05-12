@@ -88,7 +88,7 @@ export default {
           items: [
             { title: 'Certificado Catastral', route: '/busquedaCertCatasUrb' },
             { title: 'Certificado Plusvalía', route: '/busquedaCertPlusvalia' },
-            { title: 'Ficha Predial', route: '/fichaPredialUrbana' }
+            { title: 'Ficha Predial', route: '/impresion-ficha' }
           ]
         },
         {
