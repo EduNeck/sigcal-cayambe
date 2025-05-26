@@ -111,8 +111,8 @@
               label="Zona"              
               v-model="form.cod_zon"
               type="number"
-              :rules="[v => !!v && v >= 1 && v <= 9 || 'Debe ser un número entre 1 y 9']"
-              maxlength="1" @input="actualizaClaveCatastral"
+              :rules="[v => !!v && v >= 1 && v <= 99 || 'Debe ser un número entre 1 y 99']"
+              maxlength="2" @input="actualizaClaveCatastral"
               @keypress="limitDigits($event, 1)"
             ></v-text-field>
           </v-col>
@@ -121,8 +121,8 @@
               label="Sector"              
               v-model="form.cod_sec"
               type="number"
-              :rules="[v => !!v && v >= 1 && v <= 9 || 'Debe ser un número entre 1 y 9']"
-              maxlength="1" @input="actualizaClaveCatastral"
+              :rules="[v => !!v && v >= 1 && v <= 99 || 'Debe ser un número entre 1 y 99']"
+              maxlength="2" @input="actualizaClaveCatastral"
               @keypress="limitDigits($event, 1)">
             </v-text-field>
           </v-col>

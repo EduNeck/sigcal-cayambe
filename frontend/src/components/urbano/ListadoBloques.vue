@@ -134,7 +134,7 @@ export default {
     async recuperaBloques(idPredio) {
       console.log('recuperaBloques ejecutado con idPredio:', idPredio);
       try {
-        if (!idPredio || idPredio.trim() === '') {
+        if (idPredio === undefined || idPredio === null || idPredio === '') {
           console.log('idPredio no está definido o está vacío');
           return;
         }
