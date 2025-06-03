@@ -6,5 +6,5 @@ export default [
     { path: '/certificadoCatastral', component: () => import('@/components/reportes/CertificadoCatastralUrb.vue'), meta: { requiresAuth: true } },    
     { path: '/certificadoPlusvalia', component: () => import('@/components/reportes/CertificadoPlusvaliaUrb.vue'), meta: { requiresAuth: true } },
     { path: '/impresion-ficha', component: () => import('@/components/reportes/FichaPredialUrbana.vue'), meta: { requiresAuth: true } },
-
+    { path: '/linderos-certificado', component: () => import('@/components/reportes/LinderosCertificado.vue'), meta: { requiresAuth: false } },
   ];

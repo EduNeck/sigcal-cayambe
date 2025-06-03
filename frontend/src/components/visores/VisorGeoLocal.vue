@@ -23,7 +23,7 @@
     name: "VisorSecundario",
     data() {
       return {
-        urlVisor: "http://localhost/paginas/gis/prediosCayambe", 
+        urlVisor: "/paginas/gis/prediosCayambe/index.html", 
       };
     },
     methods: {

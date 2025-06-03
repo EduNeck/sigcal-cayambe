@@ -4,13 +4,25 @@ const pool = require('./db/config')
 require('dotenv').config()
 
 const app = express()
-app.use(cors())
+
+// Configuración de CORS
+app.use(cors({
+  origin: [
+    'http://localhost:5173',               // entorno local
+    'http://172.23.7.18:5173',             // IP interna del servidor 
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.use(express.json())
 
+// Endpoint base de prueba
 app.get('/', (req, res) => {
   res.send('API SIGCAL funcionando')
 })
 
+// Endpoint de prueba conexión
 app.get('/api/ping', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()')
@@ -21,69 +33,35 @@ app.get('/api/ping', async (req, res) => {
   }
 })
 
-// Importar las rutas
+// Rutas del sistema
+app.use('/api', require('./routes/seguridadRoutes'));
+app.use('/api', require('./routes/avaluosRoutes'));
+app.use('/api', require('./routes/catalogoRoutes'));
+app.use('/api', require('./routes/catalogoFotosRoutes'));
+app.use('/api', require('./routes/catalogoProvinciaCantonRoutes'));
+app.use('/api', require('./routes/catastroBloquesRoutes'));
+app.use('/api', require('./routes/catastroCiudadanoRoutes'));
+app.use('/api', require('./routes/catastroDocumentosRoutes'));
+app.use('/api', require('./routes/catastroMejorasRoutes'));
+app.use('/api', require('./routes/catastroPredioRoutes'));
+app.use('/api', require('./routes/catastroTenenciaRoutes'));
+app.use('/api', require('./routes/catastroViasRoutes'));
+app.use('/api', require('./routes/certificadoCatastralRoutes'));
+app.use('/api', require('./routes/certificadoLinderosRoutes'));
+app.use('/api', require('./routes/geoConsultasRoutes'));
+app.use('/api', require('./routes/parametrosGeneralesRoutes'));
+app.use('/api', require('./routes/reporteFichaRoutes'));
+app.use('/api', require('./routes/validacionesRoutes'));
+app.use('/api', require('./routes/valoracionRoutes'));
+app.use('/api', require('./routes/prediosAvaluoCompletoRoutes'));
 
-const seguridadRoutes = require('./routes/seguridadRoutes');
-app.use('/api', seguridadRoutes);
-
-const avaluosRoutes = require('./routes/avaluosRoutes');
-app.use('/api', avaluosRoutes);
-
-const catalogoRoutes = require('./routes/catalogoRoutes');
-app.use('/api', catalogoRoutes);
-
-const catalogoFotosRoutes = require('./routes/catalogoFotosRoutes');
-app.use('/api', catalogoFotosRoutes);
-
-const catalogoProvinciaCantonRoutes = require('./routes/catalogoProvinciaCantonRoutes');
-app.use('/api', catalogoProvinciaCantonRoutes);
-
-const catastroBloquesRoutes = require('./routes/catastroBloquesRoutes');
-app.use('/api', catastroBloquesRoutes);
-
-const catastroCiudadanoRoutes = require('./routes/catastroCiudadanoRoutes');
-app.use('/api', catastroCiudadanoRoutes);
-
-const catastroDocumentosRoutes = require('./routes/catastroDocumentosRoutes');
-app.use('/api', catastroDocumentosRoutes);
-
-const catastroMejorasRoutes = require('./routes/catastroMejorasRoutes');
-app.use('/api', catastroMejorasRoutes);
-
-const catastroPredioRoutes = require('./routes/catastroPredioRoutes');
-app.use('/api', catastroPredioRoutes);
-
-const catastroTenenciaRoutes = require('./routes/catastroTenenciaRoutes');
-app.use('/api', catastroTenenciaRoutes);
-
-const catastroViasRoutes = require('./routes/catastroViasRoutes');
-app.use('/api', catastroViasRoutes);
-
-const certificadoCatastralRoutes = require('./routes/certificadoCatastralRoutes');
-app.use('/api', certificadoCatastralRoutes);
-
-const geoConsultasRoutes = require('./routes/geoConsultasRoutes');
-app.use('/api', geoConsultasRoutes);
-
-const parametrosGeneralesRoutes = require('./routes/parametrosGeneralesRoutes');
-app.use('/api', parametrosGeneralesRoutes);
-
-const reporteFichaRoutes = require('./routes/reporteFichaRoutes');
-app.use('/api', reporteFichaRoutes);
-
-const validacionesRoutes = require('./routes/validacionesRoutes');
-app.use('/api', validacionesRoutes);
-
-const valoracionRoutes = require('./routes/valoracionRoutes');
-app.use('/api', valoracionRoutes);
-
+// Middleware de logging
 app.use((req, res, next) => {
   console.log(`[BACKEND] ${req.method} ${req.originalUrl}`);
   next();
 });
 
 const PORT = process.env.PORT || 3001;
-
 app.listen(PORT, () => {
-  console.log(`Backend corriendo en http://localhost:${PORT}`)
+  console.log(`✅ Backend corriendo en http://localhost:${PORT}`)
 })

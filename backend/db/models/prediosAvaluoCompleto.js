@@ -1,0 +1,29 @@
+const db = require('../config');
+
+/**
+ * Servicio para consultar la vista reporte_ficha.vista_predio_avaluo_completo
+ * Permite filtrar por cualquier campo usando query params
+ * Ejemplo de uso: /api/predios-avaluo?clave_catastral=123&sector=Centro
+ */
+async function getPrediosAvaluoCompleto(filters = {}) {
+  let query = `SELECT id_predio, id_tipo_predio, id_regimen_propiedad, clave_catastral_anterior, clave_catastral, id_prov, id_can, id_par, cod_zon, cod_sec, cod_pol_man, cod_pred, cod_uni, cod_bloq, id_tipo_piso, cod_piso, alicuota, area_terreno, area_comun_terreno, id_unidad_area, area_individual_construida, area_comun_construida, eje_principal, eje_secundario, sector, porcentaje_cobertura_principal, porcentaje_cobertura_secundaria, tiene_medidor_agua, id_uso_predio, id_forma_lote, id_localizacion_manzana, id_cobertura_natural, id_ecosistema_relevante, id_disponibilidad_riego, id_cobertura_principal, id_cobertura_secundaria, id_agua, id_sanitarias, id_energia_electrica, transporte_urbano, id_eliminacion_basura, telefonia_fija, telefonia_movil, telefonia_satelital, internet, id_actualizador, fecha_actualizacion, id_fiscalizador, fecha_fiscalizacion, nombre_informador, observaciones, digitador, fecha_registro, tiene_medidor_energia, actualizador, fecha_actualizacion_aud, num_medidores_agua, num_medidores_energia, notificacion, id_informador, frente_total, fondo, num_lote, nombre_predio, permite_ingreso, id_aceras_bordillos, comunicacion_otros, alumbrado, aseo_calles, id_tipo_informante, nombre_relevador, nombre_supervisor, nombre_control, fecha_informador, fecha_control, lote_conflicto, obs_conflicto, id_cond_ocupacion, id_topografia, permiso_construccion, num_permiso_construccion, id_aguas_lluvias, descripcion_lote, obs_tenencia_predio, pais_notificacion, canton_notificacion, id_tipo_direccion, parroquia_notificacion, email_notificacion, celular_notificacion, convencional_notif, direccion_notificacion, control_externo, control_interno, llenado_oficina, recoleccion_basura, aceras, bordillos, codigo_postal, id_destino_generico, id_destino_especifico, numero_predio, departamento, cat_id_lote, aspersion, bombeo, goteo, gravedad, no_tiene_riego, otro_riego, riego_permanente, acuatica, aerea, ferrea, id_tipo_via_rural, id_uso_habitacional_rural, rural_no_utilizable, rural_sin_aprovechamiento, comercio, hidrocarburos, industria, mineria, turismo, infraestructura_especial, camaronera, agricultura_huerto_familiar, agricultura_subsistencia, agricultura_tecnificada, agricultura_tradicional, conservacion_proteccion, conservacion_reserva_natural, forestal_lenya_carbon, forestal_madera, forestal_pulpa, pecuarios_avicola, pecuarios_bovino, pecuarios_caprino, pecuarios_porcino, pecuarios_otro, social_casa_comunal, social_cementerio, social_culto, social_educacion, social_espacio_publico, social_recreacion, social_salud, clave_migracion, television_cable, agua_potable, alcantarillado, energia_electrica, observacion_ficha, coordenada_x, coordenada_y, pecuarios_intensivo, pecuarios_extensivo, pecuarios_subsistencia, conservacion_otros, infraestructura_otros, estado, agua_potable_via, alcantarillado_via, energia_electrica_via, alumbrado_publico_via, predio_origen, direccion_principal, id_acceso_lote, id_valor_cultural, id_tenencia, presenta_escritura, asentamiento_de_hecho, conflicto, id_forma_propiedad, id_propietario, porcentaje_participacion_tenencia, numero_notaria, fecha_inscripcion, area_registro, id_unidad, id_provincia, id_canton, fecha_escritura, requiere_perfeccionamiento, anios_posesion, numero_registro, id_propietario_anterior, tenencia_fecha_registro, tenencia_digitador, tenencia_actualizador, tenencia_fecha_actualizacion_tenencia, repertorio, folio, id_prov_protocol, id_can_protocol, tercera_edad, ex_temporal, ex_temp_sne, desde_temp, hasta_temp, desc_hipoteca, porc_discap, desde_sne, hasta_sne, desde_hipo, hasta_hipo, desc_excencion, usr_renta, zona_promocion, tenencia_permite_ingreso, validado, obs_registro, lindero_norte, lindero_sur, lindero_este, lindero_oeste, exencion_cem, id_condicion_ocupacion, sin_titulo, etnia, habitantes, tomo, anios_sin_perfeccionar, poses_arrend_gad, precio_compra, id_celebrado_ante, tiene_titulo, partida, id_informacion_legal, obs_tenencia, propietario_anterior, cuerpo_cierto, tenencia_predio_origen, id_situacion_actual, representante, id_ciudadano, persona_fallecida, nombres, numero_documento_ciudadano, telefono, email, id_conyuge, id_tipo_persona, id_personeria, id_tipo_documento, id_estado_civil, ciudadano_fecha_registro, ciudadano_digitador, ciudadano_actualizador, fecha_actualizacion_ciudadano, direccion, lugar_inscripcion, representante_legal, conyuge, num_acuerdo, fecha_nacimiento, carnet_discapacidad, id_tipo_discapacidad, porcentaje_discapacidad, identificacion_conyuge, nombre_principal, nombre_secundario, apellido_primario, apellido_secundario, sexo_contribuyente, barrio_zona_sector, fecha_nacimiento_conyuge, codigo_origen, tipo_predio, ph, patrimonio_clave_catastral, patrimonio_clave_anterior, patrimonio_parroquia, numero_documento, patrimonio_alicuota, porcentaje_participacion, area_suelo_porcentual, area_construcciones_porcentual, valor_suelo_porcentual, valor_construcciones_porcentual, valor_instalaciones_porcentual, valor_adicionales_porcentual, avaluo_predio_porcentual, anio_proceso, id_tenencia_propiedad, propietario, fecha_proceso, patrimonio_id, nombre_parroquia FROM reporte_ficha.vista_predio_avaluo_completo`;
+  const values = [];
+  const where = [];
+  let idx = 1;
+  for (const key in filters) {
+    if (filters[key] !== undefined && filters[key] !== '') {
+      where.push(`${key} = $${idx}`);
+      values.push(filters[key]);
+      idx++;
+    }
+  }
+  if (where.length > 0) {
+    query += ' WHERE ' + where.join(' AND ');
+  }
+  const { rows } = await db.query(query, values);
+  return rows;
+}
+
+module.exports = {
+  getPrediosAvaluoCompleto,
+}; 
