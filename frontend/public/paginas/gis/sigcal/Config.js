@@ -28,7 +28,7 @@ var anio = dia.getFullYear()
 
 var map2 = this.Heron.App.map;
 var xhost = location.hostname;
-var urlMapas = "http://".concat(xhost, "/geoserver/cayambe/wms");
+var urlMapas = "http://".concat(xhost, ":8090/geoserver/sigcal/wms");
 
 function ExportaMap()
 {
@@ -241,7 +241,7 @@ Heron.options.map.layers = [
 			   ),
 
     /*
-     * Información General Catastral
+     * Informaciï¿½n General Catastral
      */
 
     
@@ -249,7 +249,7 @@ Heron.options.map.layers = [
 new OpenLayers.Layer.WMS(
 			     "Manzana",
 			     urlMapas,
-{layers: "otavalo:geo_manzana_urb", transparent: true, format: 'image/png'},
+{layers: "sigcal:geo_manzana", transparent: true, format: 'image/png'},
 {singleTile: true, opacity: 0.5, isBaseLayer: false, visibility: false,  noLegend: false, transitionEffect: 'resize', YX:{'EPSG:32717':false}, queryable: true
  , metadata: {
 	wfs: {
@@ -262,7 +262,7 @@ new OpenLayers.Layer.WMS(
 new OpenLayers.Layer.WMS(
 			     "Predios",
 			     urlMapas,
-{layers: "otavalo:geo_predio_urb", transparent: true, format: 'image/png'},
+{layers: "sigcal:geo_manzana_poligono", transparent: true, format: 'image/png'},
 {singleTile: true, opacity: 0.5, isBaseLayer: false, visibility: false,  noLegend: false, transitionEffect: 'resize', YX:{'EPSG:32717':false}, queryable: true
  , metadata: {
 	wfs: {
@@ -275,7 +275,7 @@ new OpenLayers.Layer.WMS(
 new OpenLayers.Layer.WMS(
 			     "Bloques",
 			     urlMapas,
-{layers: "otavalo:geo_bloque_urb", transparent: true, format: 'image/png'},
+{layers: "sigcal:geo_bloque", transparent: true, format: 'image/png'},
 {singleTile: true, opacity: 0.5, isBaseLayer: false, visibility: false,  noLegend: false, transitionEffect: 'resize', YX:{'EPSG:32717':false}, queryable: true
  , metadata: {
 	wfs: {
@@ -314,13 +314,13 @@ Heron.options.map.toolbar = [
 		    //hideColumns: ['objectid', 'gid', 'Foto'],
 			gridCellRenderers: [                                           
                                             {
-                                                featureType: 'geo_predio_urb',
+                                                featureType: 'geo_predio',
                                                 attrName: 'clave_vinculo',
                                                 renderer: {
                                                     fn: Heron.widgets.GridCellRenderer.browserPopupLink,
                                                     options: {
                                                         
-							url: 'http://'.concat(xhost,'/sigcalotavalo/visor_datos_predio/index.php?predio_busqueda={id_predio}'),
+							url: 'http://'.concat(xhost,'/sigcal/visor_datos_predio/index.php?predio_busqueda={id_predio}'),
                                                         winName: 'hrdemoWin',
                                                         bReopen: false,
                                                         hasMenubar: false,

@@ -58,11 +58,18 @@
   
   export default {
     name: 'VisorGeoInformacion',
+    props: {
+      idPredio: {
+        type: [Number, String],
+        required: false,
+        default: null
+      }
+    },
     data() {
       return {
         datos: {},
-        idPredio: 16,
         fotoRecuperadaUrl: '',
+        idPredioLocal: this.idPredio || 60620 // valor por defecto si no se pasa prop
       };
     },
     computed: {
@@ -95,13 +102,23 @@
       }
     },
     created() {
+      // Permitir que el id_predio se pase por prop, por parámetro de ruta o por query string
+      let id = this.idPredio;
+      if (!id && this.$route) {
+        if (this.$route.params && this.$route.params.idPredio) {
+          id = this.$route.params.idPredio;
+        } else if (this.$route.query && this.$route.query.id_predio) {
+          id = this.$route.query.id_predio;
+        }
+      }
+      this.idPredioLocal = id || 60620;
       this.obtenerDatosPredio();
-      this.recuperaFotos(this.idPredio);
+      this.recuperaFotos(this.idPredioLocal);
     },
     methods: {
       async obtenerDatosPredio() {
         try {
-          const response = await axios.get(`${API_BASE_URL}/datos_visor_predio/${this.idPredio}`);
+          const response = await axios.get(`${API_BASE_URL}/datos_visor_predio/${this.idPredioLocal}`);
           this.datos = response.data;
         } catch (error) {
           console.error('Error al obtener los datos del predio:', error);
@@ -118,11 +135,12 @@
               ? `data:image/png;base64,${foto}`
               : URL.createObjectURL(new Blob([new Uint8Array(foto.data)], { type: 'image/png' }));
           } else {
-            this.fotoRecuperadaUrl = require('@/assets/sin-foto.png');
+            // En Vite/Vue3 usa import para imágenes estáticas
+            this.fotoRecuperadaUrl = new URL('@/assets/sin-foto.png', import.meta.url).href;
           }
         } catch (error) {
           console.error('Error al recuperar la foto:', error);
-          this.fotoRecuperadaUrl = require('@/assets/sin-foto.png');
+          this.fotoRecuperadaUrl = new URL('@/assets/sin-foto.png', import.meta.url).href;
         }
       },
   

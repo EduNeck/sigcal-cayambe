@@ -21,10 +21,10 @@
       <!-- Encabezado con logo y título institucional -->
       <v-row class="align-center justify-center mb-6">
         <v-col cols="2" class="d-flex align-center justify-center">
-          <img :src="logo" class="logo"/>
+          <img :src="logo" class="logo" />
         </v-col>
         <v-col cols="8">
-          <p class="text-h10 font-weight-bold text-center">
+          <p class="titulo-certificado">
             Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe
           </p>
         </v-col>
@@ -32,7 +32,7 @@
       </v-row>
 
       <!-- Título del certificado -->
-      <v-card-title class="text-center text-h10 font-weight-bold justify-center">
+      <v-card-title class="titulo-certificado">
         Certificado de Linderos
       </v-card-title>
 
@@ -52,49 +52,80 @@
             v-model="claveCatastral"
             :rules="[v => !!v || 'Campo requerido']"
             required
-            class="mb-2 texto-certificado"
+            class="mb-2 texto-certificado-imput"
             density="compact"
           />
 
           <v-row dense class="campos-compactos">
             <v-col cols="12" md="6">
-              <v-text-field label="Contribuyente" v-model="datos.contribuyente" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Contribuyente" v-model="datos.contribuyente" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field label="Cédula" v-model="datos.cedula" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Cédula" v-model="datos.cedula" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field label="Dirección del Predio" v-model="datos.direccion_predio" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Dirección del Predio" v-model="datos.direccion_predio" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field label="Avalúo" v-model="datos.avaluo" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Avalúo" v-model="datos.avaluo" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field label="Parroquia" v-model="datos.parroquia" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Parroquia" v-model="datos.parroquia" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field label="Superficie (m²)" v-model="datos.superficie_m2" readonly class="texto-certificado" density="compact"/>
+              <v-text-field label="Superficie (m²)" v-model="datos.superficie_m2" readonly class="texto-certificado-imput" density="compact"/>
             </v-col>
           </v-row>
 
           <!-- BLOQUE 2.1: Linderos -->
           <v-divider class="my-4" />
-          <h4 class="text-center text-h7 font-weight-bold texto-certificado mb-2">Detalle de Linderos</h4>
-          <v-table class="texto-certificado" density="compact">
+          <h4 class="text-center text-h7 font-weight-bold texto-certificado mb-4">Detalle de Linderos</h4>
+          <v-table class="texto-certificado tabla-linderos" density="compact">
             <thead>
               <tr>
                 <th class="text-left">Clave Lindero</th>
-                <th class="text-left">Longitud (m)</th>
+                <th class="text-left">Longitud (m2)</th>
                 <th class="text-left">Nombres</th>
                 <th class="text-left">Orientación</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(item, index) in linderos" :key="index">
-                <td>{{ item.clave_lindero }}</td>
-                <td>{{ item.longitud }}</td>
-                <td>{{ item.nombres }}</td>
-                <td>{{ item.cardinalidad }}</td>
+                <td>
+                  <v-text-field
+                    v-model="item.clave_lindero"
+                    variant="plain"
+                    hide-details
+                    density="compact"                                                            
+                  />
+                </td>
+                <td>
+                  <v-text-field
+                    v-model="item.longitud"
+                    variant="plain"
+                    hide-details
+                    density="compact"
+                    class="input-linderos"
+                  />
+                </td>
+                <td>
+                  <v-text-field
+                    v-model="item.nombres"
+                    variant="plain"
+                    hide-details
+                    density="compact"
+                    class="input-linderos"
+                  />
+                </td>
+                <td>
+                  <v-text-field
+                    v-model="item.cardinalidad"
+                    variant="plain"
+                    hide-details
+                    density="compact"
+                    class="input-linderos"
+                  />
+                </td>
               </tr>
               <tr v-if="linderos.length === 0">
                 <td colspan="4" class="text-center">No se encontraron linderos relacionados.</td>
@@ -102,19 +133,19 @@
             </tbody>
           </v-table>
 
-          <!-- BLOQUE 3: Introducción -->
+
+
+          <!-- BLOQUE 3: Clausula -->
           <v-sheet class="pa-4 mb-1 texto-certificado" color="grey-lighten-4" rounded>
             <p class="text-justify texto-certificado">
-              Se remite toda la documentación legal a este expediente de la Dirección de Planificación, si se comprobare que ha presentado datos falsos o representaciones gráficas erróneas de cauquier clase el GADIP-Municipal revocará el presente informe de Certificación de Áreas y Linderos. El Área y Linderos es de Exclusiva responsabilidad del Propietario y Proyectista que suscribe los Planos y demas documentos.
-
-              Particular que comunico a usted para los fines pertinenetes
+              Se remite toda la documentación legal a este expediente de la Dirección de Planificación, si se comprobare que ha presentado datos falsos o representaciones gráficas erróneas de cualquier clase el GADIP-Municipal revocará el presente informe de Certificación de Áreas y Linderos. El Área y Linderos es de exclusiva responsabilidad del Propietario y Proyectista que suscribe los Planos y demás documentos. <br>
+              Particular que comunico a usted para los fines pertinentes.
             </p>
           </v-sheet>
 
           <!-- BLOQUE 4: Firmas -->
           <v-divider class="my-6" />
           <div class="text-center mt-10 texto-certificado">
-
             <v-row class="justify-center align-center mb-6">
               <v-col cols="6" class="text-center">
                 <div style="min-height: 60px;"></div>
@@ -130,7 +161,6 @@
               </v-col>
             </v-row>
           </div>
-
         </v-form>
       </v-card-text>
     </div>
@@ -159,31 +189,25 @@ const linderos = ref([])
 const buscarDatos = async () => {
   if (!claveCatastral.value) return;
   try {
-    console.log('Llamando a', `${API_BASE_URL}/predios-avaluo`, 'con clave_catastral:', claveCatastral.value);
     const response = await axios.get(`${API_BASE_URL}/predios-avaluo`, {
       params: { clave_catastral: claveCatastral.value }
     });
-    console.log('Respuesta de predios-avaluo:', response.data);
     if (response.data && response.data.length > 0) {
       const predio = response.data[0];
-      datos.value.contribuyente = predio.nombres || '';
-      datos.value.cedula = predio.numero_documento_ciudadano || '';
-      datos.value.direccion_predio = predio.direccion_principal || '';
-      datos.value.avaluo = predio.avaluo_predio_porcentual || '';
-      datos.value.parroquia = predio.nombre_parroquia || '';
-      datos.value.superficie_m2 = predio.area_terreno || '';
+      datos.value = {
+        contribuyente: predio.nombres || '',
+        cedula: predio.numero_documento_ciudadano || '',
+        direccion_predio: predio.direccion_principal || '',
+        avaluo: predio.avaluo_predio_porcentual || '',
+        parroquia: predio.nombre_parroquia || '',
+        superficie_m2: predio.area_terreno || ''
+      }
     } else {
       limpiarFormulario();
       alert('No se encontraron datos para la clave catastral ingresada');
     }
-
-    // Nueva llamada al servicio de linderos
-    console.log('Llamando a', `${API_BASE_URL}/certificado-linderos`, 'con clave_catastral:', claveCatastral.value);
-
     const responseLinderos = await axios.get(`${API_BASE_URL}/certificado-linderos/${claveCatastral.value}`);
-    console.log('Respuesta de certificado-linderos:', responseLinderos.data);
     linderos.value = responseLinderos.data || [];
-
   } catch (error) {
     console.error('Error al consultar datos:', error);
     alert('No se pudo obtener la información del predio');
@@ -191,7 +215,6 @@ const buscarDatos = async () => {
 }
 
 const limpiarFormulario = () => {
-  console.log('Limpiando formulario');
   claveCatastral.value = ''
   datos.value = {
     contribuyente: '',
@@ -204,8 +227,23 @@ const limpiarFormulario = () => {
   linderos.value = []
 }
 
-const generarPDF = () => {
-  console.log('Generando PDF del certificado');
+// Actualiza los linderos en el backend antes de generar el PDF
+const actualizaLinderos = async () => {
+  try {
+    if (!claveCatastral.value || !linderos.value.length) return;
+    for (const item of linderos.value) {
+      // Se usa tanto la clave catastral como el id del lindero para actualizar
+      await axios.put(`${API_BASE_URL}/actualiza-linderos/${claveCatastral.value}?id=${item.id}`, item);
+    }
+    console.log('Linderos actualizados correctamente');
+  } catch (error) {
+    console.error('Error al actualizar linderos:', error);
+    alert('No se pudo actualizar la información de linderos');
+  }
+}
+
+const generarPDF = async () => {
+  await actualizaLinderos();
   const element = pdfRef.value?.$el || pdfRef.value
   html2pdf()
     .from(element)
@@ -214,12 +252,22 @@ const generarPDF = () => {
       filename: `certificado_linderos_${claveCatastral.value || 'predio'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 3 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
     })
-    .save()
+    .toPdf()
+    .get('pdf')
+    .then(pdf => {
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.text(`Página ${i} de ${totalPages}`, pdf.internal.pageSize.getWidth() - 40, pdf.internal.pageSize.getHeight() - 10);
+      }
+    })
+    .save();
 }
 </script>
-
 
 <style scoped>
 .pdf-wrapper {
@@ -235,9 +283,7 @@ const generarPDF = () => {
   width: 210mm;
   max-height: 297mm;
   padding: 10mm;
-  box-sizing: border-box;
   background: white;
-  overflow: hidden;
   margin: 5px auto;
   box-shadow: 0 0 10px rgba(20, 199, 50, 0.1);
 }
@@ -247,38 +293,50 @@ const generarPDF = () => {
   min-width: 40px;
   width: 100%;
   height: auto;
-  padding: 0px;
-  display: block;
+  padding: 0;
   margin: 0 auto;
-}
-
-.texto-certificado {
-  font-size: 0.68rem;
-  line-height: 1.4;
+  display: block;
 }
 
 .titulo-certificado {
-  padding: 0 0 0 0;        
-  font-size: 0.75rem;           
-  font-weight: bold;            
-  text-align: center;           
-  justify-content: center;      
-  display: flex;                
-  line-height: 0.5;             
+  padding: 0 ;
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4px;
+  line-height: 1.1;
 }
 
+.tabla-linderos input {
+  font-size: 0.52rem ;
+  padding: 1px 3px ;
+  height: 20px ;
+  line-height: 1 ;
+}
 
-.subtitulo-certificado {
-  font-size: 0.2rem ;
-  font-weight: 600;
-  text-align: center;
+.input-linderos {
+  font-size: 0.52rem;
+  line-height: 1;
+}
+
+.texto-certificado {
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.texto-certificado-imput {
+  font-size: 0.4rem;
+  line-height: 0.8rem;
+  padding: 0 ;
+  margin: 0 ;
+  height: 40px ;
 }
 
 .campos-compactos > .v-col {
-  padding-top: 0px ;
-  padding-bottom: 0px ;
-  padding-left: 0px ;
-  padding-right: 0px ;
+  padding: 0 ;
 }
 
 .form-certificado {
@@ -287,16 +345,13 @@ const generarPDF = () => {
 
 @media print {
   .no-print {
-    display: none ;
+    display: none;
   }
   .texto-certificado {
-    font-size: 0.85rem ;
+    font-size: 0.85rem;
   }
   .titulo-certificado {
-    font-size: 0.68rem ;
-  }
-  .subtitulo-certificado {
-    font-size: 0.68rem ;
+    font-size: 0.68rem;
   }
 }
 </style>

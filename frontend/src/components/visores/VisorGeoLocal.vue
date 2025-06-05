@@ -23,7 +23,7 @@
     name: "VisorSecundario",
     data() {
       return {
-        urlVisor: "/paginas/gis/prediosCayambe/index.html", 
+        urlVisor: "/paginas/gis/sigcal/index.html", 
       };
     },
     methods: {
@@ -40,4 +40,3 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   }
   </style>
-  

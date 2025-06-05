@@ -8,6 +8,7 @@ const app = express()
 // Configuración de CORS
 app.use(cors({
   origin: [
+    'http://localhost',
     'http://localhost:5173',               // entorno local
     'http://172.23.7.18:5173',             // IP interna del servidor 
   ],
