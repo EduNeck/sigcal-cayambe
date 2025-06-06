@@ -269,8 +269,9 @@
                         <v-img v-if="fotoRecuperadaUrl" :src="fotoRecuperadaUrl" class="custom-img">Foto Predio</v-img>
                         <v-img v-else :src="sinFoto" class="custom-img">Sin Foto</v-img>
                         <!-- Croquis Predio -->
-                        <v-img v-if="croquis" :src="sinCroquis" class="custom-img" >Croquis Predio</v-img>
+                        <v-img v-if="croquisUrl" :src="croquisUrl" class="custom-img">Croquis Predio</v-img>
                         <v-img v-else :src="sinCroquis" class="custom-img">Sin Croquis</v-img>
+
                     </div>
                 </v-card-text>
 
@@ -296,6 +297,7 @@ import html2pdf from 'html2pdf.js';
 import logo from '@/assets/logo_ventana.png';
 import sinFoto from '@/assets/sin-foto.png';
 import sinCroquis from '@/assets/sin-croquis.png';
+import API_BASE_URL from '@/config/apiConfig';
 
 export default {
     name: 'FichaPredialUrbana',
@@ -309,6 +311,8 @@ export default {
             logo: logo,
             sinFoto: sinFoto,
             sinCroquis: sinCroquis,
+            croquisUrl: '',
+
             form: {
                 id_predio: null, 
                 clave_catastral: null, 
@@ -593,7 +597,7 @@ export default {
             }
         },        
 
-
+        // Método para recuperar la foto del predio desde la API
         async recuperaFotos(idPredio) {      
             try {
                 const response = await axios.get(`http://localhost:3001/api/fotos_by_idPredio/${idPredio}`);
@@ -628,6 +632,83 @@ export default {
                 this.snackbarErrorPush = true;
             }
         },
+
+        // Método para recuperar el croquis usando la clave catastral del formulario
+        async recuperarCroquis() {
+            const clave = this.form.clave_catastral;
+            console.log('Recuperando croquis para la clave:', clave);
+
+            if (!clave) {
+                console.error('No hay clave catastral disponible para recuperar el croquis.');
+                this.croquisUrl = '';
+                return;
+            }
+
+            try {
+                const resp = await axios.get(`${API_BASE_URL}/bbox_predio/${clave}`);
+                const { xmin, ymin, xmax, ymax } = resp.data;
+
+                // Validación de datos
+                if (
+                xmin == null || ymin == null || xmax == null || ymax == null ||
+                isNaN(xmin) || isNaN(ymin) || isNaN(xmax) || isNaN(ymax)
+                ) {
+                console.error('Coordenadas inválidas:', resp.data);
+                this.croquisUrl = '';
+                return;
+                }
+
+                // Conversión a número
+                const xMin = Number(xmin);
+                const yMin = Number(ymin);
+                const xMax = Number(xmax);
+                const yMax = Number(ymax);
+
+                const width_bbox = xMax - xMin;
+                const height_bbox = yMax - yMin;
+                const maxSide = Math.max(width_bbox, height_bbox);
+
+                const centerX = (xMin + xMax) / 2;
+                const centerY = (yMin + yMax) / 2;
+                const halfSide = maxSide / 2;
+
+                const newMinX = centerX - halfSide - 10;
+                const newMaxX = centerX + halfSide + 10;
+                const newMinY = centerY - halfSide - 10;
+                const newMaxY = centerY + halfSide + 10;
+
+                const bbox = `${newMinX},${newMinY},${newMaxX},${newMaxY}`;
+
+                const baseUrl = import.meta.env.VITE_GEOSERVER_URL;
+
+                const capas = [
+                'sigcal:geo_manzana_poligono',
+                'sigcal:geo_predio',
+                'sigcal:geo_bloque',
+                'sigcal:vista_geo_predio_urb',
+                'sigcal:geo_via',
+                'sigcal:geo_frentes'
+                ].join(',');
+
+                const filtros = [
+                'include',
+                'include',
+                'include',
+                `(cod_cat = '${clave}')`,
+                'include',
+                'include'
+                ].join(';');
+
+                this.croquisUrl = `${baseUrl}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${capas}&cql_filter=${filtros}&styles=&bbox=${bbox}&width=600&height=400&srs=EPSG:32717&format=image/png&_t=${Date.now()}`;
+
+                console.log('URL del croquis:', this.croquisUrl);
+
+            } catch (error) {
+                console.error('Error al obtener el croquis:', error);
+                this.croquisUrl = '';
+            }
+        },
+
 
         salir() {
             this.$router.go(-1);
@@ -666,7 +747,9 @@ export default {
         if (idPredio) {
             this.idPredio = idPredio;
             console.log('ID del predio recibido:', idPredio);
-            this.recuperaDatosPredio(idPredio);
+            this.recuperaDatosPredio(idPredio).then(() => {
+                this.recuperarCroquis(); 
+            });
             this.recuperaDatosTenencia(idPredio);
             this.recuperaDatosBloques(idPredio);
             this.recuperaDatosMejoras(idPredio);
@@ -754,15 +837,14 @@ export default {
 }
 
 .custom-img {
-  width: 250px;
-  height: 250px; 
-
-  /* Texto */ 
-  text-align: center;
-  font-size: 1rem;
-  color: #276E90;  
-  font-weight: bold;
-  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #276E90;  
+    text-align: center;
+    font-size: 1rem;
+    color: #276E90;  
+    font-weight: bold;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .footer {

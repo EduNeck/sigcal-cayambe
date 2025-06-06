@@ -1,6 +1,20 @@
-
 <template>
   <v-container class="container">
+    <!-- Overlay de carga -->
+    <v-overlay
+      :model-value="loading"
+      class="d-flex align-center justify-center"
+      persistent
+      style="z-index: 1000"
+    >
+      <v-card class="pa-4 text-center" color="#F1ECE7">
+        <v-progress-circular indeterminate color="primary" size="50" class="mb-2" />
+        <div aria-live="polite">Cargando predios, por favor espere...</div>
+      </v-card>
+    </v-overlay>
+
+
+    <!-- Contenido principal -->
     <v-row justify="center">
       <v-col cols="12" class="text-center">
         <h2 class="titulo-pantalla">Listado de Predios Urbanos</h2>
@@ -10,10 +24,10 @@
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-close" @click="navigateToMenuUrbano">Salir</v-btn>
       </v-col>
     </v-row>
+
     <v-row>
       <v-col cols="12">
         <v-data-table
-          
           :headers="headers"
           :items="filteredPredios"
           :search="search"
@@ -56,6 +70,7 @@ export default {
       search: '',
       predios: [],
       filtros: {},
+      loading: false,
       headers: [
         { title: 'Acciones', value: 'actions', sortable: false },
         { title: 'ID Predio', value: 'id_predio' },
@@ -91,57 +106,60 @@ export default {
     },
   },
   methods: {
-  async cargaPredios() {
-    console.log('Cargando predios...');
+    async cargaPredios() {
+      console.log('Cargando predios...');
+      this.loading = true;
+      console.log('loading (inicio):', this.loading);
 
-    // Recuperar filtros de la URL
-    const {
-      clave_catastral,
-      clave_catastral_anterior,
-      numero_documento,
-      nombres,
-      id_regimen_propiedad
-    } = this.$route.query;
+      const {
+        clave_catastral,
+        clave_catastral_anterior,
+        numero_documento,
+        nombres,
+        id_regimen_propiedad
+      } = this.$route.query;
 
-    // 🔄 Traduce el tipo de predio desde Vuex
-    const tipoPredioStore = this.$store.state.tipoPredio;
-    const tipoPredioTexto = tipoPredioStore === 1 ? 'URBANO' : 'RURAL';
+      const tipoPredioStore = this.$store.state.tipoPredio;
+      const tipoPredioTexto = tipoPredioStore === 1 ? 'URBANO' : 'RURAL';
 
-    try {
-      const response = await axios.get(`${API_BASE_URL}/ficha_predio`, {
-        params: {
-          clave_catastral,
-          clave_catastral_anterior,
-          numero_documento,
-          nombres,
-          id_regimen_propiedad,
-          tipo_predio: tipoPredioTexto  // ✅ Aquí el cambio clave
-        }
-      });
+      try {
+        const response = await axios.get(`${API_BASE_URL}/ficha_predio`, {
+          params: {
+            clave_catastral,
+            clave_catastral_anterior,
+            numero_documento,
+            nombres,
+            id_regimen_propiedad,
+            tipo_predio: tipoPredioTexto
+          }
+        });
 
-      this.predios = response.data;
-      console.log('Listado de predios:', this.predios);
-    } catch (error) {
-      console.error('Error al obtener el listado de predios:', error);
-    }
-  },
+        this.predios = response.data;
+        console.log('Listado de predios:', this.predios);
+      } catch (error) {
+        console.error('Error al obtener el listado de predios:', error);
+      } finally {
+        this.loading = false;
+        console.log('loading (fin):', this.loading);
+      }
+    },
 
-  editItem(item) {
-    const idPredio = item.id_predio;
-    this.$router.push({ path: '/ficha-predial', query: { id_predio: idPredio } });
-  },
-  
-  aplicarFiltros(filtros) {
-    this.filtros = filtros;
-  },
+    editItem(item) {
+      const idPredio = item.id_predio;
+      this.$router.push({ path: '/ficha-predial', query: { id_predio: idPredio } });
+    },
 
-  navigateToFormFichaPredial() {
-    this.$router.push('/ficha-predial');
-  },
+    aplicarFiltros(filtros) {
+      this.filtros = filtros;
+    },
 
-  navigateToMenuUrbano() {
-    this.$router.push('/menu-predial');
-  },
+    navigateToFormFichaPredial() {
+      this.$router.push('/ficha-predial');
+    },
+
+    navigateToMenuUrbano() {
+      this.$router.push('/menu-predial');
+    },
   },
 };
 </script>
@@ -158,4 +176,5 @@ export default {
   background-color: #223770;
   color: #ffffff;
 }
+
 </style>

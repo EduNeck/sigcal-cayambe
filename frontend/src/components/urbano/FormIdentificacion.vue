@@ -6,13 +6,13 @@
       </v-col>
       <!-- Botones -->
       <v-col cols="12" class="d-flex justify-center flex-wrap">
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevoRegistro" v-if="canEdit">Nuevo</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="Boolean(Boolean(getIdPredio))" v-if="canEdit">Guardar</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Eliminar</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-file" @click="valorar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Valorar</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-printer" @click="imprimirFicha" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Imprimir Ficha</v-btn>
-        <v-btn class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevoRegistro" v-if="canEdit">Nuevo</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="Boolean(Boolean(getIdPredio))" v-if="canEdit">Guardar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Eliminar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file" @click="valorar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Valorar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-printer" @click="imprimirFicha" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Imprimir Ficha</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>
       </v-col>
     </v-row>
 
@@ -30,12 +30,13 @@
           <div class="img-title">Sin Foto</div>
         </v-img>       
         <!-- Croquis Predio -->
-        <v-img v-if="croquis" :src="sinCroquis" class="custom-img">
+        <v-img v-if="croquisUrl" :src="croquisUrl" class="custom-img">
           <div class="img-title">Croquis Predio</div>
         </v-img>
-        <v-img v-else :src="sinCroquis" class="custom-img">
+        <v-img
+          v-else :src="sinCroquis" class="custom-img">
           <div class="img-title">Sin Croquis</div>
-        </v-img>    
+        </v-img>
       </div>
     </v-window>
     <!-- Segundo Bloque -->
@@ -294,6 +295,7 @@ import useUserRoles from '@/composables/useUserRoles';
 import API_BASE_URL from '@/config/apiConfig';
 import sinPredio from '@/assets/sin-foto.png';
 import sinCroquis from '@/assets/sin-croquis.png';
+import { generarUrlCroquis } from '@/components/utils/croquisUtils';
 
 export default {
   name: 'TabIdentificacion',  
@@ -330,7 +332,7 @@ export default {
         digitador: '',
         fecha_registro: '',
         actualizador: '',
-        fecha_actualizacion: '',
+        fecha_actualizacion: '',        
       },
       // Catálogos
       tipoPredios: [],
@@ -350,6 +352,7 @@ export default {
       croquis: '',
       sinPredio: sinPredio,
       sinCroquis: sinCroquis,
+      croquisUrl : '',
      };
   },
 
@@ -359,7 +362,7 @@ export default {
     if (idPredio) {      
       this.id_predio = idPredio;
       this.updateIdPredio(idPredio);
-      this.cargaIdentificacion(idPredio);
+      this.cargaPredio(idPredio);
       this.recuperaFotos(idPredio);
     }else{
       console.log('SIN ID DEL PREDIO RECIBIDO');
@@ -614,11 +617,12 @@ export default {
     },
 
     // Obtener predio
-    async cargaIdentificacion(idPredio) {
+    async cargaPredio(idPredio) {
       try {
         const response = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${idPredio}`);
         const predio = response.data;
         console.log('Datos del predio:', predio);
+
         this.form = {
           id_tipo_predio: predio.id_tipo_predio,
           id_regimen_propiedad: predio.id_regimen_propiedad,
@@ -646,8 +650,15 @@ export default {
           sector: predio.sector,
           area_grafica: predio.area_grafica,
         };
+
         this.idPredio = idPredio;
+
+        // ✅ Generar la URL del croquis después de tener la clave catastral
+        this.croquisUrl = await generarUrlCroquis(this.form.clave_catastral, 5);
+
+        // (opcional) Cargar el área geográfica
         await this.caragaAreaGeo(predio.area_grafica);
+        
       } catch (error) {
         console.error('Error fetching predio:', error);
       }
@@ -687,6 +698,12 @@ export default {
         this.snackbarError = 'Error al recuperar la foto';
         this.snackbarErrorPush = true;
       }
+    },
+
+    async created() {
+      const clave = this.form.clave_catastral;
+      const url = await generarUrlCroquis(clave, 15); // 15 metros de margen
+      this.croquisUrl = url;
     },
 
     // Nuevo registro
@@ -910,7 +927,7 @@ export default {
 }
 /* Fondo uniforme para todas las tarjetas */
 .v-card {
-  background-color: #F1ECE7 !important;
+  background-color: #F1ECE7 ;
 }
 
 .custom-img {
@@ -951,8 +968,8 @@ export default {
 
 /* Botones */
 .urbano-btn {
-  background-color: #276E90 !important;
-  color: #ffffff !important;
+  background-color: #276E90 ;
+  color: #ffffff ;
   border-radius: 8px;
   font-weight: 600;
   margin: 4px;
@@ -960,8 +977,8 @@ export default {
 }
 
 .rural-btn {
-  background-color: #4C7031 !important;
-  color: #ffffff !important;
+  background-color: #4C7031 ;
+  color: #ffffff ;
   border-radius: 8px;
   font-weight: 600;
   margin: 4px;

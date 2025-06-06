@@ -20,11 +20,14 @@
   
   <script>
   export default {
-    name: "VisorSecundario",
+    name: "VisoerGeoLocal",
     data() {
       return {
-        urlVisor: "/paginas/gis/sigcal/index.html", 
+        urlVisor: import.meta.env.VITE_VISOR_URL
       };
+    },
+    mounted() {
+      console.log("URL del visor:", this.urlVisor);
     },
     methods: {
       salir() {

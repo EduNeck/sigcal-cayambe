@@ -16,7 +16,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-app.use(express.json())
+
+app.use(express.json({ limit: '10mb' }))  // limite tamaño documentos JSON
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Endpoint base de prueba
 app.get('/', (req, res) => {
@@ -55,6 +57,7 @@ app.use('/api', require('./routes/reporteFichaRoutes'));
 app.use('/api', require('./routes/validacionesRoutes'));
 app.use('/api', require('./routes/valoracionRoutes'));
 app.use('/api', require('./routes/prediosAvaluoCompletoRoutes'));
+app.use('/api', require('./routes/croquisRoutes'));
 
 // Middleware de logging
 app.use((req, res, next) => {

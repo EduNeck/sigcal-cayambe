@@ -80,6 +80,7 @@ export default {
             { title: 'Búsqueda Predio', route: '/busqueda-predios-urb' },
             //{ title: 'Listado Predios', route: '/listado-predios-urb' },
             { title: 'Gestión Documental', route: '/gestion-documental' },
+            { title: 'Listado Documental', route: '/listado-documental' },
             { title: 'Ciudadanos', route: '/busqueda-ciudadanos' }
           ]
         },

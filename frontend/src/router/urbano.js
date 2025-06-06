@@ -22,4 +22,5 @@ export default [
   { path: '/gestion-documental', component: () => import('@/components/urbano/FormGestionDocumental.vue'), meta: { requiresAuth: true } }, 
   // Caracteristicas Rurales
   { path: '/form-caracteristicas-rurales', component: () => import('@/components/urbano/FormCaracteristicasRurales.vue'), meta: { requiresAuth: true } }, 
+  { path: '/listado-documental', component: () => import('@/components/urbano/ListadoDocumental.vue'), meta: { requiresAuth: true } },
 ];
