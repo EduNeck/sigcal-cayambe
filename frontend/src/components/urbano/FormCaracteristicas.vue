@@ -387,24 +387,27 @@ export default {
     async actualiza() {
       console.log('Actualizando características del predio...');
 
+      // Helper para convertir a null si es vacío
+      const parseOrNull = v => (v === '' || v === undefined) ? null : v;
+
       const actualizaCaracteristicas = {
-        id_uso_predio: this.form.id_uso_predio || null,
+        id_uso_predio: parseOrNull(this.form.id_uso_predio),
         lote_conflicto: this.form.lote_conflicto === 'SI',
-        obs_conflicto: this.form.obs_conflicto || null,
-        id_forma_lote: this.form.id_forma_lote || null,
-        id_topografia: this.form.id_topografia || null,
-        id_localizacion_manzana: this.form.id_localizacion_manzana || null,
+        obs_conflicto: parseOrNull(this.form.obs_conflicto),
+        id_forma_lote: parseOrNull(this.form.id_forma_lote),
+        id_topografia: parseOrNull(this.form.id_topografia),
+        id_localizacion_manzana: parseOrNull(this.form.id_localizacion_manzana),
         permiso_construccion: this.form.permiso_construccion === 'SI',
-        num_permiso_construccion: this.form.num_permiso_construccion || null,
-        id_agua: this.form.id_agua || null,
-        id_sanitarias: this.form.id_sanitarias || null,
-        id_energia_electrica: this.form.id_energia_electrica || null,
+        num_permiso_construccion: parseOrNull(this.form.num_permiso_construccion),
+        id_agua: parseOrNull(this.form.id_agua),
+        id_sanitarias: parseOrNull(this.form.id_sanitarias),
+        id_energia_electrica: parseOrNull(this.form.id_energia_electrica),
         aceras: this.form.aceras === 'SI',
         bordillos: this.form.bordillos === 'SI',
         alumbrado: this.form.alumbrado === 'SI',
         aseo_calles: this.form.aseo_calles === 'SI',
         recoleccion_basura: this.form.recoleccion_basura === 'SI',
-        id_eliminacion_basura: this.form.id_eliminacion_basura,
+        id_eliminacion_basura: parseOrNull(this.form.id_eliminacion_basura),
         transporte_urbano: this.form.transporte_urbano === 'SI',
         telefonia_fija: this.form.telefonia_fija === 'SI',
         telefonia_satelital: this.form.telefonia_satelital === 'SI',

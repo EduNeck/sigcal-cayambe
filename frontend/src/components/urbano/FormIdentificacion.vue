@@ -261,6 +261,9 @@
             <v-text-field label="Eje Secundario" color = #F2AA1F v-model="form.eje_secundario"></v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="4">
+            <v-text-field label="Dirección Principal" color = #F2AA1F v-model="form.direccion_principal"></v-text-field>
+          </v-col>
+          <v-col cols="12" sm="6" md="4">
             <v-text-field label="Sector" color = #F2AA1F v-model="form.sector"></v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="4">
@@ -333,6 +336,7 @@ export default {
         fecha_registro: '',
         actualizador: '',
         fecha_actualizacion: '',        
+        direccion_principal: '',
       },
       // Catálogos
       tipoPredios: [],
@@ -573,6 +577,7 @@ export default {
         sector: this.form.sector,
         actualizador: this.userName,
         fecha_actualizacion: fechaActualiza,
+        direccion_principal: this.form.direccion_principal,
       };
 
       if (this.form.id_regimen_propiedad === 4) {
@@ -649,6 +654,7 @@ export default {
           eje_secundario: predio.eje_secundario,
           sector: predio.sector,
           area_grafica: predio.area_grafica,
+          direccion_principal: predio.direccion_principal,
         };
 
         this.idPredio = idPredio;
@@ -772,6 +778,7 @@ export default {
       this.form.sector = '';      
       this.fecha_actualizacion = '';      
       this.fecha_registro = '';
+      this.form.direccion_principal = '';
 
       // Limpia variables globales
       this.resetIdPredio();

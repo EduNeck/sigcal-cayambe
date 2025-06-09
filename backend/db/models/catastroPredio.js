@@ -8,10 +8,10 @@ const insertaIdentificacionPredio = async (data) => {
       clave_catastral, id_prov, id_can, id_par, cod_zon, cod_sec, cod_pol_man, cod_pred, cod_uni, cod_bloq, 
       id_tipo_piso, cod_piso, alicuota, area_terreno, area_comun_terreno, id_unidad_area, 
       area_individual_construida, area_comun_construida, eje_principal, eje_secundario, sector, digitador, 
-      fecha_registro
+      fecha_registro, direccion_principal
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 
-      $20, $21, $22, $23, $24, $25, $26
+      $20, $21, $22, $23, $24, $25, $26, $27
     )
     RETURNING id_predio;
   `;
@@ -21,7 +21,7 @@ const insertaIdentificacionPredio = async (data) => {
     data.cod_pred, data.cod_uni, data.cod_bloq, data.id_tipo_piso, data.cod_piso, data.alicuota, 
     data.area_terreno, data.area_comun_terreno, data.id_unidad_area, data.area_individual_construida,
     data.area_comun_construida, data.eje_principal, data.eje_secundario, data.sector, data.digitador,
-    data.fecha_registro     
+    data.fecha_registro, data.direccion_principal
   ];
 
   // Validar que los valores no sean vacíos para los campos que esperan enteros
@@ -76,8 +76,8 @@ const updateCatastroPredio = async (id, data) => {
           id_prov = $5, id_can = $6, id_par = $7, cod_zon = $8, cod_sec = $9,
           cod_pol_man = $10, cod_pred = $11, cod_uni = $12, cod_bloq = $13, id_tipo_piso = $14, cod_piso = $15,
           alicuota = $16, area_terreno = $17, area_comun_terreno = $18, id_unidad_area = $19, area_individual_construida = $20,
-          area_comun_construida = $21, eje_principal = $22, eje_secundario = $23, sector = $24, fecha_actualizacion = $25, actualizador = $26
-      WHERE id_predio = $27
+          area_comun_construida = $21, eje_principal = $22, eje_secundario = $23, sector = $24, fecha_actualizacion = $25, actualizador = $26, direccion_principal = $28
+      WHERE id_predio = $29
       RETURNING *;
     `;
     const values = [
@@ -86,7 +86,7 @@ const updateCatastroPredio = async (id, data) => {
       data.cod_pred, data.cod_uni, data.cod_bloq, data.id_tipo_piso, data.cod_piso, data.alicuota,
       data.area_terreno, data.area_comun_terreno, data.id_unidad_area, data.area_individual_construida,
       data.area_comun_construida, data.eje_principal, data.eje_secundario, data.sector, data.fecha_actualizacion, 
-      data.actualizador, id
+      data.actualizador, data.direccion_principal, id
     ];
 
     try {

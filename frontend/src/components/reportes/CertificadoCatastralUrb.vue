@@ -222,6 +222,7 @@ import html2pdf from 'html2pdf.js';
 import QRCode from 'qrcode'; // Importar la librería QRCode
 import { textVariables } from '@/config/textVariables';
 import { mapGetters } from 'vuex';
+import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: "CertificadoCatastralUrb",
@@ -273,7 +274,7 @@ export default {
   methods: {
     async recuperaPatrimonio(claveCatastral, anioProceso) {
       try {
-        const response = await axios.get(`http://localhost:3001/api/patrimonio-urbano`,{
+        const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano`,{
             params: {
               clave_catastral: claveCatastral,
               anio_proceso: anioProceso,
@@ -327,7 +328,7 @@ export default {
 
         console.log('Datos enviados al proceso de insertar:', JSON.stringify(this.form, null, 2));
 
-        const response = await axios.post('http://localhost:3001/api/insertaCertificadoCatastral', this.form);
+        const response = await axios.post(`${API_BASE_URL}/genera_certificado`, this.form);
 
         if (response.status === 201) {
           console.log('Certificado catastral insertado correctamente:', response.data);
@@ -347,7 +348,7 @@ export default {
 
     async cargaCatalogo(id_tipo_atributo, tipo) {
       try {
-        const response = await axios.get(`http://localhost:3001/api/catalogo/${id_tipo_atributo}/${tipo}`);
+        const response = await axios.get(`${API_BASE_URL}/catalogo/${id_tipo_atributo}/${tipo}`);
         console.log(`Datos obtenidos para id_tipo_atributo ${id_tipo_atributo} y tipo ${tipo}:`, response.data);
         
         if (Array.isArray(response.data)) {
@@ -371,7 +372,7 @@ export default {
 
     async cargaCiudadano() {
       try {
-        const response = await axios.get('http://localhost:3001/api/ciudadano_tenencia');
+        const response = await axios.get(`${API_BASE_URL}/ciudadano_tenencia`);
         console.log('Datos obtenidos para ciudadano:', response.data);
         if (Array.isArray(response.data)) {
           this.ciudadanoRecuperado = response.data.map(item => {

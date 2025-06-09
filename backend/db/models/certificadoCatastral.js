@@ -22,30 +22,32 @@ async function recuperaCertificadoById(id) {
   return rows[0];
 }
 
-// Insertar un nuevo registro
+// Insertar un nuevo registro con valores por defecto si están vacíos o nulos
 async function insertaCertificado(data) {
-  // Obtener el número total de certificados para el tipo_certificado
+  const normalizar = (valor, tipo = 'texto') => {
+    if (valor === undefined || valor === null || valor === '') {
+      if (tipo === 'texto') return '';
+      if (tipo === 'numero') return 0;
+      if (tipo === 'booleano') return false;
+      return null;
+    }
+    return valor;
+  };
+
+  const parseFecha = (fecha) => {
+    return (fecha && !isNaN(new Date(fecha))) ? new Date(fecha) : null;
+  };
+
   const maxQuery = `
     SELECT COUNT(*) AS max_numero
     FROM valores_reportes.certificado_catastral
     WHERE tipo_certificado = $1
   `;
-  const { rows: maxRows } = await db.query(maxQuery, [data.tipo_certificado]);
-
-  // Depuración: Verificar el resultado de la consulta
-  console.log('Número total de registros:', maxRows[0].max_numero);
-
-  // Convertir el valor recuperado a número y sumarle 1
-  const maxNumero = parseInt(maxRows[0].max_numero, 10) + 1;
-
-  // Obtener el año actual
+  const { rows: maxRows } = await db.query(maxQuery, [normalizar(data.tipo_certificado)]);
+  const maxNumero = parseInt(maxRows[0].max_numero || 0, 10) + 1;
   const anioActual = new Date().getFullYear();
-
-  // Concatenar el número incrementado con el año actual
   const nuevoNumeroSerie = `${maxNumero} - ${anioActual}`;
-  console.log('Nuevo número de serie:', nuevoNumeroSerie);
 
-  // Insertar el nuevo registro
   const query = `
     INSERT INTO valores_reportes.certificado_catastral (
       tipo_predio, ph, clave_catastral, clave_anterior, parroquia, numero_documento, alicuota,
@@ -53,8 +55,8 @@ async function insertaCertificado(data) {
       valor_construcciones_porcentual, valor_instalaciones_porcentual, valor_adicionales_porcentual,
       avaluo_predio_porcentual, anio_proceso, id_tenencia_propiedad, id_predio, propietario, fecha_proceso,
       nombre_canton, nombre_parroquia, direccion, tipo_tramite, propietario_nuevo, nuevo_documento,
-      tipo_venta, cuantia, porcentaje_compra, valor_compra, observaciones, fecha_registro, usuario, 
-      tipo_certificado, numero_serie, fecha_adquisicion_anterior, valor_avaluo_anterior, sup_total_adquirida, 
+      tipo_venta, cuantia, porcentaje_compra, valor_compra, observaciones, fecha_registro, usuario,
+      tipo_certificado, numero_serie, fecha_adquisicion_anterior, valor_avaluo_anterior, sup_total_adquirida,
       sup_transfiere, fecha_pos_def, valor_avaluo_pos_def, valor_const_pos_def, valor_otros_pos_def
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
@@ -62,38 +64,49 @@ async function insertaCertificado(data) {
       $39, $40, $41, $42, $43
     ) RETURNING *
   `;
+
   const values = [
-    data.tipo_predio, data.ph, data.clave_catastral, data.clave_anterior, data.parroquia, data.numero_documento,
-    data.alicuota, data.porcentaje_participacion, data.area_suelo_porcentual, data.area_construcciones_porcentual,
-    data.valor_suelo_porcentual, data.valor_construcciones_porcentual, data.valor_instalaciones_porcentual,
-    data.valor_adicionales_porcentual, data.avaluo_predio_porcentual, data.anio_proceso, data.id_tenencia_propiedad,
-    data.id_predio, data.propietario, data.fecha_proceso, data.nombre_canton, data.nombre_parroquia, data.direccion,
-    (data.tipo_tramite || '').toString().replace(/[{}]/g, ''), data.propietario_nuevo, data.nuevo_documento,
-    (data.tipo_venta || '').toString().replace(/[{}]/g, ''), data.cuantia, data.porcentaje_compra, data.valor_compra,
-    data.observaciones, new Date(), data.usuario, data.tipo_certificado, nuevoNumeroSerie, data.fecha_adquisicion_anterior,
-    data.valor_avaluo_anterior, data.sup_total_adquirida, data.sup_transfiere, data.fecha_pos_def,
-    data.valor_avaluo_pos_def, data.valor_const_pos_def, data.valor_otros_pos_def
+    normalizar(data.tipo_predio, 'numero'), normalizar(data.ph), normalizar(data.clave_catastral),
+    normalizar(data.clave_anterior), normalizar(data.parroquia, 'numero'), normalizar(data.numero_documento),
+    normalizar(data.alicuota, 'numero'), normalizar(data.porcentaje_participacion, 'numero'),
+    normalizar(data.area_suelo_porcentual, 'numero'), normalizar(data.area_construcciones_porcentual, 'numero'),
+    normalizar(data.valor_suelo_porcentual, 'numero'), normalizar(data.valor_construcciones_porcentual, 'numero'),
+    normalizar(data.valor_instalaciones_porcentual, 'numero'), normalizar(data.valor_adicionales_porcentual, 'numero'),
+    normalizar(data.avaluo_predio_porcentual, 'numero'), normalizar(data.anio_proceso, 'numero'),
+    normalizar(data.id_tenencia_propiedad, 'numero'), normalizar(data.id_predio, 'numero'),
+    normalizar(data.propietario), parseFecha(data.fecha_proceso), normalizar(data.nombre_canton),
+    normalizar(data.nombre_parroquia), normalizar(data.direccion),
+    (normalizar(data.tipo_tramite) || '').toString().replace(/[{}]/g, ''),
+    normalizar(data.propietario_nuevo), normalizar(data.nuevo_documento),
+    (normalizar(data.tipo_venta) || '').toString().replace(/[{}]/g, ''),
+    normalizar(data.cuantia, 'numero'), normalizar(data.porcentaje_compra, 'numero'),
+    normalizar(data.valor_compra, 'numero'), normalizar(data.observaciones),
+    new Date(), normalizar(data.usuario), normalizar(data.tipo_certificado), nuevoNumeroSerie,
+    parseFecha(data.fecha_adquisicion_anterior), normalizar(data.valor_avaluo_anterior, 'numero'),
+    normalizar(data.sup_total_adquirida, 'numero'), normalizar(data.sup_transfiere, 'numero'),
+    parseFecha(data.fecha_pos_def), normalizar(data.valor_avaluo_pos_def, 'numero'),
+    normalizar(data.valor_const_pos_def, 'numero'), normalizar(data.valor_otros_pos_def, 'numero')
   ];
 
   try {
     console.log('Valores a insertar:', values);
     const result = await db.query(query, values);
-    return result.rows[0]; // Devolver el registro insertado
+    return result.rows[0];
   } catch (err) {
     let errorMessage = 'Error ejecutando la consulta';
     if (err.code) {
       switch (err.code) {
-        case '23505': // unique_violation
+        case '23505':
           errorMessage = 'Error: Valor duplicado viola la restricción de unicidad';
           break;
-        case '23503': // foreign_key_violation
-          errorMessage = 'Error: Violación de clave foránea';
+        case '23503':
+          errorMessage = `Error: Violación de clave foránea (${err.detail})`;
           break;
-        case '23502': // not_null_violation
-          errorMessage = `Error: Valor nulo en la columna ${err.column} viola la restricción not-null`;
+        case '23502':
+          errorMessage = `Error: Valor nulo en la columna '${err.column}' viola la restricción NOT NULL`;
           break;
-        case '22P02': // invalid_text_representation
-          errorMessage = 'Error: Sintaxis de entrada no válida para entero';
+        case '22P02':
+          errorMessage = 'Error: Sintaxis de entrada no válida (esperaba número y recibió texto)';
           break;
         default:
           errorMessage = `Error de base de datos: ${err.message}`;
@@ -101,7 +114,10 @@ async function insertaCertificado(data) {
     } else {
       errorMessage = `Error ejecutando la consulta: ${err.stack}`;
     }
-    console.error(errorMessage);
+
+    console.error('==== ERROR INSERTANDO CERTIFICADO ====');
+    console.error('Mensaje de error:', errorMessage);
+    console.error('Datos recibidos que causaron el error:', data);
     throw new Error(errorMessage);
   }
 }
