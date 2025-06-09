@@ -16,7 +16,7 @@
                 item-text="title"
                 item-value="id"
                 required
-                @click ="onPredioSeleccionado"              
+                @update:model-value="onPredioSeleccionado"
               ></v-autocomplete>
             </v-col>
             <v-col cols="12">
@@ -27,12 +27,21 @@
               ></v-textarea>
             </v-col>
             <v-col cols="12">
+              <v-text-field
+                v-model="form.nombre"
+                label="Nombre del Documento (*)"
+                required                
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
               <input                
                 type="file"
                 @change="cargarArchivo"
                 accept=".pdf, .doc, .docx, .jpg, .png"
                 required
+                :class="{'is-invalid': !form.documento && valid}"
               />
+              <span v-if="!form.documento && valid" class="error--text">Debe cargar un archivo</span>
             </v-col>
           </v-row>
         </v-form>
@@ -41,7 +50,7 @@
             <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-plus" v-if="canEdit">Nuevo</v-btn>
             <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-check" @click="guardar" v-if="canEdit">Guardar</v-btn>
             <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-pencil" v-if="canEdit">Actualizar</v-btn>
-            <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-delete" v-if="canEdit">Eliminar</v-btn>
+            <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-delete" v-if="canEdit" @click="eliminar">Eliminar</v-btn>
             <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-exit-to-app" @click="salir">Salir</v-btn>
           </v-btn-toggle>
         </v-row>
@@ -65,7 +74,8 @@ export default {
         descripcion: '',
         fecha_registro: '',
         documento: null,
-        id_predio: null
+        id_predio: null,
+        nombre: ''
       },
       idPredio: null,
       selectedClaveCatastral: '',
@@ -79,6 +89,11 @@ export default {
 
   async mounted() {
     this.clavesCatastrales = await this.recuperaClaves();   
+    // Si viene id_documentos por query, cargar el documento
+    const idDocumento = this.$route.query.id_documentos;
+    if (idDocumento) {
+      this.cargarDocumentoPorId(idDocumento);
+    }
   },
 
   computed: {
@@ -133,6 +148,7 @@ export default {
           documento: this.form.documento, // Documento en Base64
           id_predio: this.form.id_predio,
           digitador: this.userName,
+          nombre: this.form.nombre
         };
 
         try {
@@ -154,7 +170,8 @@ export default {
         descripcion: '',
         fecha_registro: '',
         documento: null,
-        id_predio: null
+        id_predio: null,
+        nombre: ''
       };
       this.$refs.form.reset();
     },
@@ -164,19 +181,76 @@ export default {
       if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          this.form.documento = e.target.result.split(',')[1]; // Convertir a Base64 y almacenar
+          const result = e.target.result;
+          // Guarda solo el contenido base64 (sin encabezado)
+          this.form.documento = result.split(',')[1];
+          this.form.tipo = file.type;            // Mime type
+          this.form.tamanio = file.size;         // Tamaño
+          console.log('Base64 (inicio):', this.form.documento.slice(0, 100));
         };
-        reader.readAsDataURL(file); // Leer el archivo como Data URL
+        reader.readAsDataURL(file); // Lee como Data URL
       }
     },
 
-    async onPredioSeleccionado() {
-      console.log('Predio seleccionado:', this.form.id_predio);
+    onPredioSeleccionado(value) {
+      this.form.id_predio = value;
+      const clave = this.clavesCatastrales.find(item => item.id === value)?.title || '';
+      if (clave) {
+        this.form.nombre = clave; // Solo la clave, sin guion bajo ni texto adicional
+      }
+      console.log('Predio seleccionado:', value);
     },
 
     salir() {
       this.$router.push('/menu-predial'); 
-    }   
+    },
+
+    async cargarDocumentoPorId(id) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/documento_by_id/${id}`);
+        const doc = response.data;
+        console.log('Documento cargado:', doc);
+        if (doc) {
+          this.form.descripcion = doc.descripcion || '';
+          this.form.fecha_registro = doc.fecha_registro || '';
+          this.form.documento = doc.documento || null;
+          this.form.id_predio = doc.id_predio || null;
+          this.form.nombre = doc.nombre || '';
+          // Si tienes más campos, agrégalos aquí
+        }
+      } catch (error) {
+        console.error('Error al cargar el documento por ID:', error);
+        this.snackbarErrorMessage = 'Error al cargar el documento';
+        this.snackbarError = true;
+      }
+    },
+
+    async eliminar() {
+      const idDocumento = this.$route.query.id_documentos;
+      if (!idDocumento) {
+        this.snackbarErrorMessage = 'No hay documento seleccionado para eliminar';
+        this.snackbarError = true;
+        return;
+      }
+      this.snackbarMessage = '¿Está seguro de que desea eliminar este documento?';
+      this.snackbar = true;
+      // Esperar confirmación del usuario usando un setTimeout y luego eliminar
+      setTimeout(async () => {
+        if (window.confirm('¿Está seguro de que desea eliminar este documento?')) {
+          try {
+            await axios.delete(`${API_BASE_URL}/elimina_documento_by_id/${idDocumento}`);
+            this.snackbarMessage = 'Documento eliminado con éxito';
+            this.snackbar = true;
+            this.resetForm();
+            this.$router.push('/listado-documental');
+          } catch (error) {
+            console.error('Error al eliminar el documento:', error);
+            this.snackbarErrorMessage = 'Error al eliminar el documento';
+            this.snackbarError = true;
+          }
+        }
+      }, 100);
+    }
 
   },
 

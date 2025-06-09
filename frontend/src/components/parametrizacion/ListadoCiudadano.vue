@@ -1,5 +1,14 @@
 <template>
-  <v-container class="container">
+  <v-container class="container" style="position: relative;">
+    <!-- Máscara de carga centrada -->
+    <v-overlay :model-value="loading" class="d-flex align-center justify-center" persistent z-index="2000">
+      <v-card class="pa-4 text-center" color="#F1ECE7">
+        <v-progress-circular indeterminate color="primary" size="50" class="mb-2" />
+        <div aria-live="polite">Cargando ciudadanos, por favor espere...</div>
+      </v-card>
+    </v-overlay>
+
+    <!-- Contenido principal -->
     <v-row justify="center">
       <v-col cols="12" class="text-center">
         <h2 class="titulo-pantalla">Listado de Ciudadanos</h2>
@@ -12,6 +21,14 @@
             :items="ciudadanos"
             :search="search"
             class="elevation-1"
+            :items-per-page="10"
+            :footer-props="{
+              'items-per-page-options': [10, 20, 50, 100],
+              'items-per-page-text': 'Filas por página',
+              'show-current-page': true,
+              'show-first-last-page': true,
+              'show-total': true
+            }"
           >
             <template v-slot:top>
               <v-toolbar flat>
@@ -19,9 +36,8 @@
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-col cols="auto">
-                  <v-btn class="custom-text-color"  @click="recargarDatos">Recargar Datos</v-btn>
-                  <v-btn class="custom-text-color"  @click="salir">Salir</v-btn>
-
+                  <v-btn class="custom-text-color" @click="recargarDatos">Recargar Datos</v-btn>
+                  <v-btn class="custom-text-color" @click="salir">Salir</v-btn>
                 </v-col>
                 <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
@@ -35,7 +51,6 @@
               </v-toolbar>
             </template>
 
-            <!-- Renderizar manualmente las filas -->
             <template v-slot:item="{ item }">
               <tr :class="{ 'selected-row': item.id_ciudadano === selectedCiudadanoId }">
                 <td>
@@ -55,12 +70,19 @@
                 <td>{{ item.estado_civil }}</td>
               </tr>
             </template>
+
+            <template v-slot:footer.page-text="{ pageStart, pageStop, itemsLength }">
+              <div class="text-caption pa-2">
+                Mostrando {{ pageStart }} - {{ pageStop }} de {{ itemsLength }} ciudadanos
+              </div>
+            </template>
           </v-data-table>
         </v-col>
       </v-row>
     </v-row>
   </v-container>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -74,8 +96,9 @@ export default {
       search: '',
       ciudadanos: [],
       selectedCiudadanoId: null,
+      loading: false,
       headers: [
-        { title: 'Acción', value: 'action', sortable: false }, // Acción para el botón de editar
+        { title: 'Acción', value: 'action', sortable: false },
         { title: 'Id', value: 'id_ciudadano' },
         { title: 'Nombres', value: 'nombres' },
         { title: 'Número de Documento', value: 'numero_documento' },
@@ -103,16 +126,20 @@ export default {
     // Método para recargar los datos de la tabla
     async recargarDatos() {
       try {
+        this.loading = true;
         console.log('Recargando datos...');
         await this.cargaDatos();
       } catch (error) {
         console.error('Error al recargar los datos:', error);
+      } finally {
+        this.loading = false;
       }
     },
 
     // Método para obtener los ciudadanos
     async cargaDatos() {
       console.log('Cargando datos...');
+      this.loading = true;
       const { nombres, numero_documento, tipo_persona, tipo_docuemnto } = this.$route.query;
       try {
         const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano`, {
@@ -127,6 +154,8 @@ export default {
         console.log('Datos obtenidos:', this.ciudadanos);
       } catch (error) {
         console.error('Error al obtener el listado de ciudadanos:', error);
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -171,4 +200,10 @@ export default {
   background-color: #223770;
   color: #ffffff;
 }
+
+.v-overlay__content {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+}
+
 </style>

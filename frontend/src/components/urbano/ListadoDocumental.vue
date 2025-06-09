@@ -45,6 +45,10 @@
             </v-toolbar>
           </template>
 
+          <template v-slot:item.nombre="{ item }">
+            {{ item.nombre }}
+          </template>
+
           <template v-slot:item.fecha_registro="{ item }">
             {{ formatFecha(item.fecha_registro) }}
           </template>
@@ -60,6 +64,12 @@
               @click="descargarDocumento(item.documento, `documento_${item.id_documento || 'descarga'}.pdf`)"
             >
               <v-icon>mdi-download</v-icon>
+            </v-btn>
+          </template>
+
+          <template v-slot:item.id_documentos="{ item }">
+            <v-btn variant="text" color="primary" @click="irAGestionDocumental(item.id_documentos)">
+              {{ item.id_documentos }}
             </v-btn>
           </template>
         </v-data-table>
@@ -79,13 +89,13 @@ export default {
       search: '',
       documentos: [],
       loading: false,
-      headers: [
-        { title: 'Descargar', value: 'documento', sortable: false },
+      headers: [                
+        { title: 'ID', value: 'id_documentos'},
+        { title: 'Nombre', value: 'nombre'},
         { title: 'Descripción', value: 'descripcion' },
         { title: 'Fecha Registro', value: 'fecha_registro' },
         { title: 'Digitador', value: 'digitador' },
-        { title: 'Actualizador', value: 'actualizador' },
-        { title: 'Fecha Actualización', value: 'fecha_actualizacion_aud' },
+        { title: 'Descargar', value: 'documento', sortable: false },
       ],
     };
   },
@@ -120,38 +130,40 @@ export default {
     navigateToMenuUrbano() {
       this.$router.push('/menu-predial');
     },
+
     descargarDocumento(documentoData, nombre = 'documento.pdf') {
       try {
-        let base64String = '';
-
-        // Si es un objeto tipo Buffer del backend, conviértelo
-        if (typeof documentoData === 'object' && documentoData.data) {
-          const byteArray = new Uint8Array(documentoData.data);
-          base64String = btoa(
-            byteArray.reduce((data, byte) => data + String.fromCharCode(byte), '')
-          );
-        } else if (typeof documentoData === 'string') {
-          base64String = documentoData;
-        } else {
-          throw new Error('Formato de documento no reconocido');
+        // Validación básica
+        if (!documentoData || typeof documentoData !== 'string') {
+          throw new Error('El documento no es una cadena base64 válida');
         }
 
-        const byteCharacters = atob(base64String);
-        const byteNumbers = Array.from(byteCharacters, char => char.charCodeAt(0));
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+        // Detectar el tipo MIME por la extensión
+        const extension = nombre.split('.').pop().toLowerCase();
+        let mimeType = 'application/octet-stream';
+        if (extension === 'pdf') mimeType = 'application/pdf';
+        if (extension === 'jpg' || extension === 'jpeg') mimeType = 'image/jpeg';
+        if (extension === 'png') mimeType = 'image/png';
+        if (extension === 'doc') mimeType = 'application/msword';
+        if (extension === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
+        // Crear el enlace para descarga con encabezado base64
+        const dataUrl = `data:${mimeType};base64,${documentoData}`;
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
+        link.href = dataUrl;
         link.download = nombre;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
       } catch (err) {
         console.error('Error al descargar documento:', err);
       }
     },
+
+    irAGestionDocumental(id) {
+      this.$router.push({ path: '/gestion-documental', query: { id_documentos: id } });
+    },   
+
   },
   mounted() {
     this.cargarDocumentos();

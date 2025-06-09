@@ -5,15 +5,24 @@ const db = require('../config');
 const insertaDocumento = async (data) => {
   const query = `
     INSERT INTO public.catastro_documentos (
-      descripcion, fecha_registro, documento, id_predio, digitador, actualizador, 
+      descripcion, fecha_registro, documento, id_predio, digitador, actualizador,
       fecha_actualizacion_aud, nombre, tipo, tamanio
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
     ) RETURNING id_documentos;
   `;
+  
   const values = [
-    data.descripcion, data.fecha_registro, data.documento, data.id_predio, data.digitador, 
-    data.actualizador, data.fecha_actualizacion_aud, data.nombre, data.tipo, data.tamanio
+    data.descripcion,
+    data.fecha_registro,
+    data.documento,                  // base64 plano como texto
+    data.id_predio,
+    data.digitador,
+    data.actualizador || data.digitador,
+    data.fecha_actualizacion_aud || data.fecha_registro,
+    data.nombre,
+    data.tipo || 'application/pdf',
+    data.tamanio || 0
   ];
 
   try {
@@ -40,18 +49,42 @@ const obtieneDocumentoById = async (id) => {
 };
 
 // Función para obtener todos los documentos
+// Función para obtener todos los documentos
 const obtieneDocumentos = async () => {
   const query = `
-    SELECT * FROM public.catastro_documentos;
+    SELECT 
+      id_documentos,
+      descripcion,
+      fecha_registro,
+      id_predio,
+      digitador,
+      actualizador,
+      fecha_actualizacion_aud,
+      nombre,
+      tipo,
+      tamanio,
+      documento
+    FROM public.catastro_documentos;
   `;
+
   try {
     const result = await db.query(query);
-    return result.rows;
+
+    // Convertir campo documento a base64
+    const documentos = result.rows.map(doc => ({
+      ...doc,
+      documento: doc.documento
+        ? Buffer.from(doc.documento).toString('base64')
+        : null, // evitar errores si está vacío
+    }));
+
+    return documentos;
   } catch (err) {
     console.error('Error al obtener los documentos:', err);
     throw err;
   }
 };
+
 
 // Función para actualizar un documento por su ID
 const actualizaDocumento = async (id, data) => {

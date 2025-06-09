@@ -60,12 +60,12 @@ router.beforeEach((to, from, next) => {
       next({ path: '/login', query: { redirect: to.fullPath } });
     } else {
       // Validación por menú
-      console.log('Acceso permitido a la ruta:', to.path);
+      /*console.log('Acceso permitido a la ruta:', to.path);
       console.log('Permiso Urbano:', store.getters.canAccessUrbanoMenu);
       console.log('Permiso Rural:', store.getters.canAccessRuralMenu);
       console.log('Permiso Admin:', store.getters.isAdmin);
       console.log('Permiso Valor Urb:', store.getters.canAccessValoracionUrb);
-      console.log('Permiso Valor Rur:', store.getters.canAccessValoracionRur);
+      console.log('Permiso Valor Rur:', store.getters.canAccessValoracionRur);*/
 
       if (to.path.includes('/menu-predial') && !store.getters.canAccessUrbanoMenu) {
         return next('/menu-ingreso');
