@@ -427,17 +427,17 @@ export default {
       const tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
       try {
         this.tipoPiso = await this.cargaCatalogo(3,0);         
-        this.condicionFisica = await this.cargaCatalogo(28,tipoPredioFlag);
+        this.condicionFisica = await this.cargaCatalogo(99,tipoPredioFlag);
         this.estadoConservacion = await this.cargaCatalogo(27,tipoPredioFlag); 
         this.ocupacionBloque = await this.cargaCatalogo(30,tipoPredioFlag);
         this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag);
-        this.estructura = await this.cargaCatalogo(35,tipoPredioFlag); 
+        this.estructura = await this.cargaCatalogo(84,tipoPredioFlag); 
         this.paredes = await this.cargaCatalogo(36,tipoPredioFlag); 
         this.cubierta = await this.cargaCatalogo(37,tipoPredioFlag);
         this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);
-        this.revParedes = await this.cargaCatalogo(38,tipoPredioFlag);
-        this.revCubierta = await this.cargaCatalogo(39,tipoPredioFlag);
-        this.ventanas = await this.cargaCatalogo(81,tipoPredioFlag);
+        this.revParedes = await this.cargaCatalogo(89,tipoPredioFlag);
+        this.revCubierta = await this.cargaCatalogo(90,tipoPredioFlag);
+        this.ventanas = await this.cargaCatalogo(40,tipoPredioFlag);
         this.vidrios = await this.cargaCatalogo(42,tipoPredioFlag);
         this.puertas = await this.cargaCatalogo(41,tipoPredioFlag);
       } catch (error) {
