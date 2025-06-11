@@ -96,11 +96,15 @@ export default {
   },
   methods: {
     ingresoUrbano() {
+      console.log('Ingreso a Urbano');
+      console.log('Tipo de predio:', this.$store.state.tipoPredio);
       this.$store.commit('setTipoPredio', 1);
       this.$router.push('/menu-predial');
       
     },
     ingresoRural() {
+      console.log('Ingreso a Rural');
+      console.log('Tipo de predio:', this.$store.state.tipoPredio);
       this.$store.commit('setTipoPredio', 2);
       this.$router.push('/menu-predial');
     }
@@ -111,6 +115,8 @@ export default {
     console.log('Tipo primario:', this.userTypePrimario);
     console.log('Tipo secundario:', this.userTypeSecundario);
     console.log('Es admin:', this.userAdmin);
+    console.log('Permiso acceso urbano:', this.canAccessUrbano);
+    console.log('Permiso acceso rural:', this.canAccessRural);
   }
 };
 </script>

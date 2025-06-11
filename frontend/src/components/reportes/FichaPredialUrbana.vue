@@ -439,7 +439,7 @@ export default {
         // Método para recuperar los datos del predio desde la API
         async recuperaDatosPredio(idPredio) {
             try {
-                const response = await axios.get(`http://localhost:3001/api/ficha_predio/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/ficha_predio/${idPredio}`);
                 const predioFicha=response.data; 
                 console.log('Datos del predio:', predioFicha);                
                 this.form = {
@@ -517,7 +517,7 @@ export default {
                     console.log('idPredio no está definido, no es una cadena de texto o está vacío');
                     return;
                 }
-                const response = await axios.get(`http://localhost:3001/api/ficha_tenencia/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/ficha_tenencia/${idPredio}`);
                 this.tenenciasFicha = response.data;
             } catch (error) {
                 console.warn('Datos de tenencia faltantes para el predio:', idPredio);
@@ -533,7 +533,7 @@ export default {
                     console.log('idPredio no está definido, no es una cadena de texto o está vacío');
                     return;
                 }
-                const response = await axios.get(`http://localhost:3001/api/ficha_bloques/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/ficha_bloques/${idPredio}`);
                 this.bloquesFicha = response.data;
             } catch (error) {
                 console.warn('Datos de bloques faltantes para el predio:', idPredio);
@@ -549,7 +549,7 @@ export default {
                     console.log('idPredio no está definido, no es una cadena de texto o está vacío');
                     return;
                 }
-                const response = await axios.get(`http://localhost:3001/api/ficha_mejoras/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/ficha_mejoras/${idPredio}`);
                 this.mejorasFicha = response.data;
             } catch (error) {
                 console.warn('Datos de mejoras faltantes para el predio:', idPredio);
@@ -565,7 +565,7 @@ export default {
                     console.log('idPredio no está definido, no es una cadena de texto o está vacío');
                     return;
                 }
-                const response = await axios.get(`http://localhost:3001/api/ficha_vias/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/ficha_vias/${idPredio}`);
                 this.viasFicha = response.data;
             } catch (error) {
                 console.warn('Datos de vías faltantes para el predio:', idPredio);
@@ -576,7 +576,7 @@ export default {
         // Método para recuperar los datos del predio desde la API
         async recuperaDatosValoracion(idPredio) {
             try {
-                const response = await axios.get(`http://localhost:3001/api/patrimonio-urbano/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano/${idPredio}`);
                 const patrimonioFicha = response.data; 
                 console.log('Datos del predio:', patrimonioFicha);                
                 this.form = {
@@ -600,7 +600,7 @@ export default {
         // Método para recuperar la foto del predio desde la API
         async recuperaFotos(idPredio) {      
             try {
-                const response = await axios.get(`http://localhost:3001/api/fotos_by_idPredio/${idPredio}`);
+                const response = await axios.get(`${API_BASE_URL}/fotos_by_idPredio/${idPredio}`);
                 const data = response.data;
                 if (data.length > 0) {
                 const fotosPredio = data[0];                    

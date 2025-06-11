@@ -17,7 +17,7 @@
     <!-- Contenido principal -->
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">Listado de Predios Urbanos</h2>
+        <h2 class="titulo-pantalla">Listado de Predios</h2>
       </v-col>
       <v-col cols="12" class="d-flex justify-center flex-wrap">
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-plus" @click="navigateToFormFichaPredial">Nuevo</v-btn>

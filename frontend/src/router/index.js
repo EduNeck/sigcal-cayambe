@@ -67,10 +67,11 @@ router.beforeEach((to, from, next) => {
       console.log('Permiso Valor Urb:', store.getters.canAccessValoracionUrb);
       console.log('Permiso Valor Rur:', store.getters.canAccessValoracionRur);*/
 
-      if (to.path.includes('/menu-predial') && !store.getters.canAccessUrbanoMenu) {
+      // Permitir acceso a /menu-predial si el usuario es urbano o rural
+      if (to.path.includes('/menu-predial') && !(store.getters.canAccessUrbanoMenu || store.getters.canAccessRuralMenu)) {
         return next('/menu-ingreso');
       }
-      if (to.path.includes('/menu-rural') && !store.getters.canAccessRuralMenu) {
+      if (to.path.includes('/menu-predial') && !store.getters.canAccessRuralMenu) {
         return next('/menu-ingreso');
       }
       if (to.path.includes('/menu-admin') && !store.getters.isAdmin) {

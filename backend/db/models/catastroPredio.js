@@ -76,8 +76,8 @@ const updateCatastroPredio = async (id, data) => {
           id_prov = $5, id_can = $6, id_par = $7, cod_zon = $8, cod_sec = $9,
           cod_pol_man = $10, cod_pred = $11, cod_uni = $12, cod_bloq = $13, id_tipo_piso = $14, cod_piso = $15,
           alicuota = $16, area_terreno = $17, area_comun_terreno = $18, id_unidad_area = $19, area_individual_construida = $20,
-          area_comun_construida = $21, eje_principal = $22, eje_secundario = $23, sector = $24, fecha_actualizacion = $25, actualizador = $26, direccion_principal = $28
-      WHERE id_predio = $29
+          area_comun_construida = $21, eje_principal = $22, eje_secundario = $23, sector = $24, fecha_actualizacion = $25, actualizador = $26, direccion_principal = $27
+      WHERE id_predio = $28
       RETURNING *;
     `;
     const values = [

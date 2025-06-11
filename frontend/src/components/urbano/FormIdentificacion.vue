@@ -533,14 +533,44 @@ export default {
         id_regimen_propiedad: this.form.id_regimen_propiedad,
         clave_catastral: this.form.clave_catastral,
         fecha_registro: fechaRegistro,
+        id_prov: this.form.id_prov && this.form.id_prov !== '' ? this.form.id_prov : '17',
+        id_can: this.form.id_can && this.form.id_can !== '' ? this.form.id_can : '1702',
+        id_par: this.form.id_par || 0,
+        cod_zon: this.form.cod_zon || 0,
+        cod_sec: this.form.cod_sec || 0,
+        cod_pol_man: this.form.cod_pol_man || 0,
+        cod_pred: this.form.cod_pred || 0,
+        cod_uni: this.form.cod_uni || 0,
+        cod_bloq: this.form.cod_bloq || 0,
+        id_tipo_piso: this.form.id_tipo_piso || 5,
+        cod_piso: this.form.cod_piso || 0,
+        alicuota: this.form.alicuota || 0,
+        area_terreno: this.form.area_terreno || 0,
+        area_comun_terreno: this.form.area_comun_terreno || 0,
+        id_unidad_area: this.form.id_unidad_area || 22,
+        area_individual_construida: this.form.area_individual_construida || 0,
+        area_comun_construida: this.form.area_comun_construida || 0,
+        eje_principal: this.form.eje_principal || '',
+        eje_secundario: this.form.eje_secundario || '',
+        sector: this.form.sector || '',
+        area_grafica: this.form.area_grafica ||  0,
+        direccion_principal: this.form.direccion_principal || ''
         // Otros campos necesarios
       };
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/inserta_predio`, nuevoPredio);
+        const response = await axios.post(`${API_BASE_URL}/inserta_identificacion_predio`, nuevoPredio);
         console.log('Predio guardado con éxito:', response.data);
         this.snackbarOk = 'Predio guardado con éxito';
         this.snackbarOkPush = true;
+        // Guardar el id del predio en la variable global idPredio si viene en la respuesta
+        if (response.data && response.data.id) {
+          this.idPredio = response.data.id;
+          this.updateIdPredio(response.data.id);
+          console.log('Respuesta recibida del backend:', response.data);
+
+        }
+
       } catch (error) {
         console.error('Error al guardar el predio:', error);
         this.snackbarError = 'Error al guardar el predio';
@@ -716,6 +746,8 @@ export default {
     nuevoRegistro() {
       this.idPredio = null;
       this.limpiarCampos();
+      this.fotoRecuperadaUrl = '';
+      this.croquisUrl = '';
     },
 
     // Actualizar clave catastral
@@ -823,15 +855,38 @@ export default {
 
     // Método para copiar al portapapeles
     copiaClaveCatastral(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        this.snackbarOk = 'Clave catastral copiada al portapapeles';
-        this.snackbarOkPush = true;
-      }).catch(err => {
-        console.error('Error al copiar al portapapeles:', err);
-        this.snackbarError = 'Error al copiar al portapapeles';
-        this.snackbarErrorPush = true;
-      });
-    },
+      if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(text).then(() => {
+          this.snackbarOk = 'Clave catastral copiada al portapapeles';
+          this.snackbarOkPush = true;
+        }).catch(err => {
+          console.error('Error al copiar al portapapeles:', err);
+          this.snackbarError = 'No se pudo copiar la clave al portapapeles';
+          this.snackbarErrorPush = true;
+        });
+      } else {
+        // Alternativa de respaldo con execCommand
+        try {
+          const input = document.createElement('input');
+          input.setAttribute('value', text);
+          document.body.appendChild(input);
+          input.select();
+          const success = document.execCommand('copy');
+          document.body.removeChild(input);
+          if (success) {
+            this.snackbarOk = 'Clave catastral copiada al portapapeles (modo alternativo)';
+            this.snackbarOkPush = true;
+          } else {
+            throw new Error('Fallback copy failed');
+          }
+        } catch (err) {
+          console.error('Error alternativo al copiar:', err);
+          this.snackbarError = 'Copiado no soportado en este navegador';
+          this.snackbarErrorPush = true;
+        }
+      }
+    },  
+
 
     // Eliminar predio
     async eliminar() {

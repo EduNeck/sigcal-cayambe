@@ -1,4 +1,5 @@
 import axios from 'axios';
+import API_BASE_URL from '@/config/apiConfig';
 
 export async function generarUrlCroquis(claveCatastral, margenZoom = 10) {
   if (!claveCatastral) {
@@ -7,7 +8,7 @@ export async function generarUrlCroquis(claveCatastral, margenZoom = 10) {
   }
 
   try {
-    const resp = await axios.get(`http://localhost:3001/api/bbox_predio/${claveCatastral}`);
+    const resp = await axios.get(`${API_BASE_URL}/bbox_predio/${claveCatastral}`);
     const { xmin, ymin, xmax, ymax } = resp.data;
 
     if (
@@ -37,6 +38,7 @@ export async function generarUrlCroquis(claveCatastral, margenZoom = 10) {
     const newMaxY = centerY + halfSide + margenZoom;
 
     const bbox = `${newMinX},${newMinY},${newMaxX},${newMaxY}`;
+    const baseUrl = import.meta.env.VITE_GEOSERVER_URL;
 
     const capas = [
       'sigcal:geo_manzana_poligono',
@@ -56,7 +58,7 @@ export async function generarUrlCroquis(claveCatastral, margenZoom = 10) {
       'include'
     ].join(';');
 
-    const baseUrl = import.meta.env.VITE_GEOSERVER_URL;
+
 
     return `${baseUrl}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${capas}&cql_filter=${filtros}&styles=&bbox=${bbox}&width=600&height=400&srs=EPSG:32717&format=image/png&_t=${Date.now()}`;
   } catch (error) {
