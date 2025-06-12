@@ -112,8 +112,8 @@
               label="Zona"              
               v-model="form.cod_zon"
               type="number"
-              :rules="[v => !!v && v >= 1 && v <= 99 || 'Debe ser un número entre 1 y 99']"
-              maxlength="2" @input="actualizaClaveCatastral"
+              :rules="[v => !!v && v >= 1 && v <= 9 || 'Debe ser un número entre 1 y 9']"
+              maxlength="1" @input="actualizaClaveCatastral"
               @keypress="limitDigits($event, 1)"
             ></v-text-field>
           </v-col>
@@ -122,8 +122,8 @@
               label="Sector"              
               v-model="form.cod_sec"
               type="number"
-              :rules="[v => !!v && v >= 1 && v <= 99 || 'Debe ser un número entre 1 y 99']"
-              maxlength="2" @input="actualizaClaveCatastral"
+              :rules="[v => !!v && v >= 1 && v <= 9 || 'Debe ser un número entre 1 y 9']"
+              maxlength="1" @input="actualizaClaveCatastral"
               @keypress="limitDigits($event, 1)">
             </v-text-field>
           </v-col>
@@ -531,7 +531,7 @@ export default {
       const nuevoPredio = {
         id_tipo_predio: this.form.id_tipo_predio,
         id_regimen_propiedad: this.form.id_regimen_propiedad,
-        clave_catastral: this.form.clave_catastral,
+        //clave_catastral: this.form.clave_catastral,
         fecha_registro: fechaRegistro,
         id_prov: this.form.id_prov && this.form.id_prov !== '' ? this.form.id_prov : '17',
         id_can: this.form.id_can && this.form.id_can !== '' ? this.form.id_can : '1702',
@@ -593,8 +593,7 @@ export default {
       const detalle_json = { 
         id_tipo_predio: this.form.id_tipo_predio,
         id_regimen_propiedad: this.form.id_regimen_propiedad,
-        clave_catastral_anterior: this.form.clave_catastral_anterior,
-        clave_catastral: this.form.clave_catastral,
+        clave_catastral_anterior: this.form.clave_catastral_anterior,        
         id_prov: this.form.id_prov,
         id_can: this.form.id_can,
         id_par: this.form.id_par,

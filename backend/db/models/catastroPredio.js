@@ -5,18 +5,18 @@ const db = require('../config');
 const insertaIdentificacionPredio = async (data) => {
   const query = `
     INSERT INTO public.catastro_predio (id_tipo_predio, id_regimen_propiedad, clave_catastral_anterior, 
-      clave_catastral, id_prov, id_can, id_par, cod_zon, cod_sec, cod_pol_man, cod_pred, cod_uni, cod_bloq, 
+      id_prov, id_can, id_par, cod_zon, cod_sec, cod_pol_man, cod_pred, cod_uni, cod_bloq, 
       id_tipo_piso, cod_piso, alicuota, area_terreno, area_comun_terreno, id_unidad_area, 
       area_individual_construida, area_comun_construida, eje_principal, eje_secundario, sector, digitador, 
       fecha_registro, direccion_principal
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 
-      $20, $21, $22, $23, $24, $25, $26, $27
+      $20, $21, $22, $23, $24, $25, $26
     )
     RETURNING id_predio;
   `;
   const values = [
-    data.id_tipo_predio, data.id_regimen_propiedad, data.clave_catastral_anterior, data.clave_catastral,
+    data.id_tipo_predio, data.id_regimen_propiedad, data.clave_catastral_anterior,
     data.id_prov, data.id_can, data.id_par, data.cod_zon, data.cod_sec, data.cod_pol_man, 
     data.cod_pred, data.cod_uni, data.cod_bloq, data.id_tipo_piso, data.cod_piso, data.alicuota, 
     data.area_terreno, data.area_comun_terreno, data.id_unidad_area, data.area_individual_construida,
@@ -45,7 +45,7 @@ const insertaIdentificacionPredio = async (data) => {
     let errorMessage = 'Error ejecutando la consulta';
     if (err.code) {
       switch (err.code) {
-        case '23505': // unique_violation
+        case '23505':
           errorMessage = 'Error: Valor duplicado viola la restricción de unicidad';
           break;
         case '23503': // foreign_key_violation
@@ -72,30 +72,70 @@ const insertaIdentificacionPredio = async (data) => {
 const updateCatastroPredio = async (id, data) => {
     const query = `
       UPDATE public.catastro_predio
-      SET id_tipo_predio = $1, id_regimen_propiedad = $2, clave_catastral_anterior = $3, clave_catastral = $4,
-          id_prov = $5, id_can = $6, id_par = $7, cod_zon = $8, cod_sec = $9,
-          cod_pol_man = $10, cod_pred = $11, cod_uni = $12, cod_bloq = $13, id_tipo_piso = $14, cod_piso = $15,
-          alicuota = $16, area_terreno = $17, area_comun_terreno = $18, id_unidad_area = $19, area_individual_construida = $20,
-          area_comun_construida = $21, eje_principal = $22, eje_secundario = $23, sector = $24, fecha_actualizacion = $25, actualizador = $26, direccion_principal = $27
-      WHERE id_predio = $28
+      SET 
+        id_tipo_predio = $1, 
+        id_regimen_propiedad = $2, 
+        clave_catastral_anterior = $3,
+        id_prov = $4, 
+        id_can = $5, 
+        id_par = $6, 
+        cod_zon = $7, 
+        cod_sec = $8,
+        cod_pol_man = $9, 
+        cod_pred = $10, 
+        cod_uni = $11, 
+        cod_bloq = $12, 
+        id_tipo_piso = $13, 
+        cod_piso = $14,
+        alicuota = $15, 
+        area_terreno = $16, 
+        area_comun_terreno = $17, 
+        id_unidad_area = $18, 
+        area_individual_construida = $19,
+        area_comun_construida = $20, 
+        eje_principal = $21, 
+        eje_secundario = $22, 
+        sector = $23, 
+        fecha_actualizacion = $24, 
+        actualizador = $25, 
+        direccion_principal = $26
+      WHERE id_predio = $27
       RETURNING *;
     `;
+
     const values = [
-      data.id_tipo_predio, data.id_regimen_propiedad, data.clave_catastral_anterior, data.clave_catastral,
-      data.id_prov, data.id_can, data.id_par, data.cod_zon, data.cod_sec, data.cod_pol_man, 
-      data.cod_pred, data.cod_uni, data.cod_bloq, data.id_tipo_piso, data.cod_piso, data.alicuota,
-      data.area_terreno, data.area_comun_terreno, data.id_unidad_area, data.area_individual_construida,
-      data.area_comun_construida, data.eje_principal, data.eje_secundario, data.sector, data.fecha_actualizacion, 
-      data.actualizador, data.direccion_principal, id
+      data.id_tipo_predio,
+      data.id_regimen_propiedad,
+      data.clave_catastral_anterior,
+      data.id_prov,
+      data.id_can,
+      data.id_par,
+      data.cod_zon,
+      data.cod_sec,
+      data.cod_pol_man,
+      data.cod_pred,
+      data.cod_uni,
+      data.cod_bloq,
+      data.id_tipo_piso,
+      data.cod_piso,
+      data.alicuota,
+      data.area_terreno,
+      data.area_comun_terreno,
+      data.id_unidad_area,
+      data.area_individual_construida,
+      data.area_comun_construida,
+      data.eje_principal,
+      data.eje_secundario,
+      data.sector,
+      data.fecha_actualizacion,
+      data.actualizador,
+      data.direccion_principal,
+      id
     ];
 
-    try {
-        const result = await db.query(query, values);
-        return result.rows[0];
-    } catch (err) {
-        console.error('Error executing query', err.stack);
-        throw err;
-    }
+
+    const result = await db.query(query, values);
+    return result.rows[0];
 };
 
 // Función para obtener un registro de la tabla `catastro_predio` basado en su ID
