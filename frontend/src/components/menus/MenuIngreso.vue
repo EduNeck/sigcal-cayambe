@@ -59,6 +59,11 @@
         </v-row>
       </v-container>
     </v-card>
+
+    <!-- Snackbar de ingreso -->
+    <v-snackbar v-model="snackbarIngresando" :timeout="1500" color="info" rounded="pill">
+      {{ snackbarTexto }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -75,7 +80,9 @@ export default {
       logoSrcUrbano: logo_urbano,
       fallbackLogoUrbano: logo_urbano,
       logoSrcRural: logo_rural,
-      fallbackLogoRural: logo_rural
+      fallbackLogoRural: logo_rural,
+      snackbarIngresando: false,
+      snackbarTexto: ''
     };
   },
   
@@ -94,21 +101,26 @@ export default {
       return this.userTypePrimario === 'R' || this.userTypeSecundario === 'R';
     }
   },
+
   methods: {
     ingresoUrbano() {
-      console.log('Ingreso a Urbano');
-      console.log('Tipo de predio:', this.$store.state.tipoPredio);
       this.$store.commit('setTipoPredio', 1);
-      this.$router.push('/menu-predial');
-      
+      this.snackbarTexto = 'Ingresando al módulo urbano...';
+      this.snackbarIngresando = true;
+      setTimeout(() => {
+        this.$router.push('/menu-predial');
+      }, 1000);
     },
     ingresoRural() {
-      console.log('Ingreso a Rural');
-      console.log('Tipo de predio:', this.$store.state.tipoPredio);
       this.$store.commit('setTipoPredio', 2);
-      this.$router.push('/menu-predial');
+      this.snackbarTexto = 'Ingresando al módulo rural...';
+      this.snackbarIngresando = true;
+      setTimeout(() => {
+        this.$router.push('/menu-predial');
+      }, 1000);
     }
   },
+
   created() {
     console.log('Usuario logueado:', this.userLogin);
     console.log('Nombre del usuario:', this.userName);
@@ -120,7 +132,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 .custom-background {

@@ -128,6 +128,8 @@ export default {
             }            
             const response = await axios.get(`${API_BASE_URL}/vista_vias_by_idPredio/${idPredio}`);            
             this.vias = response.data;
+            console.log('Vías obtenidas:', this.vias);
+            console.log('JSON recuperado:', JSON.stringify(this.vias, null, 2));
         } catch (error) {
             console.error('Error al obtener el listado de vías:', error);        
         }

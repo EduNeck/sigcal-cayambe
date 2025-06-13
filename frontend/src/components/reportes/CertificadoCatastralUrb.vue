@@ -52,7 +52,16 @@
       <!-- Primer Bloques -->
       <v-card>
         <v-card-title class="block-title fondo-sub">
-          <p class="text-center">CERTIFICADO DE AVALÚS Y CATASTROS URBANOS N°: {{ form.numero_serie }}</p>
+          <v-card-title class="block-title fondo-sub">
+            <p class="text-center">
+              CERTIFICADO DE AVALÚS Y CATASTROS 
+              <span v-if="form.tipo_predio == 1">URBANOS</span>
+              <span v-else-if="form.tipo_predio == 2">RURALES</span>
+              <span v-else>CATASTRALES</span>
+              N°: {{ form.numero_serie }}
+            </p>
+          </v-card-title>
+
         </v-card-title>
         <v-card-text class="block-text">
           <v-row>
@@ -272,12 +281,13 @@ export default {
   },
 
   methods: {
-    async recuperaPatrimonio(claveCatastral, anioProceso) {
+    async recuperaPatrimonio(claveCatastral, anioProceso, tipoPredio) {
       try {
-        const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano`,{
+        const response = await axios.get(`${API_BASE_URL}/patrimonio-certificado`,{
             params: {
               clave_catastral: claveCatastral,
               anio_proceso: anioProceso,
+              tipo_predio: tipoPredio
             },
           }
         );
@@ -435,29 +445,27 @@ export default {
   },
 
   async mounted() {
-    // Recuperar los parámetros enviados desde el componente anterior
-    const { claveCatastral, anioProceso } = this.$route.query;
+    const { clave_catastral, anio_proceso, tipo_predio } = this.$route.query;
 
-    if (claveCatastral && anioProceso) {
-      // Llamar al método recuperaPatrimonio con los parámetros recibidos
-      await this.recuperaPatrimonio(claveCatastral, anioProceso);
+    console.log('🟡 Parámetros RAW desde la URL:', this.$route.query);
+    console.log('➡️ clave_catastral:', clave_catastral);
+    console.log('➡️ anio_proceso:', anio_proceso);
+    console.log('➡️ tipo_predio:', tipo_predio);
+
+    if (clave_catastral && anio_proceso && tipo_predio) {
+      await this.recuperaPatrimonio(clave_catastral, anio_proceso, tipo_predio);
     } else {
-      console.warn('No se recibieron parámetros para clave catastral y año de proceso.');
+      console.warn('❌ Faltan parámetros requeridos para cargar patrimonio');
     }
 
-    await this.cargaCiudadano();    
-    
-    // Cargar catálogos
-    try {
-      console.log('Componente montado');
-      this.tipoTramites = await this.cargaCatalogo(94,0);    
-      this.tipoVenta = await this.cargaCatalogo(95,0);  
-      console.log('Datos del catálogo cargados:', 
-      this.tipoTramites);
-    } catch (error) {
+    await this.cargaCiudadano();
 
+    try {
+      this.tipoTramites = await this.cargaCatalogo(94, 0);    
+      this.tipoVenta = await this.cargaCatalogo(95, 0);  
+    } catch (error) {
       console.error('Error al montar el componente:', error);
-    }   
+    }
   },
 
     // Cancatenar descripción de parroquia

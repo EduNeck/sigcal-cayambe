@@ -1,6 +1,6 @@
 const db = require('../config');
 
-const getPatrimonioUrbano = async (claveCatastral, anioProceso) => {
+const recuperaPatrimonioCertificado = async (claveCatastral, anioProceso, tipoPredio) => {
   const query = `
     SELECT tipo_predio, ph, clave_catastral, clave_anterior, parroquia, 
            numero_documento, alicuota, porcentaje_participacion, area_suelo_porcentual, 
@@ -9,11 +9,11 @@ const getPatrimonioUrbano = async (claveCatastral, anioProceso) => {
            anio_proceso, id_tenencia_propiedad, id_predio, propietario, fecha_proceso, nombre_parroquia, 
            nombre_canton, direccion
     FROM valores_reportes.vista_patrimonio
-    WHERE clave_catastral = $1 AND anio_proceso = $2;
+    WHERE clave_catastral = $1 AND anio_proceso = $2 AND tipo_predio = $3;
   `;
 
   try {
-    const { rows } = await db.query(query, [claveCatastral, anioProceso]);
+    const { rows } = await db.query(query, [claveCatastral, anioProceso, tipoPredio]);
     return rows;
   } catch (error) {
     console.error('Error al recuperar datos de patrimonio urbano:', error);
@@ -22,6 +22,6 @@ const getPatrimonioUrbano = async (claveCatastral, anioProceso) => {
 };
 
 module.exports = {
-    getPatrimonioUrbano,
+    recuperaPatrimonioCertificado,
 };
 

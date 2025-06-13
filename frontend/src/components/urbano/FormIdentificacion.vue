@@ -383,7 +383,6 @@ export default {
     try {
       console.log('Componente montado');
       const tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
-
       this.tipoPredios = await this.cargaCatalogo(1, tipoPredioFlag);
       this.regimens = await this.cargaCatalogo(2, 0);
       this.tipoPisos = await this.cargaCatalogo(3, tipoPredioFlag);
@@ -568,7 +567,6 @@ export default {
           this.idPredio = response.data.id;
           this.updateIdPredio(response.data.id);
           console.log('Respuesta recibida del backend:', response.data);
-
         }
 
       } catch (error) {
@@ -656,6 +654,9 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${idPredio}`);
         const predio = response.data;
         console.log('Datos del predio:', predio);
+        // ✅ Establecer el tipo de predio en Vuex
+        this.$store.commit('setTipoPredio', predio.id_tipo_predio);
+        console.log('Tipo de predio establecido en Vuex:', predio.id_tipo_predio);        
 
         this.form = {
           id_tipo_predio: predio.id_tipo_predio,
@@ -688,16 +689,17 @@ export default {
 
         this.idPredio = idPredio;
 
-        // ✅ Generar la URL del croquis después de tener la clave catastral
+        // ✅ Generar croquis
         this.croquisUrl = await generarUrlCroquis(this.form.clave_catastral, 5);
 
-        // (opcional) Cargar el área geográfica
+        // (opcional) Cargar área geográfica
         await this.caragaAreaGeo(predio.area_grafica);
-        
+
       } catch (error) {
         console.error('Error fetching predio:', error);
       }
     },
+
 
     // Recuperar fotos
     async recuperaFotos(id_predio) {      

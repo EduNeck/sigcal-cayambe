@@ -9,7 +9,7 @@
       </v-col>
       <v-col cols="12" class="d-flex justify-center flex-wrap">
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-close" @click="navigateToMenu">Salir</v-btn>
-        <v-btn class="btn_app mx-2 my-2" color="primary" @click="fetchValoracionPatrimonio">Refresh</v-btn>
+        <v-btn class="btn_app mx-2 my-2" color="primary" @click="generaValoracion">Refresh</v-btn>
       </v-col>
     </v-row>
     <v-row>
@@ -75,7 +75,7 @@ export default {
     };
   },
   methods: {
-    async fetchValoracionPatrimonio() {
+    async generaValoracion() {
       try {
         const response = await axios.get(`${API_BASE_URL}/valores_patrimonio_urb`);
         this.valoracionPatrimonio = response.data;
@@ -88,7 +88,7 @@ export default {
     },
   },
   created() {
-    this.fetchValoracionPatrimonio();
+    this.generaValoracion();
   },
 };
 </script>

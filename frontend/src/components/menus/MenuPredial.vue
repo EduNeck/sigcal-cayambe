@@ -136,7 +136,9 @@ export default {
       this.$router.push(route);
     }
   },
-
+  mounted() {
+    console.log('Tipo de predio activo:', this.getTipoPredio);
+  },
 
   computed: {
     ...mapGetters(['getTipoPredio']),

@@ -1,7 +1,5 @@
 <template>
-
   <v-container :class="['container', tipoClaseContainer]">
-
   <v-col cols="12" class="text-center">
     <h2 class="titulo-pantalla">Bloques Constructivos</h2>
   </v-col>
@@ -392,7 +390,7 @@ export default {
 
     // Recuperar datos del bloque si existe
     if (this.idBloque) {
-      await this.recuperarDatos(this.idBloque);
+      await this.cargaBloques(this.idBloque);
     }
   },
 
@@ -431,7 +429,7 @@ export default {
         this.estadoConservacion = await this.cargaCatalogo(27,tipoPredioFlag); 
         this.ocupacionBloque = await this.cargaCatalogo(30,tipoPredioFlag);
         this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag);
-        this.estructura = await this.cargaCatalogo(84,tipoPredioFlag); 
+        this.estructura = await this.cargaCatalogo(35,tipoPredioFlag); 
         this.paredes = await this.cargaCatalogo(36,tipoPredioFlag); 
         this.cubierta = await this.cargaCatalogo(37,tipoPredioFlag);
         this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);
@@ -531,17 +529,23 @@ export default {
       }
     },
 
-    async recuperarDatos(idBloque) {
+    async cargaBloques(idBloque) {
       console.log('ID DEL BLOQUE:', idBloque);
       try {
         const response = await axios.get(`${API_BASE_URL}/bloque_by_idBloque/${idBloque}`);
         console.log('Datos recuperados del servidor:', response.data);
         this.form = { ...this.form, ...response.data };
-
         if (response.data.id_predio) {
-          this.idPredio = response.data.id_predio; // asigna el id_predio que viene
-          this.$store.dispatch('updateIdPredio', response.data.id_predio); // actualiza también en Vuex
+          this.idPredio = response.data.id_predio;
+          this.$store.dispatch('updateIdPredio', response.data.id_predio);
           console.log('Asignado ID Predio desde el bloque:', this.idPredio);
+          // Llamar a la API catastro_predio_by_id y guardar el tipo de predio en Vuex
+          const predioResp = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${response.data.id_predio}`);
+          const predio = predioResp.data;
+          if (predio && predio.id_tipo_predio !== undefined) {
+            this.$store.commit('setTipoPredio', predio.id_tipo_predio);
+            console.log('Tipo de predio recuperado y almacenado en Vuex:', predio.id_tipo_predio);
+          }
         }
       } catch (error) {
         console.error('Error al recuperar los datos del bloque:', error);
