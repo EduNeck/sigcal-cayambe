@@ -8,7 +8,7 @@
   <v-container class="container fill-height">
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">Buscar Certificado de Plusvalía</h2>
+        <h2 class="titulo-pantalla">Buscar Certificado de Catastral</h2>
       </v-col>
 
       <v-col cols="12" md="6">
@@ -99,7 +99,7 @@ export default {
         });
 
         this.$router.push({
-          path: '/certificadoPlusvalia',
+          path: '/certificadoCatastral',
           query: {
             clave_catastral: this.form.claveCatastral,
             anio_proceso: this.form.anioProceso,
