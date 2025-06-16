@@ -63,7 +63,7 @@
                         <v-col cols="12" sm="6" md="6">
                             <v-text-field
                             v-model="form.longitud"
-                            label="Longitud *"
+                            label="Frente *"
                             type="number"
                             required
                             ></v-text-field>

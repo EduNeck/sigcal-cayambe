@@ -42,5 +42,5 @@ export default {
 </script>
 
 <style scoped>
-/* Tus estilos aquí */
+
 </style>

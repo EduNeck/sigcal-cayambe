@@ -8,10 +8,10 @@ const insertaIdentificacionPredio = async (data) => {
       id_prov, id_can, id_par, cod_zon, cod_sec, cod_pol_man, cod_pred, cod_uni, cod_bloq, 
       id_tipo_piso, cod_piso, alicuota, area_terreno, area_comun_terreno, id_unidad_area, 
       area_individual_construida, area_comun_construida, eje_principal, eje_secundario, sector, digitador, 
-      fecha_registro, direccion_principal
+      fecha_registro, direccion_principal, nombre_predio
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, 
-      $20, $21, $22, $23, $24, $25, $26
+      $20, $21, $22, $23, $24, $25, $26, $27
     )
     RETURNING id_predio;
   `;
@@ -21,7 +21,7 @@ const insertaIdentificacionPredio = async (data) => {
     data.cod_pred, data.cod_uni, data.cod_bloq, data.id_tipo_piso, data.cod_piso, data.alicuota, 
     data.area_terreno, data.area_comun_terreno, data.id_unidad_area, data.area_individual_construida,
     data.area_comun_construida, data.eje_principal, data.eje_secundario, data.sector, data.digitador,
-    data.fecha_registro, data.direccion_principal
+    data.fecha_registro, data.direccion_principal, data.nombre_predio
   ];
 
   // Validar que los valores no sean vacíos para los campos que esperan enteros
@@ -98,8 +98,9 @@ const updateCatastroPredio = async (id, data) => {
         sector = $23, 
         fecha_actualizacion = $24, 
         actualizador = $25, 
-        direccion_principal = $26
-      WHERE id_predio = $27
+        direccion_principal = $26,
+        nombre_predio = $27
+      WHERE id_predio = $28
       RETURNING *;
     `;
 
@@ -130,6 +131,7 @@ const updateCatastroPredio = async (id, data) => {
       data.fecha_actualizacion,
       data.actualizador,
       data.direccion_principal,
+      data.nombre_predio,
       id
     ];
 

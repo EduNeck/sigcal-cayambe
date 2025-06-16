@@ -8,11 +8,12 @@ const insertCatastroTenencia = async (data) => {
                         porcentaje_participacion, id_forma_propiedad, id_propietario, id_prov_protocol,
                         id_can_protocol, fecha_inscripcion, numero_notaria, area_registro, id_unidad,
                         id_provincia, id_canton, fecha_escritura, repertorio, folio, numero_registro,
-                        lindero_norte, lindero_sur, lindero_este, lindero_oeste, propietario_anterior        
+                        lindero_norte, lindero_sur, lindero_este, lindero_oeste, propietario_anterior,
+                        utilidad_publica, representante
                     )VALUES ( 
                         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
                         $11, $12, $13, $14, $15, $16, $17, $18, $19,
-                        $20, $21, $22, $23, $24, $25) RETURNING id_tenencia;`;
+                        $20, $21, $22, $23, $24, $25, $26, $27) RETURNING id_tenencia;`;
     const values = [
         data.id_predio,
         data.permite_ingreso, data.presenta_escritura, data.asentamiento_de_hecho,
@@ -21,7 +22,8 @@ const insertCatastroTenencia = async (data) => {
         data.fecha_inscripcion, data.numero_notaria, data.area_registro,
         data.id_unidad, data.id_provincia, data.id_canton, data.fecha_escritura,
         data.repertorio, data.folio, data.numero_registro, data.lindero_norte,
-        data.lindero_sur, data.lindero_este, data.lindero_oeste, data.propietario_anterior
+        data.lindero_sur, data.lindero_este, data.lindero_oeste, data.propietario_anterior,
+        data.utilidad_publica, data.representante
     ];
 
     // Validar que los valores no sean vacíos para los campos que esperan enteros
@@ -74,8 +76,8 @@ const updateCatastroTenencia = async (id, data) => {
                         id_can_protocol = $9, fecha_inscripcion = $10, numero_notaria = $11, area_registro = $12,
                         id_unidad = $13, id_provincia = $14, id_canton = $15, fecha_escritura = $16, repertorio = $17,
                         folio = $18, numero_registro = $19, lindero_norte = $20, lindero_sur = $21, lindero_este = $22,
-                        lindero_oeste = $23, propietario_anterior = $24
-                    WHERE id_tenencia = $25 RETURNING *;`;
+                        lindero_oeste = $23, propietario_anterior = $24, utilidad_publica = $25, representante = $26
+                    WHERE id_tenencia = $27 RETURNING *;`;
     const values = [
         data.permite_ingreso, data.presenta_escritura, data.asentamiento_de_hecho,
         data.conflicto, data.porcentaje_participacion, data.id_forma_propiedad,
@@ -83,7 +85,8 @@ const updateCatastroTenencia = async (id, data) => {
         data.fecha_inscripcion, data.numero_notaria, data.area_registro,
         data.id_unidad, data.id_provincia, data.id_canton, data.fecha_escritura,
         data.repertorio, data.folio, data.numero_registro, data.lindero_norte,
-        data.lindero_sur, data.lindero_este, data.lindero_oeste, data.propietario_anterior, id
+        data.lindero_sur, data.lindero_este, data.lindero_oeste, data.propietario_anterior,
+        data.utilidad_publica, data.representante, id
     ];
 
     try {
@@ -111,7 +114,8 @@ const getCatastroTenenciaById = async (id) => {
 
 // Función para obtener todos los registros de la tabla `Catastro Tenencia`
 const getListadoTenenciaByPredio  = async (id) => {
-    const query = `SELECT id_tenencia, nombres, numero_documento, presenta_escritura, forma_propiedad,  tipo_persona,  porcentaje_participacion, regimen_propiedad
+    const query = `SELECT   id_tenencia, nombres, numero_documento, presenta_escritura, forma_propiedad,  tipo_persona,
+                            porcentaje_participacion, regimen_propiedad, representante, utilidad_publica
                     FROM reporte_ficha.ficha_tenencia WHERE id_predio = $1 ORDER BY id_tenencia;`;
     const values = [id];
 

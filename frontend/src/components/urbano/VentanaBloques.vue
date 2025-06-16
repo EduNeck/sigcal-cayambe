@@ -43,5 +43,5 @@
   </script>
   
   <style scoped>
-  /* Tus estilos aquí */
+
   </style>

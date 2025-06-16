@@ -49,6 +49,7 @@
                 <td>{{ item.tipo_persona }}</td>
                 <td>{{ item.porcentaje_participacion }}%</td>
                 <td>{{ item.regimen_propiedad }}</td>
+                <td>{{ item.representante }}</td>
               </tr>
             </template>
           </v-data-table>
@@ -81,6 +82,7 @@ export default {
         { title: 'Tipo de Persona', value: 'tipo_persona' },
         { title: 'Porcentaje de Participación', value: 'porcentaje_participación' },
         { title: 'Régimen de Propiedad', value: 'regimen_propiedad' },
+        { title: 'Representante', value: 'representante' },
       ],
     };
   },

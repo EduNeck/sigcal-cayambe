@@ -80,6 +80,12 @@
                 </v-btn>
             </v-text-field>
           </v-col>
+
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field label="Nombre del Predio"
+                v-model="form.nombre_predio">
+            </v-text-field>
+          </v-col>
         </v-row>
       </v-card-text>
     </v-card>   
@@ -129,7 +135,7 @@
           </v-col>
           <v-col cols="12" sm="6" md="1">
             <v-text-field
-              label="Pol/Manzana"              
+              :label="getTipoPredio === 1 ? 'Manzana' : 'Polígono'"
               v-model="form.cod_pol_man"
               type="number"
               :rules="[v => !!v && v >= 1 && v <= 999 || 'Debe ser un número entre 1 y 999']"
@@ -311,6 +317,7 @@ export default {
         id_regimen_propiedad: '',
         clave_catastral_anterior: '',
         clave_catastral: '',
+        nombre_predio: '',
         id_prov: '17',
         id_can: '1702',
         id_par: '',
@@ -362,13 +369,17 @@ export default {
 
   
   created() {
-    const idPredio = this.$route.query.id_predio;    
-    if (idPredio) {      
+    const idPredio = this.$route.query.id_predio;
+    const tipoPredio = this.$route.query.tipo_predio; 
+    if (idPredio) {
       this.id_predio = idPredio;
       this.updateIdPredio(idPredio);
       this.cargaPredio(idPredio);
       this.recuperaFotos(idPredio);
-    }else{
+      if (tipoPredio) {
+        this.form.id_tipo_predio = tipoPredio; 
+      }
+    } else {
       console.log('SIN ID DEL PREDIO RECIBIDO');
       this.resetIdPredio();
       this.resetIdTenencia();
@@ -789,6 +800,7 @@ export default {
       this.form.id_regimen_propiedad = '';
       this.form.clave_catastral_anterior = '';
       this.form.clave_catastral = '';
+      this.form.nombre_predio = '';
       this.form.id_prov = '17';
       this.form.id_can = '1702';
       this.form.id_par = '';
