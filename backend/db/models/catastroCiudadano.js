@@ -139,7 +139,7 @@ const actualizaCiudadanoByid = async (id, data) => {
 
 // Función para obtener los registros de la tabla `catastro_ciudadano`
 const recuperaCiudadanoTenencia = async () => {
-  const query = 'SELECT id_ciudadano, nombres, numero_documento FROM public.catastro_ciudadano';
+  const query = 'SELECT id_ciudadano, nombres, numero_documento FROM public.catastro_ciudadano ORDER BY nombres ASC';
   try {
     const result = await db.query(query);
     return result.rows;

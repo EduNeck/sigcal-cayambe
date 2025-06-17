@@ -19,7 +19,8 @@ export default [
   { path: '/tab_foto_predios', component: () => import('@/components/urbano/FormFotoPredio.vue'), meta: { requiresAuth: true } },
   { path: '/listado-predios-urb', component: () => import('@/components/urbano/ListadoPrediosUrbanos.vue'), meta: { requiresAuth: true } },
   { path: '/busqueda-predios-urb', component: () => import('@/components/urbano/BusquedaPrediosUrbanos.vue'), meta: { requiresAuth: true } },
-  { path: '/gestion-documental', component: () => import('@/components/urbano/FormGestionDocumental.vue'), meta: { requiresAuth: true } }, 
+  { path: '/gestion-documental', component: () => import('@/components/urbano/FormGestionDocumental.vue'), meta: { requiresAuth: true } },
+  { path: '/grid-tenencia', component: () => import('@/components/urbano/GridTenencia.vue'), meta: { requiresAuth: true } },
   // Caracteristicas Rurales
   { path: '/form-caracteristicas-rurales', component: () => import('@/components/urbano/FormCaracteristicasRurales.vue'), meta: { requiresAuth: true } }, 
   { path: '/listado-documental', component: () => import('@/components/urbano/ListadoDocumental.vue'), meta: { requiresAuth: true } },

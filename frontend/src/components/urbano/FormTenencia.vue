@@ -107,6 +107,14 @@
               item-value="id"
               required              
             ></v-select>
+          </v-col>
+          <v-col cols="12" sm="6" md="4">
+            <v-checkbox
+              :model-value="form.representante === 1"
+              @update:model-value="val => form.representante = val ? 1 : 2"
+              label="¿Representante?"
+              color="primary"
+            ></v-checkbox>
           </v-col>          
         </v-row>
       </v-card-text>
@@ -314,6 +322,7 @@ export default {
         lindero_este: '',
         lindero_oeste: '', 
         propietario_anterior: '',        
+        representante: 2,
       },
       // Listados
       items: ['SI', 'NO'],
@@ -333,7 +342,6 @@ export default {
       
     }
   },
-
   computed: { 
     ...mapGetters(['getIdPredio', 'getIdTenencia', 'getTipoPredio', 'isConsultaPrimario']),
 
@@ -355,7 +363,6 @@ export default {
       return canEdit.value; 
     }
   },
-
   async mounted() {
 
     console.log('Componente Catalogo montado');
@@ -382,13 +389,18 @@ export default {
       await this.cargarDatosTenencia(this.idTenencia);
     }
   
-  },
-
+      try {
+        const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
+        const propietario = response.data;
+        console.log('Datos del propietario cargados:', propietario);
+        // Asignar los datos del propietario al formulario
+        this.form.id_propietario = propietario.id_ciudadano;
+        console.log('ID del propietario:', this.form.id_propietario);
+      } catch (error) {
+        console.error('Error al cargar los datos del propietario:', error);        
+      }
+    },
   methods: {
-
-    ...mapActions(['updateIdTenencia']),
-
-    // Método para cargar los datos del propietario por id_propietario
     async cargarDatosPropietario(id_propietario) {
       try {
         const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
@@ -611,6 +623,7 @@ export default {
         porcentaje_participacion: this.form.porcentaje_participacion || null,
         id_forma_propiedad: this.form.id_forma_propiedad || null,
         id_propietario: this.form.id_propietario || null, 
+        representante: this.form.representante || false,
         id_prov_protocol: this.form.id_prov_protocol || null,
         id_can_protocol: this.form.id_can_protocol || null,
         fecha_inscripcion: this.form.fecha_inscripcion || null,
@@ -669,7 +682,8 @@ export default {
         conflicto: this.form.conflicto,
         porcentaje_participacion: this.form.porcentaje_participacion,
         id_forma_propiedad: this.form.id_forma_propiedad,
-        id_propietario: this.form.id_propietario, 
+        id_propietario: this.form.id_propietario,
+        representante: this.form.representante,
         id_prov_protocol: this.form.id_prov_protocol,
         id_can_protocol: this.form.id_can_protocol,
         fecha_inscripcion: fecha_inscripcion,
@@ -750,6 +764,7 @@ export default {
         lindero_este: '',
         lindero_oeste: '', 
         propietario_anterior: '',     
+        representante: 2,
       };
     },
 
@@ -765,7 +780,7 @@ export default {
       this.limpiarFormulario();
       this.idTenencia = null;
       this.cargaCiudadanoTenecia(); 
-    },
+    }
   }
 }
 </script>

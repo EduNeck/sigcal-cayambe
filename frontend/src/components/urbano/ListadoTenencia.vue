@@ -49,7 +49,10 @@
                 <td>{{ item.tipo_persona }}</td>
                 <td>{{ item.porcentaje_participacion }}%</td>
                 <td>{{ item.regimen_propiedad }}</td>
-                <td>{{ item.representante }}</td>
+                <td>
+                  <v-icon v-if="item.representante === 1">mdi-check-circle</v-icon>
+                  <v-icon v-else color="grey lighten-1">mdi-close-circle</v-icon>
+                </td>
               </tr>
             </template>
           </v-data-table>
@@ -123,7 +126,6 @@ export default {
         console.error('Error al recargar los datos:', error);
       }
     },
-
     // Método para obtener las tenencias de un predio
     async recuperaTenecia(idPredio) {
       console.log('Recuperando tenencias...');

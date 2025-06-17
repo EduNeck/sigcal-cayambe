@@ -50,9 +50,6 @@ const insertCatastroTenencia = async (data) => {
                 case '23503': // foreign_key_violation
                     console.error('Error: Foreign key violation', err.detail);
                     break;
-                case '23502': // not_null_violation
-                    console.error('Error: Null value in column violates not-null constraint', err.column);
-                    break;
                 case '22P02': // invalid_text_representation
                     console.error('Error: Invalid input syntax for integer', err.message);
                     break;
@@ -169,6 +166,32 @@ const deleteCatastroTenencia = async (id) => {
     }
 };
 
+// Inserta múltiples tenencias con solo campos esenciales
+const insertMultiplesTenenciasBasicas = async (tenencias) => {
+  const query = `
+    INSERT INTO public.catastro_tenencia (
+      id_predio, id_propietario, porcentaje_participacion, representante
+    ) VALUES
+    ${tenencias.map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`).join(', ')}
+    RETURNING id_tenencia;
+  `;
+
+  const values = tenencias.flatMap(t => [
+    t.id_predio,
+    t.id_propietario,
+    t.porcentaje_participacion,
+    t.representante
+  ]);
+
+  try {
+    const result = await db.query(query, values);
+    return result.rows;
+  } catch (err) {
+    console.error('❌ Error al insertar varias tenencias:', err.message);
+    throw err;
+  }
+};
+
 
 module.exports = {
     insertCatastroTenencia,
@@ -176,5 +199,6 @@ module.exports = {
     getCatastroTenenciaById,
     getListadoTenenciaByPredio, 
     getTenenciaById,
-    deleteCatastroTenencia
+    deleteCatastroTenencia,
+    insertMultiplesTenenciasBasicas
 }

@@ -364,8 +364,7 @@ export default {
 
   async mounted() {
     // Recuperar id de query o Vuex
-    const idBloquesQuery = this.$route.query.id_bloques;
-    const tipoPredio = this.$route.query.tipo_predio; // Nuevo: obtener tipo_predio de la URL
+    const idBloquesQuery = this.$route.query.id_bloques; 
 
     if (idBloquesQuery) {
       console.log('✅ Recibido ID BLOQUE desde la URL:', idBloquesQuery);
@@ -376,12 +375,6 @@ export default {
       this.idBloque = this.getIdBloque;
     } else {
       console.warn('⚠️ No hay ID de bloque disponible.');
-    }
-
-    // Nuevo: Asignar tipo_predio si viene en la URL
-    if (tipoPredio) {
-      this.$store.commit('setTipoPredio', tipoPredio);
-      console.log('Tipo de predio recibido desde la URL y almacenado en Vuex:', tipoPredio);
     }
 
     // Asignar idPredio de Vuex

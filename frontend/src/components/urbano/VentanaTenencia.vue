@@ -7,9 +7,9 @@
       </v-btn>
     </template>
 
-    <!-- Botón siguiente con tooltip "Nuevo" solo cuando está en listado-tenencia -->
+    <!-- Botón siguiente con tooltip "Nuevos Registros" solo cuando está en listado-tenencia -->
     <template #next="{ props }">
-      <v-tooltip v-if="window === 'listado-tenencia'" text="Nuevo" location="top">
+      <v-tooltip v-if="window === 'listado-tenencia'" text="Nuevos Registros" location="top">
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="{ ...props, ...tooltipProps }"
@@ -32,6 +32,9 @@
     <v-window-item value="listado-tenencia">
       <TabListadoTenencia @navigateToTenencia="navigateToTenencia" />
     </v-window-item>
+    <v-window-item :key="tabRegistrosKey" value="tab-registros">
+      <TabRegistros />
+    </v-window-item>    
     <v-window-item :key="tabTenenciaKey" value="tab-tenencia">
       <TabTenencia />
     </v-window-item>
@@ -41,6 +44,7 @@
 <script>
 import TabListadoTenencia from './ListadoTenencia.vue';
 import TabTenencia from './FormTenencia.vue';
+import TabRegistros from './GridTenencia.vue';
 import { mapGetters } from 'vuex';
 
 export default {
@@ -49,22 +53,28 @@ export default {
     return {
       window: 'listado-tenencia',
       tabTenenciaKey: 0,
+      tabRegistrosKey: 0,
     };
   },
   components: {
     TabListadoTenencia,
     TabTenencia,
+    TabRegistros,
   },
   computed: {
     ...mapGetters(['getIdPredio']),
   },
   methods: {
     toggleTabTenencia() {
-      this.window = this.window === 'listado-tenencia' ? 'tab-tenencia' : 'listado-tenencia';
+      this.window = this.window === 'listado-tenencia' ? 'tab-registros' : 'tab-tenencia';
     },
     navigateToTenencia() {
       this.tabTenenciaKey += 1;
       this.window = 'tab-tenencia';
+    },
+    navigateToRegistrosMultiples() {
+      this.tabRegistrosKey += 1;
+      this.window = 'tab-registros';      
     },
   },
 };

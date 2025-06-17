@@ -77,4 +77,15 @@ router.delete('/elimina_tenencia_by_id/:id', async (req, res) => {
   }
 });
 
+router.post('/inserta_varias_tenencias', async (req, res) => {
+  try {
+    const resultado = await catastroTenencia.insertMultiplesTenenciasBasicas(req.body);
+    res.status(201).json({ message: 'Tenencias insertadas correctamente', ids: resultado });
+  } catch (err) {
+    console.error('Error insertando múltiples tenencias:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 module.exports = router;
