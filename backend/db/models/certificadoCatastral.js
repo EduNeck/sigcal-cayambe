@@ -189,7 +189,9 @@ async function getCertificadoCatastralDetallePorClave(claveCatastral) {
       ROUND(v.avaluo_predio_porcentual::numeric, 2) AS avaluo_predio_porcentual, 
       v.parroquia, 
       r.descripcion AS nombre_parroquia,     
-      ROUND(v.alicuota::numeric, 2) AS alicuota
+      ROUND(v.alicuota::numeric, 2) AS alicuota,
+      p.direccion_principal,
+      v.anio_proceso
     FROM 
       public.catastro_predio p 
     LEFT JOIN 

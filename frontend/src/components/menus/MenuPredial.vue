@@ -85,7 +85,7 @@ export default {
         {
           titulo: 'REPORTES',
           items: [
-            { title: 'Genera Certificado', route: '/genera-certificados-urb' },
+            { title: 'Genera Certificado', route: '/genera-certificados' },
             { title: 'Certificado Catastral', route: '/busquedaCertCatasUrb' },
             { title: 'Certificado Plusvalía', route: '/busquedaCertPlusvalia' },
           ]

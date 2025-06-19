@@ -69,7 +69,7 @@
               <p class="text-justify"><strong>De acuerdo al Código de Organización Territorial, Autonomía y Descentralización vigente, de la Dirección de Avalúos y Catastros del Gobierno Municipal del Cantón Cayambe, a través del jefe de Avalúos y Catastros en usos de sus atribuciones, CERTIFICA QUE:</strong></p>
               <p><strong>Nombre de: </strong> {{ form.propietario }}</p>
               <p><strong>con cédula/RUC: </strong> {{ form.numero_documento }}</p>
-              <p><strong>Consta en el Catastro urbano del año: </strong> {{ form.anio_proceso }} <strong>del cantón:</strong> {{ form.nombre_canton }} <strong>de la parroquia:</strong> {{ form.nombre_parroquia }}</p>              
+              <p><strong>Consta en el Catastro urbano del año: </strong> {{ form.anio_proceso }} <strong>del cantón:</strong>CAYAMBE<strong>de la parroquia:</strong> {{ form.nombre_parroquia }}</p>              
               <p><strong>Dirección:</strong> {{ form.direccion }}</p>              
             </v-col>
           </v-row>
@@ -130,12 +130,13 @@
                 class="input-text"
                 label="Propietario"
                 v-model="form.propietario_nuevo"
-                :items="ciudadanoRecuperado" 
-                item-text="title" 
-                item-value="title"
+                :items="ciudadanoRecuperado"
+                item-text="title"
+                item-value="id"
                 required
                 outlined
-                dense 
+                dense
+                @update:model-value="onPropietarioNuevoChange"
                 ></v-autocomplete>
             </v-col>
             <v-col cols="6">
@@ -154,16 +155,7 @@
                 item-text="descripcion"
                 item-value="descripcion"
                 multiple                
-              ></v-select>
-              <v-text-field
-                class="input-text"
-                label="Cuantía"
-                v-model="form.cuantia"
-                outlined
-                dense
-                type="number"
-                prefix="$"
-              ></v-text-field>           
+              ></v-select>      
             </v-col>
             <v-col cols="6">
               <v-text-field
@@ -177,13 +169,13 @@
               ></v-text-field>
               <v-text-field
                 class="input-text"
-                label="Valor de Compra"
-                v-model="form.valor_compra"
+                label="Cuantía"
+                v-model="form.cuantia"
                 outlined
                 dense
                 type="number"
                 prefix="$"
-              ></v-text-field>
+              ></v-text-field>     
             </v-col>
             <v-col cols="10">
               <v-textarea                
@@ -228,18 +220,18 @@
 <script>
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
-import QRCode from 'qrcode'; // Importar la librería QRCode
+import QRCode from 'qrcode';
 import { textVariables } from '@/config/textVariables';
 import { mapGetters } from 'vuex';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
-  name: "CertificadoCatastralUrb",
+  name: "CertificadoCatastral",
   data() {
     return {
-      organizationName: textVariables.organizationName,
-      jefeCatastros: textVariables.jefeCatastros,
-      tituloJefe: textVariables.tituloJefeCatastros,
+      organizationName: textVariables.general.organizationName,
+      jefeCatastros: textVariables.experto_urbano.jefe,
+      tituloJefe: textVariables.experto_urbano.titulo,
       qrCode: null, // Nueva propiedad para almacenar el QR generado
       form: {
         propietario: '',
@@ -253,7 +245,6 @@ export default {
         propietario_nuevo: '',
         nuevo_documento: '',
         porcentaje_compra: '',
-        valor_compra: '',
         tipo_predio: '',
         ph: '',
         clave_anterior: '',
@@ -420,7 +411,7 @@ export default {
     },
 
     salir() {
-      this.$router.push('/menu-predial'); // Cambia la ruta según tu aplicación
+      this.$router.push('/genera-certificados'); 
     },
 
     async generateQRCode() {
@@ -436,30 +427,72 @@ export default {
       };
 
       try {
-        this.qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
-        console.log('QR Code generado:', this.qrCode);
+        this.qrCode = await QRCode.toDataURL(JSON.stringify(qrData));        
       } catch (error) {
         console.error('Error al generar el QR Code:', error);
+      }
+    },
+
+    onPropietarioNuevoChange(val) {
+      // Buscar el ciudadano seleccionado por id y asignar su número de documento
+      const ciudadano = this.ciudadanoRecuperado.find(c => c.id === val);
+      if (ciudadano) {
+        this.form.nuevo_documento = ciudadano.numero_documento;
       }
     },
   },
 
   async mounted() {
-    const { clave_catastral, anio_proceso, tipo_predio } = this.$route.query;
+    // Si vienen datos por query desde GeneraCertificados.vue, llenar el form
+    const q = this.$route.query;
+    if (q && q.clave_catastral) {
+      this.form.clave_catastral = q.clave_catastral || '';
+      this.form.propietario = q.propietario || '';
+      this.form.valor_suelo_porcentual = q.avaluo_suelo || '';
+      this.form.valor_construcciones_porcentual = q.avaluo_construccion || '';
+      this.form.avaluo_predio_porcentual = q.avaluo_total || '';
+      this.form.area_construcciones_porcentual = q.area_construccion || '';
+      this.form.area_suelo_porcentual = q.area_suelo || '';
+      // Soporte para tipo_tramite múltiple
+      if (q.tipo_tramite) {
+        try {
+          this.form.tipo_tramite = JSON.parse(q.tipo_tramite);
+        } catch {
+          this.form.tipo_tramite = q.tipo_tramite;
+        }
+      }
+      this.form.certificadoPlusvalia = q.certificado_plusvalia === 'true' || false;
+      if (q.cuantia) {
+        this.form.cuantia = q.cuantia;
+      }
+      if (q.numero_documento) {
+        this.form.numero_documento = q.numero_documento;
+      }
+      if (q.direccion_principal) {
+        this.form.direccion = q.direccion_principal;
+      }
+      if (q.nombre_parroquia) {
+        this.form.nombre_parroquia = q.nombre_parroquia;
+      }
+      if (q.anio_proceso) {
+        this.form.anio_proceso = q.anio_proceso;
+      }
+      if (q.porcentaje_participacion) {
+        this.form.alicuota = q.porcentaje_participacion;
+      }
+      if (q.clave_catastral_anterior) {
+        this.form.clave_anterior = q.clave_catastral_anterior;
+      }
 
-    console.log('🟡 Parámetros RAW desde la URL:', this.$route.query);
-    console.log('➡️ clave_catastral:', clave_catastral);
-    console.log('➡️ anio_proceso:', anio_proceso);
-    console.log('➡️ tipo_predio:', tipo_predio);
-
-    if (clave_catastral && anio_proceso && tipo_predio) {
-      await this.recuperaPatrimonio(clave_catastral, anio_proceso, tipo_predio);
     } else {
-      console.warn('❌ Faltan parámetros requeridos para cargar patrimonio');
+      const { clave_catastral, anio_proceso, tipo_predio } = this.$route.query;
+      if (clave_catastral && anio_proceso && tipo_predio) {
+        await this.recuperaPatrimonio(clave_catastral, anio_proceso, tipo_predio);
+      } else {
+        console.warn('❌ Faltan parámetros requeridos para cargar patrimonio');
+      }
     }
-
     await this.cargaCiudadano();
-
     try {
       this.tipoTramites = await this.cargaCatalogo(94, 0);    
       this.tipoVenta = await this.cargaCatalogo(95, 0);  
@@ -511,7 +544,7 @@ export default {
 }
 
 .title {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: bold;
   color:#114358;
 }
@@ -520,29 +553,42 @@ export default {
   background-color: #dbdbdb;
   color: #114358;
   text-align: center;
-  padding: 5px;
+  padding: 4px;
   font-weight: bold;
-  font-size: 1rem; /* Ajustado desde 0.9rem */
+  font-size: 0.85rem; /* Reducido */
 }
 
 .input-text {
   height: 60px; 
 }
 
-.v-select {
-  height: 60px;
+.input-text input,
+.input-text .v-input__control,
+.input-text .v-field__input {
+  font-size: 0.85rem !important; /* Reducido */
+  height: 32px !important;
 }
 
-.v-btn {
-  height: 36px; 
+.v-select input,
+.v-select .v-input__control,
+.v-select .v-field__input {
+  font-size: 0.85rem !important;
+  height: 32px !important;
 }
 
-.v-textarea {
-  white-space: pre-wrap;
+.v-text-field input,
+.v-text-field .v-input__control,
+.v-text-field .v-field__input {
+  font-size: 0.85rem !important;
+  height: 32px !important;
+}
+
+.v-textarea textarea {
+  font-size: 0.85rem !important;
 }
 
 .numero-serie {
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #114358;
   margin-top: 5px;

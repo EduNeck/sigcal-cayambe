@@ -166,6 +166,7 @@
               :rules="[v => !!v || 'Tipo Trámite es requerido']"
               required
               class="white-text-field"
+              multiple
             />
             <v-text-field
               v-model.number="form.cuantias"
@@ -213,7 +214,9 @@ export default {
         areasSuelo: '',
         tipoTramite: '',
         cuantias: '',
-        certificadoPlusvalia: false
+        certificadoPlusvalia: false,
+        clave_anterior: '',
+        alicuota: ''
       },
       snackbarErrorPush: false,
       snackbarError: '',
@@ -240,13 +243,29 @@ export default {
   },
   methods: {
     enviarFormulario() {
-      if (this.$refs.form.validate()) {
-        this.snackbarOk = 'Certificado generado correctamente';
-        this.snackbarOkPush = true;
-      } else {
-        this.snackbarNota = 'Formulario inválido';
-        this.snackbarNotaPush = true;
-      }
+      const datosEnviados = {
+        clave_catastral: this.form.claveCatastral,
+        propietario: this.form.propietarios,
+        avaluo_suelo: this.form.avaluoSuelo,
+        avaluo_construccion: this.form.avaluoConstruccion,
+        avaluo_total: this.form.avaluoTotal,
+        area_construccion: this.form.areasConstruccion,
+        area_suelo: this.form.areasSuelo,
+        tipo_tramite: JSON.stringify(this.form.tipoTramite),
+        certificado_plusvalia: this.form.certificadoPlusvalia,
+        cuantia: this.form.cuantias,
+        numero_documento: this.form.numero_documento,
+        direccion_principal: this.form.direccion_principal,
+        nombre_parroquia: this.form.nombre_parroquia,
+        anio_proceso: this.form.anio_proceso,
+        clave_catastral_anterior: this.form.clave_anterior,
+        porcentaje_participacion: this.form.alicuota
+      };
+      console.log('Datos enviados al certificado:', datosEnviados);
+      this.$router.push({
+        path: '/certificadoCatastral',
+        query: datosEnviados
+      });
     },
     navigateToMenu() {
       this.$router.push('/menu-predial');
@@ -275,6 +294,12 @@ export default {
           this.form.areasConstruccion = '';
           this.form.areasSuelo = '';
           this.form.cuantias = '';
+          this.form.numero_documento = '';
+          this.form.direccion_principal = '';
+          this.form.nombre_parroquia = '';
+          this.form.anio_proceso = '';
+          this.form.clave_anterior = '';
+          this.form.alicuota = '';
           this.selectedPropietario = null;
           return;
         }
@@ -288,6 +313,12 @@ export default {
           this.form.areasConstruccion = propietario.area_construcciones_porcentual || '';
           this.form.areasSuelo = propietario.area_suelo_porcentual || '';
           this.form.cuantias = propietario.avaluo_predio_porcentual || '';
+          this.form.numero_documento = propietario.numero_documento || '';
+          this.form.direccion_principal = propietario.direccion_principal || '';
+          this.form.nombre_parroquia = propietario.nombre_parroquia || '';
+          this.form.anio_proceso = propietario.anio_proceso || '';
+          this.form.clave_anterior = propietario.clave_catastral_anterior || '';
+          this.form.alicuota = propietario.porcentaje_participacion || '';
           this.selectedPropietario = propietario.id_tenencia;
         } else {
           this.form.propietarios = '';
@@ -310,6 +341,12 @@ export default {
         this.form.areasConstruccion = propietario.area_construcciones_porcentual || '';
         this.form.areasSuelo = propietario.area_suelo_porcentual || '';
         this.form.cuantias = propietario.avaluo_predio_porcentual || '';
+        this.form.numero_documento = propietario.numero_documento || '';
+        this.form.direccion_principal = propietario.direccion_principal || '';
+        this.form.nombre_parroquia = propietario.nombre_parroquia || '';
+        this.form.anio_proceso = propietario.anio_proceso || '';
+        this.form.clave_anterior = propietario.clave_catastral_anterior || '';
+        this.form.alicuota = propietario.porcentaje_participacion || '';
         // Mostrar mensaje si no hay datos de valoración
         if (
           (!this.form.avaluoSuelo || Number(this.form.avaluoSuelo) === 0) &&
@@ -355,7 +392,9 @@ export default {
         areasSuelo: '',
         tipoTramite: '',
         cuantias: '',
-        certificadoPlusvalia: false
+        certificadoPlusvalia: false,
+        clave_anterior: '',
+        alicuota: ''
       };
       this.propietariosList = [];
       this.selectedPropietario = null;

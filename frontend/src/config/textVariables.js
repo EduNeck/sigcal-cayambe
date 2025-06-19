@@ -4,14 +4,13 @@ export const textVariables = {
     systemName: 'Sistema Catastral SIGCAL',
     version: 'v1.0.0'
   },
-  catastro: {
+  experto_urbano: {
     jefe: 'Arq. Silvia Mora Eras',
     titulo: 'Experto Catastral'
   },
-  contacto: {
-    email: 'catastros@municipiocayambe.gob.ec',
-    telefono: '(02) 1234-567',
-    direccion: 'Calle Bolívar y Sucre, Cayambe, Ecuador'
+  experto_rural: {
+    jefe: 'Ing. Juan Pérez',
+    titulo: 'Experto Catastral'
   },
   visual: {
     logoPath: '@/assets/logo_ventana.png'
