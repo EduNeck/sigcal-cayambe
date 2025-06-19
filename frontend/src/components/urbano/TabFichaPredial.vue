@@ -15,6 +15,7 @@
       <v-tab>Mejoras</v-tab>
       <v-tab>Observaciones</v-tab>
       <v-tab>Foto Fachada</v-tab>
+      <v-tab>Salir</v-tab>
     </v-tabs>
 
     <v-window v-model="tab">
@@ -27,6 +28,16 @@
       <v-window-item><VentanaMejoras/></v-window-item>
       <v-window-item><TabObservaciones/></v-window-item>
       <v-window-item><TabFotoPredio/></v-window-item>
+      <v-window-item>
+        <div class="d-flex flex-column align-center justify-center" style="height: 200px; gap: 16px;">
+          <v-btn color="#808b96" append-icon="mdi-exit-to-app" @click="salirMenuPredial">
+            Salir al menú predial
+          </v-btn>
+          <v-btn color="#808b96" append-icon="mdi-exit-to-app" @click="salirMenuIngreso">
+            Salir al menú ingreso
+          </v-btn>
+        </div>
+      </v-window-item>
     </v-window>
   </v-container>
 </template>
@@ -69,7 +80,6 @@ export default {
   },
   watch: {
     getTipoPredio(newVal) {
-     
       if (newVal !== 2 && this.tab === 3) {
         this.tab = 0;
       }
@@ -81,6 +91,14 @@ export default {
       console.log('✅ ID de predio recibido:', idPredio);
     } else {
       console.warn('⚠️ No se recibió id_predio en la URL');
+    }
+  },
+  methods: {
+    salirMenuPredial() {
+      this.$router.push('/menu-predial');
+    },
+    salirMenuIngreso() {
+      this.$router.push('/menu-ingreso');
     }
   }
 };

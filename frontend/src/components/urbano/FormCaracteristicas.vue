@@ -136,7 +136,7 @@
           <v-col cols="12" sm="6" md="2">
             <v-select 
               :items="valida" 
-              label="Alumbrado" 
+              label="Alumbrado Público" 
               v-model="form.alumbrado" 
               item-text="title" 
               item-value="id" 

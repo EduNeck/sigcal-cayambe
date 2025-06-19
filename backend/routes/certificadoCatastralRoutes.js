@@ -61,4 +61,16 @@ router.delete('/elimina_certificado/:id', async (req, res) => {
   }
 });
 
+// Obtener datos completos de certificado catastral por clave catastral
+router.get('/certificado_detalle_by_clave/:clave', async (req, res) => {
+  const { clave } = req.params;
+  try {
+    const data = await certificadoCatastralModel.getCertificadoCatastralDetallePorClave(clave);
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Error al obtener detalle de certificado por clave catastral:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

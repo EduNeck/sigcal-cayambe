@@ -169,11 +169,51 @@ async function eliminaCertificado(id) {
   return { message: 'Certificado eliminado correctamente' };
 }
 
+// Servicio para obtener datos completos de certificado catastral por clave catastral
+async function getCertificadoCatastralDetallePorClave(claveCatastral) {
+  const query = `
+    SELECT 
+      p.id_predio, 
+      p.clave_catastral, 
+      p.clave_catastral_anterior, 
+      p.id_tipo_predio,
+      t.id_tenencia, 
+      ROUND(t.porcentaje_participacion::numeric,2) AS porcentaje_participacion,
+      c.nombres, 
+      c.numero_documento, 
+      ROUND(v.area_suelo_porcentual::numeric, 2) AS area_suelo_porcentual,
+      ROUND(v.area_construcciones_porcentual::numeric, 2) AS area_construcciones_porcentual, 
+      ROUND(v.valor_suelo_porcentual::numeric, 2) AS valor_suelo_porcentual, 
+      ROUND(v.valor_construcciones_porcentual::numeric, 2) AS valor_construcciones_porcentual, 
+      ROUND(v.valor_adicionales_porcentual::numeric, 2) AS valor_adicionales_porcentual,
+      ROUND(v.avaluo_predio_porcentual::numeric, 2) AS avaluo_predio_porcentual, 
+      v.parroquia, 
+      r.descripcion AS nombre_parroquia,     
+      ROUND(v.alicuota::numeric, 2) AS alicuota
+    FROM 
+      public.catastro_predio p 
+    LEFT JOIN 
+      public.catastro_tenencia t ON p.id_predio = t.id_predio
+    LEFT JOIN 
+      public.catastro_ciudadano c ON c.id_ciudadano = t.id_propietario
+    LEFT JOIN 
+      valores_reportes.vista_patrimonio_urbano v ON v.id_predio = p.id_predio
+      AND t.id_tenencia = v.id_tenencia_propiedad
+    LEFT JOIN 
+      public.catastro_parroquia r ON r.id_par = v.parroquia
+    WHERE 
+      p.clave_catastral = $1
+  `;
+  const { rows } = await db.query(query, [claveCatastral]);
+  return rows;
+}
+
 module.exports = {
   recuperaCertificado,
   recuperaCertificadoById,
   insertaCertificado,
   actualizaCertificado,
   eliminaCertificado,
+  getCertificadoCatastralDetallePorClave,
 };
 

@@ -70,7 +70,6 @@ export default {
           titulo: 'VISOR',
           items: [
             { title: 'Geo Visor', route: '/visor-geo-local' },
-            { title: 'Visor Información', route: '/visor-geo-informacion' }
           ]
         },
         {
@@ -86,17 +85,15 @@ export default {
         {
           titulo: 'REPORTES',
           items: [
+            { title: 'Genera Certificado', route: '/genera-certificados-urb' },
             { title: 'Certificado Catastral', route: '/busquedaCertCatasUrb' },
             { title: 'Certificado Plusvalía', route: '/busquedaCertPlusvalia' },
-            { title: 'Ficha Predial', route: '/impresion-ficha' }
           ]
         },
         {
           titulo: 'VALORACIÓN',
           items: [
             { title: 'Genera Valoración', route: '/genera-valoracion' },
-            { title: 'Certificado Catastral', route: '/genera-certificado' },
-            { title: 'PDF Catastral', route: '/certificado-catastral' },
             { title: 'Valores Comerciales', route: '/valores-comerciales' },
             { title: 'Factores Suelo', route: '/valoracion-suelo-factores' },
             { title: 'Factores Piso', route: '/valoracion-piso-factores' },
