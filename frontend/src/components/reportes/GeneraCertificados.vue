@@ -262,8 +262,15 @@ export default {
         porcentaje_participacion: this.form.alicuota
       };
       console.log('Datos enviados al certificado:', datosEnviados);
+      // Abrir Certificado Plusvalía en nueva ventana si está seleccionado
+      if (this.form.certificadoPlusvalia) {
+        const queryString = Object.entries(datosEnviados)
+          .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+          .join('&');
+        window.open(`/certificado-plusvalia?${queryString}`, '_blank');
+      }
       this.$router.push({
-        path: '/certificadoCatastral',
+        path: '/certificado-catastral',
         query: datosEnviados
       });
     },

@@ -1,6 +1,6 @@
 export default [
 
-  { path: '/certificado-catastral', component: () => import('@/components/valoracion/CertificadoCatastral.vue'), meta: { requiresAuth: true } },
+  { path: '/certificado-catastral-val', component: () => import('@/components/valoracion/CertificadoCatastral.vue'), meta: { requiresAuth: true } },
   { path: '/fito-corvini', component: () => import('@/components/valoracion/FitoCorvini.vue'), meta: { requiresAuth:  true } },
   { path: '/genera-certificado', component: () => import('@/components/valoracion/GeneraCertificado.vue'), meta: { requiresAuth: true } },
   { path: '/genera-valoracion', component: () => import('@/components/valoracion/GeneraValoracion.vue'), meta: { requiresAuth: true } },

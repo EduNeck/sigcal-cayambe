@@ -539,14 +539,22 @@ export default {
 }
 
 .logo {
-  max-width: 50%;
+  max-width: 100%;
+  width: 160px;
+  max-height: 90px;
   height: auto;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+  background: none;
 }
 
 .title {
-  font-size: 0.7rem;
+  font-size: 1rem;
   font-weight: bold;
-  color:#114358;
+  color: #114358;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .fondo-sub {
