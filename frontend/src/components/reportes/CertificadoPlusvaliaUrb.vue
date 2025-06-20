@@ -586,11 +586,12 @@ export default {
   min-height: 297mm;
   max-width: 210mm;
   max-height: 297mm;
-  margin: 1px auto;
-  padding: 5mm 5mm;
+  margin: 0 auto;
+  padding: 8mm 8mm 6mm 8mm;
   background: #ffffff;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .org-header {
   display: flex;
@@ -623,9 +624,21 @@ export default {
     min-height: 297mm;
     max-width: 210mm;
     max-height: 297mm;
-    padding: 20mm 15mm;
+    padding: 8mm 8mm 6mm 8mm;
     background: #fff;
-    page-break-after: always;
+    /* Eliminar saltos de página forzados */
+    page-break-after: avoid;
+    page-break-before: avoid;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    overflow: hidden;
   }
 }
 .block {
@@ -691,9 +704,28 @@ export default {
   width: 100%;
   text-align: center;
   font-size: 0.85rem;
-  color: #ffffff;
+  color: #114358; /* Cambiado de #ffffff a #114358 para que sea visible en PDF/impresión */
   margin-top: 18px;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+@media print {
+  .footer-fecha {
+    color: #114358 !important; /* Asegura visibilidad en PDF */
+    position: absolute;
+    bottom: 12mm;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    z-index: 100;
+    font-size: 0.85rem;
+    text-align: center;
+    page-break-inside: avoid;
+  }
 }
 
 </style>
