@@ -86,8 +86,6 @@ export default {
           titulo: 'REPORTES',
           items: [
             { title: 'Genera Certificado', route: '/genera-certificados' },
-            { title: 'Certificado Catastral', route: '/busquedaCertCatasUrb' },
-            { title: 'Certificado Plusvalía', route: '/busquedaCertPlusvalia' },
           ]
         },
         {
@@ -168,33 +166,33 @@ export default {
 }
 
 .salir-btn {
-  background-color: #922b21 !important;
-  color: white !important;
+  background-color: #922b21 ;
+  color: white ;
 }
 
 .salir-btn:hover {
-  background-color: #7b1e17 !important;
+  background-color: #7b1e17 ;
 }
 
 /* Colores urbanos */
 .urbano-barra {
-  background-color: #276E90 !important;
+  background-color: #276E90 ;
 }
 .urbano-boton {
-  background-color: #276E90 !important;
+  background-color: #276E90 ;
 }
 .urbano-boton:hover {
-  background-color: #114358 !important;
+  background-color: #114358 ;
 }
 
 /* Colores rurales */
 .rural-barra {
-  background-color: #668A4C !important;
+  background-color: #668A4C ;
 }
 .rural-boton {
-  background-color: #668A4C !important;
+  background-color: #668A4C ;
 }
 .rural-boton:hover {
-  background-color: #324b21 !important;
+  background-color: #324b21 ;
 }
 </style>
