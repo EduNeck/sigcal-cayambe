@@ -1,4 +1,16 @@
 <template>
+  <!-- Overlay de carga usuarios -->
+  <v-overlay
+    :model-value="loading"
+    class="d-flex align-center justify-center"
+    persistent
+    style="z-index: 2000"
+  >
+    <v-card class="pa-4 text-center" color="#f5f5f5">
+      <v-progress-circular indeterminate color="primary" size="50" class="mb-2" />
+      <div aria-live="polite">Cargando usuarios, por favor espere...</div>
+    </v-card>
+  </v-overlay>
   <v-container class="container">
     <v-row justify="center" align="center">
       <v-col cols="12" class="text-center">
@@ -131,6 +143,7 @@ export default {
         { title: 'Valoración Rural', value: 'val_rural' }
       ],
       usuarios: [],
+      loading: false,
     };
   },
   created() {
@@ -138,11 +151,14 @@ export default {
   },
   methods: {
     async recargaUsuario() {
+      this.loading = true;
       try {
         const response = await axios.get(`${API_BASE_URL}/recuperaTodosUsuarios`);
         this.usuarios = response.data;
       } catch (error) {
         console.error('Error al recuperar los usuarios:', error);
+      } finally {
+        this.loading = false;
       }
     },
     salir() {

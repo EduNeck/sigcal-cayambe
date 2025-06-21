@@ -1,4 +1,16 @@
 <template>
+  <!-- Overlay de carga catálogo dominios -->
+  <v-overlay
+    :model-value="loadingCatalogo"
+    class="d-flex align-center justify-center"
+    persistent
+    style="z-index: 2000"
+  >
+    <v-card class="pa-4 text-center" color="#f5f5f5">
+      <v-progress-circular indeterminate color="primary" size="50" class="mb-2" />
+      <div aria-live="polite">Cargando catálogo, por favor espere...</div>
+    </v-card>
+  </v-overlay>
   <v-container class="container">
     <v-row justify="center" align="center">
       <v-col cols="12" class="text-center">
@@ -14,7 +26,8 @@
       <v-col cols="12">
         <v-data-table
           :headers="headers"
-          :items="dominios"
+          :items="filteredDominios"
+          :search="search"
           item-key="id"
           class="elevation-2 rounded-lg"
           dense
@@ -24,6 +37,16 @@
             <v-toolbar flat class="bg-primary rounded-t-lg">
               <v-toolbar-title class="white--text">Dominios</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-text-field
+                v-model="search"
+                append-icon="mdi-magnify"
+                label="Buscar en el catálogo"
+                single-line
+                hide-details
+                clearable
+                class="ma-2"
+                style="max-width: 300px;"
+              ></v-text-field>
             </v-toolbar>
           </template>
 
@@ -124,8 +147,10 @@ export default {
       snackbar: false,
       snackbarText: '',
       snackbarColor: 'success',
+      search: '',
+      loadingCatalogo: false,
       headers: [
-        { title: 'ID Tipo Atributo', value: 'id_tipo_atributo', align: 'start' },
+        { title: 'Tipo Atributo', value: 'id_tipo_atributo', align: 'start' },
         { title: 'Descripción Tipo Atributo', value: 'tipo_atributo_desc', align: 'start' },
         { title: 'Código', value: 'codigo' },
         { title: 'Descripción', value: 'descripcion' },
@@ -136,9 +161,22 @@ export default {
       ],
     };
   },
+  computed: {
+    filteredDominios() {
+      if (!this.dominios) return [];
+      if (!this.search) return this.dominios;
+      const searchLower = this.search.toLowerCase();
+      return this.dominios.filter(item =>
+        Object.values(item).some(val =>
+          String(val ?? '').toLowerCase().includes(searchLower)
+        )
+      );
+    },
+  },
   methods: {
     async cargarTiposAtributo() {
       try {
+        this.loadingCatalogo = true;
         const response = await axios.get(`${API_BASE_URL}/tipo_atributo`);
         if (Array.isArray(response.data)) {
           this.tipoAtributos = response.data.map(item => ({
@@ -148,11 +186,14 @@ export default {
         }
       } catch (error) {
         console.error('Error al cargar tipos de atributo:', error);
+      } finally {
+        this.loadingCatalogo = false;
       }
     },
 
     async cargarDominios() {
       try {
+        this.loadingCatalogo = true;
         const response = await axios.get(`${API_BASE_URL}/catalogo_dominios`);
         let data = [];
 
@@ -168,6 +209,8 @@ export default {
         }));
       } catch (error) {
         console.error('Error al cargar dominios:', error);
+      } finally {
+        this.loadingCatalogo = false;
       }
     },
 

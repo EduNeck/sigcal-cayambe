@@ -4,6 +4,43 @@
       <v-col cols="12" sm="8" md="6">
         <v-card class="elevation-12 form-card">
           <v-card-title class="headline primary--text text-center">Ingreso de Usuario</v-card-title>
+          <!-- Botones de Acción arriba del formulario -->
+          <v-card-actions class="justify-center">
+            <v-btn
+              v-if="!isEditing"
+              :disabled="!valid"
+              color="success"
+              class="mr-4"
+              @click="ingresaUsuario"
+            >
+              Guardar
+            </v-btn>
+            <v-btn
+              v-if="isEditing"
+              :disabled="!valid"
+              color="warning"
+              class="mr-4"
+              @click="actualizaUsuario"
+            >
+              Actualizar
+            </v-btn>
+            <v-btn
+              :color="form.active === 'Y' ? 'error' : 'success'"
+              class="mr-4"
+              @click="actualizarEstado"
+            >
+              {{ form.active === 'Y' ? 'Inactivar' : 'Activar' }}
+            </v-btn>
+            <v-btn
+              :color="form.priv_admin === 'Y' ? 'error' : 'success'"
+              class="mr-4"
+              @click="actualizarPrivAdmin"
+            >
+              {{ form.priv_admin === 'Y' ? 'Quitar Admin' : 'Dar Admin' }}
+            </v-btn>
+            <v-btn color="error" @click="reset">Limpiar</v-btn>
+            <v-btn color="primary" @click="salir">Salir</v-btn>
+          </v-card-actions>
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy-validation>
               <!-- Información Básica -->
@@ -45,6 +82,7 @@
                         outlined
                         dense
                         class="white-input full-width"
+                        :disabled="isEditing"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12">
@@ -66,6 +104,16 @@
                         outlined
                         dense
                         class="white-input full-width"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        :value="form.priv_admin === 'Y' ? 'SI' : 'NO'"
+                        label="Privilegio Administrador"
+                        outlined
+                        dense
+                        class="white-input full-width"
+                        :disabled="true"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -151,44 +199,6 @@
                   ></v-checkbox>
                 </v-col>
               </v-row>
-
-              <!-- Botones de Acción -->
-              <v-card-actions class="justify-center">
-                <v-btn
-                  v-if="!isEditing"
-                  :disabled="!valid"
-                  color="success"
-                  class="mr-4"
-                  @click="ingresaUsuario"
-                >
-                  Guardar
-                </v-btn>
-                <v-btn
-                  v-if="isEditing"
-                  :disabled="!valid"
-                  color="warning"
-                  class="mr-4"
-                  @click="actualizaUsuario"
-                >
-                  Actualizar
-                </v-btn>
-                <v-btn
-                  :color="form.active === 'Y' ? 'error' : 'success'"
-                  class="mr-4"
-                  @click="actualizarEstado"
-                >
-                  {{ form.active === 'Y' ? 'Inactivar' : 'Activar' }}
-                </v-btn>
-                <v-btn
-                  :color="form.priv_admin === 'Y' ? 'error' : 'success'"
-                  class="mr-4"
-                  @click="actualizarPrivAdmin"
-                >
-                  {{ form.priv_admin === 'Y' ? 'Quitar Admin' : 'Dar Admin' }}
-                </v-btn>
-                <v-btn color="error" @click="reset">Limpiar</v-btn>
-                <v-btn color="primary" @click="salir">Salir</v-btn>
-              </v-card-actions>
             </v-form>
           </v-card-text>
         </v-card>
@@ -271,14 +281,17 @@ export default {
         if (usuario.photo) {
           if (typeof usuario.photo === 'string') {
             this.form.photoUrl = `data:image/png;base64,${usuario.photo}`;
+            this.form.photoOriginal = usuario.photo; // Guardar base64
           } else if (usuario.photo.data) {
             const byteArray = new Uint8Array(usuario.photo.data);
             const blob = new Blob([byteArray], { type: 'image/png' });
             this.form.photoUrl = URL.createObjectURL(blob);
+            // No base64 disponible, no se guarda photoOriginal
           }
           console.log('Foto recuperada:', this.form.photoUrl);
         } else {
           this.form.photoUrl = '';
+          this.form.photoOriginal = null;
         }
       } catch (error) {
         console.error('Error al recuperar el usuario:', error);
@@ -336,10 +349,14 @@ export default {
         try {
           const formData = new FormData();
           formData.append('login', this.form.login);
-          formData.append('pswd', this.form.pswd);
           formData.append('name', this.form.name);
           formData.append('email', this.form.email);
-          formData.append('photo', this.form.photo);
+          // Si hay nueva foto, se envía; si no, se envía la original (base64)
+          if (this.form.photo) {
+            formData.append('photo', this.form.photo);
+          } else if (this.form.photoOriginal) {
+            formData.append('photo', this.form.photoOriginal);
+          }
           formData.append('active', this.form.active);
           formData.append('priv_admin', this.form.priv_admin);
           formData.append('priv_rol', this.form.priv_rol || 'N');
@@ -348,11 +365,13 @@ export default {
           formData.append('priv_tipo_sec', this.form.priv_tipo_sec || 'N');
           formData.append('val_urbano', this.form.val_urbano|| 'N');
           formData.append('val_rural', this.form.val_rural|| 'N');
-
+          // Solo enviar contraseña si NO está en edición
+          if (!this.isEditing && this.form.pswd) {
+            formData.append('pswd', this.form.pswd);
+          }
           console.log('Datos enviados:', JSON.stringify(this.form, null, 2));
           console.log('val_urbano:', this.form.val_urbano);
           console.log('val_rural:', this.form.val_rural);
-
           const response = await axios.put(`${API_BASE_URL}/actualizaUsuario/${this.form.login}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
@@ -426,7 +445,7 @@ export default {
 
 .v-card {
   padding: 20px;
-  background-color: #d0d3d4; 
+  background-color: #ffffff; 
 }
 
 .v-card-title {
