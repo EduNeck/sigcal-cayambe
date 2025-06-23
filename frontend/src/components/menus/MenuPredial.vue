@@ -1,7 +1,7 @@
 <template>
   <!-- Barra superior -->
-  <v-app-bar :class="barraClase" :elevation="2" class="d-flex justify-center">
-    <v-app-bar-title class="text-center text-white text-uppercase">
+  <v-app-bar :class="['menu-app-bar', barraClase]">
+    <v-app-bar-title class="menu-app-bar-title">
       {{ tituloPredio }}
     </v-app-bar-title>
   </v-app-bar>
@@ -152,6 +152,25 @@ export default {
 </script>
 
 <style scoped>
+.menu-app-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 64px;
+  padding: 0 16px;
+
+}
+
+.menu-app-bar-title {
+  text-align: center;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 1.5rem;
+  width: 100%;
+}
+
 .centered-image {
   max-width: 100%;
   object-fit: contain;
@@ -176,23 +195,23 @@ export default {
 
 /* Colores urbanos */
 .urbano-barra {
-  background-color: #276E90 ;
+  background-color: #276E90 !important;
 }
 .urbano-boton {
-  background-color: #276E90 ;
+  background-color: #276E90;
 }
 .urbano-boton:hover {
-  background-color: #114358 ;
+  background-color: #114358;
 }
 
 /* Colores rurales */
 .rural-barra {
-  background-color: #668A4C ;
+  background-color: #668A4C !important;
 }
 .rural-boton {
-  background-color: #668A4C ;
+  background-color: #668A4C;
 }
 .rural-boton:hover {
-  background-color: #324b21 ;
+  background-color: #324b21;
 }
 </style>

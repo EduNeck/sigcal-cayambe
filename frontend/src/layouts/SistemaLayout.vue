@@ -13,10 +13,13 @@
         </div>
         <!-- Contenedor del usuario + logout -->
         <div class="d-flex align-center mr-3">
-          <v-avatar v-if="userPhoto" size="36" class="mr-2">
+          <v-avatar v-if="userPhoto" size="36" class="mr-2 avatar-bordered">
             <v-img :src="`data:image/png;base64,${userPhoto}`" alt="Avatar"></v-img>
           </v-avatar>
           <span v-if="userName" class="user-name mr-2">{{ userName }}</span>
+          <v-btn @click="goToConfig" color="primary" variant="plain" class="mr-2">
+            <v-icon start>mdi-cog</v-icon>
+          </v-btn>
           <v-btn @click="logout" color="error" variant="plain">
             <v-icon start>mdi-logout</v-icon>
             Salir
@@ -75,6 +78,9 @@
             setTimeout(() => {
                 this.$router.push('/login');
             }, 1000);
+        },
+        goToConfig() {
+            this.$router.push('/configuracion-usuario');
         }
     },
 
@@ -107,5 +113,9 @@
   .text-center {
     text-align: center;
     color: #ffffff; 
+  }
+  .avatar-bordered {
+    border: 2px solid #1976d2;
+    box-shadow: 0 0 4px #1976d233;
   }
   </style>

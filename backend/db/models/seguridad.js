@@ -194,6 +194,39 @@ const cambiarPrivAdmin = async (login, priv_admin) => {
   }
 };
 
+// Función para actualizar la contraseña solo si la clave anterior es correcta
+const actualizarClaveUsuario = async (login, claveAnterior, claveNueva) => {
+  // 1. Obtener el hash actual de la base de datos
+  const querySelect = `SELECT pswd FROM public.sec_users WHERE login = $1`;
+  const valuesSelect = [login];
+  try {
+    const result = await db.query(querySelect, valuesSelect);
+    if (result.rows.length === 0) {
+      throw new Error(`Usuario con login '${login}' no encontrado.`);
+    }
+    const hashActual = result.rows[0].pswd;
+    // 2. Verificar la clave anterior
+    const coincide = await bcrypt.compare(claveAnterior, hashActual);
+    if (!coincide) {
+      throw new Error('La clave anterior no es correcta.');
+    }
+    // 3. Actualizar la clave
+    const hashedPassword = await bcrypt.hash(claveNueva, 10);
+    const queryUpdate = `
+      UPDATE public.sec_users
+      SET pswd = $2
+      WHERE login = $1
+      RETURNING login;
+    `;
+    const valuesUpdate = [login, hashedPassword];
+    const resultUpdate = await db.query(queryUpdate, valuesUpdate);
+    return resultUpdate.rows[0];
+  } catch (err) {
+    console.error('Error actualizando clave del usuario:', err.message);
+    throw new Error(`Error actualizando clave del usuario: ${err.message}`);
+  }
+};
+
 module.exports = {
   autenticarUsuario,  
   ingresoUsuario,
@@ -203,6 +236,6 @@ module.exports = {
   obtenerTodosUsuarios,
   cambiarEstadoUsuario,
   cambiarPrivAdmin,
-
+  actualizarClaveUsuario,
 };
 

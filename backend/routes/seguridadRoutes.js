@@ -116,4 +116,34 @@ router.put('/cambiarPrivAdmin/:login', async (req, res) => {
   }
 });
 
+// ---------------------- CAMBIAR CONTRASEÑA DE USUARIO ----------------------
+router.put('/cambiarContrasena/:login', async (req, res) => {
+  const { login } = req.params;
+  const { pswd } = req.body;
+
+  try {
+    const usuario = await seguridadModel.actualizarClaveUsuario(login, pswd);
+    usuario
+      ? res.json({ message: 'Contraseña cambiada con éxito', usuario })
+      : res.status(404).json({ error: 'Usuario no encontrado' });
+  } catch (err) {
+    console.error('Error cambiando contraseña del usuario:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- ACTUALIZAR CLAVE USUARIO ----------------------
+router.put('/actualizarClaveUsuario', async (req, res) => {
+  const { login, claveAnterior, claveNueva } = req.body;
+  if (!login || !claveAnterior || !claveNueva) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos.' });
+  }
+  try {
+    const data = await seguridadModel.actualizarClaveUsuario(login, claveAnterior, claveNueva);
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
