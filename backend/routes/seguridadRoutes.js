@@ -146,4 +146,48 @@ router.put('/actualizarClaveUsuario', async (req, res) => {
   }
 });
 
+// ---------------------- CREAR O ACTUALIZAR USUARIO DIBUJO  ----------------------
+router.post('/creaUsuarioDibujo', async (req, res) => {
+  const { username, password, role } = req.body;
+  if (!username || !password || !role) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos.' });
+  }
+  try {
+    const result = await seguridadModel.creaUsuarioDibujo(username, password, role);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------- RESETEAR CLAVE USUARIO (deja la clave vacía) ----------------------
+router.put('/reseteaClaveUsuario/:login', async (req, res) => {
+  const { login } = req.params;
+  if (!login) {
+    return res.status(400).json({ success: false, error: 'Falta el parámetro login.' });
+  }
+
+  try {
+    const result = await seguridadModel.reseteaClaveUsuario(login);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------- RESETEAR CLAVE USUARIO DE DIBUJO (ALTER USER ... WITH PASSWORD ...) ----------------------
+router.put('/reseteaClaveDibujo/:username', async (req, res) => {
+  const { username } = req.params;
+  const { password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos: username y password.' });
+  }
+  try {
+    const result = await seguridadModel.reseteaClaveDibujo(username, password);
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

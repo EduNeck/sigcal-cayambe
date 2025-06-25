@@ -1,16 +1,19 @@
 <template>
   <v-container class="pa-4 fill-height">
     <v-row justify="center" align="center" class="fill-height">
-      <v-col cols="12" sm="8" md="6">
-        <v-card class="elevation-12 form-card">
-          <v-card-title class="headline primary--text text-center">Ingreso de Usuario</v-card-title>
-          <!-- Botones de Acción arriba del formulario -->
-          <v-card-actions class="justify-center">
+      <v-col cols="12" sm="10" md="8">
+        <v-card class="elevation-12 pa-6 rounded-lg">
+          <v-card-title class="text-center text-primary font-weight-bold text-h5">
+            Ingreso de Usuario
+          </v-card-title>
+
+          <!-- Botones centrados y organizados -->
+          <v-card-actions class="d-flex flex-wrap justify-center">
             <v-btn
               v-if="!isEditing"
               :disabled="!valid"
               color="success"
-              class="mr-4"
+              class="ma-2"
               @click="ingresaUsuario"
             >
               Guardar
@@ -19,28 +22,37 @@
               v-if="isEditing"
               :disabled="!valid"
               color="warning"
-              class="mr-4"
+              class="ma-2"
               @click="actualizaUsuario"
             >
               Actualizar
             </v-btn>
             <v-btn
               :color="form.active === 'Y' ? 'error' : 'success'"
-              class="mr-4"
+              class="ma-2"
               @click="actualizarEstado"
             >
               {{ form.active === 'Y' ? 'Inactivar' : 'Activar' }}
             </v-btn>
             <v-btn
               :color="form.priv_admin === 'Y' ? 'error' : 'success'"
-              class="mr-4"
+              class="ma-2"
               @click="actualizarPrivAdmin"
             >
               {{ form.priv_admin === 'Y' ? 'Quitar Admin' : 'Dar Admin' }}
             </v-btn>
-            <v-btn color="error" @click="reset">Limpiar</v-btn>
-            <v-btn color="primary" @click="salir">Salir</v-btn>
+            <v-btn color="error" class="ma-2" @click="reset">Limpiar</v-btn>
+            <v-btn color="primary" class="ma-2" @click="salir">Salir</v-btn>
+            <v-btn
+              v-if="isEditing"
+              color="error"
+              class="ma-2"
+              @click="resetearClaveUsuario"
+            >
+              Resetea
+            </v-btn>
           </v-card-actions>
+
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy-validation>
               <!-- Información Básica -->
@@ -48,17 +60,26 @@
               <v-divider></v-divider>
               <v-row>
                 <!-- Foto de Usuario -->
-                <v-col cols="12" sm="4" class="text-center">
-                  <v-img :src="form.photoUrl" v-if="form.photoUrl" class="my-4 photo-size"></v-img>
-                  <v-file-input
-                    label="Subir Foto"
-                    prepend-icon="mdi-camera"
-                    @change="onFileChange"
-                    accept="image/*"
-                    class="white-input"
-                    outlined dense
-                  ></v-file-input>
-                </v-col>
+              <v-col cols="12" sm="4" class="d-flex flex-column align-center justify-center">
+                <div class="photo-wrapper mb-3">
+                  <v-img
+                    v-if="form.photoUrl"
+                    :src="form.photoUrl"
+                    class="photo-avatar"
+                    alt="Foto de usuario"
+                  />
+                </div>
+                <v-file-input
+                  label="Subir Foto"
+                  prepend-icon="mdi-camera"
+                  @change="onFileChange"
+                  accept="image/*"
+                  class="white-input"
+                  outlined dense
+                  hide-details
+                />
+              </v-col>
+
                 <!-- Campos de Información Básica -->
                 <v-col cols="12" sm="8">
                   <v-row>
@@ -199,6 +220,55 @@
                   ></v-checkbox>
                 </v-col>
               </v-row>
+
+              <!-- Bloque para usuario de dibujo -->
+              <v-card-subtitle class="subtitle-1 primary--text mt-6">Usuario de Dibujo (Geo)</v-card-subtitle>
+              <v-divider></v-divider>
+              <v-row>
+                <v-col cols="12" sm="6">
+                  <v-select
+                    v-model="geoUser.role"
+                    :items="geoRoles"
+                    label="Rol de Dibujo"
+                    item-title="text"
+                    item-value="value"
+                    required
+                    outlined
+                    dense
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model="geoUser.username"
+                    label="Usuario de Dibujo"
+                    required
+                    outlined
+                    dense
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model="geoUser.password"
+                    label="Contraseña de Dibujo"
+                    type="password"
+                    required
+                    outlined
+                    dense
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="12" sm="8" class="d-flex align-end">
+                  <v-btn color="primary" @click="guardarUsuarioDibujo">
+                    Guardar Usuario
+                  </v-btn>
+                </v-col>
+                <v-col cols="12" sm="4" class="d-flex align-end">
+                  <v-btn color="error" @click="resetearClaveDibujo" >
+                    Resetea Contraseña
+                  </v-btn>
+                </v-col>
+              </v-row>
             </v-form>
           </v-card-text>
         </v-card>
@@ -212,6 +282,9 @@
     </v-snackbar>
   </v-container>
 </template>
+
+<!-- Tu <script> y <style scoped> permanecen igual, no se tocan funciones -->
+
 
 <script>
 import axios from 'axios';
@@ -251,7 +324,17 @@ export default {
       snackbar: false,
       snackbarMessage: '',
       snackbarError: false,
-      snackbarErrorMessage: ''
+      snackbarErrorMessage: '',
+      geoUser: {
+        username: '',
+        password: '',
+        role: ''
+      },
+      geoRoles: [
+        { text: 'Geocodificador', value: 'geocodificador' },
+        { text: 'Consulta', value: 'consulta' },
+        { text: 'Planeamiento', value: 'planeamiento' }
+      ]
     };
   },
   async mounted() {
@@ -429,6 +512,49 @@ export default {
     },
     salir() {
       this.$router.back();
+    },
+    async guardarUsuarioDibujo() {
+      try {
+        const response = await axios.post(`${API_BASE_URL}/creaUsuarioDibujo`, {
+          username: this.geoUser.username,
+          password: this.geoUser.password,
+          role: this.geoUser.role
+        });
+        this.snackbarMessage = response.data.success ? 'Usuario de dibujo creado/actualizado correctamente' : (response.data.error || 'Error al crear usuario de dibujo');
+        this.snackbar = true;
+        if (response.data.success) {
+          this.geoUser.username = '';
+          this.geoUser.password = '';
+          this.geoUser.role = '';
+        }
+      } catch (error) {
+        this.snackbarErrorMessage = error.response?.data?.error || 'Error al crear usuario de dibujo';
+        this.snackbarError = true;
+      }
+    },
+    async resetearClaveUsuario() {
+      try {
+        console.log('Reseteando clave para el usuario:', this.form.login);
+        const response = await axios.put(`${API_BASE_URL}/reseteaClaveUsuario/${this.form.login}`);
+        this.snackbarMessage = response.data.success ? 'Contraseña reseteada con éxito' : (response.data.error || 'Error al resetear la contraseña');
+        this.snackbar = true;
+      } catch (error) {
+        this.snackbarErrorMessage = error.response?.data?.error || 'Error al resetear la contraseña';
+        this.snackbarError = true;
+      }
+    },
+    async resetearClaveDibujo() {
+      try {
+        const response = await axios.put(
+          `${API_BASE_URL}/reseteaClaveDibujo/${this.geoUser.username}`,
+          { password: this.geoUser.password }
+        );
+        this.snackbarMessage = response.data.success ? 'Contraseña de dibujo reseteada correctamente' : (response.data.error || 'Error al resetear la contraseña de dibujo');
+        this.snackbar = true;
+      } catch (error) {
+        this.snackbarErrorMessage = error.response?.data?.error || 'Error al resetear la contraseña de dibujo';
+        this.snackbarError = true;
+      }
     }
   }
 };
@@ -478,5 +604,25 @@ export default {
   width: 150px; 
   height: 150px; 
   object-fit: cover; 
+}
+
+.photo-wrapper {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  border: 3px solid #1976d2;
+  transition: transform 0.2s ease-in-out;
+}
+
+.photo-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.photo-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

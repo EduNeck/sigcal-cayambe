@@ -227,6 +227,59 @@ const actualizarClaveUsuario = async (login, claveAnterior, claveNueva) => {
   }
 };
 
+// Ejecuta la función admingeo.create_or_update_user_secure
+const creaUsuarioDibujo = async (username, password, role) => {
+  const query = `SELECT admingeo.create_or_update_user_secure($1, $2, $3) as result;`;
+  const values = [username, password, role];
+  try {
+    const result = await db.query(query, values);
+    return result.rows[0].result;
+  } catch (err) {
+    console.error('Error ejecutando create_or_update_user_secure:', err.message);
+    throw new Error(`Error ejecutando create_or_update_user_secure: ${err.message}`);
+  }
+};
+
+// Función para resetear la clave de un usuario (deja la clave en '12345')
+const reseteaClaveUsuario = async (login) => {
+  const nuevaClave = '12345';
+  const hashedPassword = await bcrypt.hash(nuevaClave, 10);
+
+  const query = `
+    UPDATE public.sec_users
+    SET pswd = $1
+    WHERE login = $2
+    RETURNING login;
+  `;
+  const values = [hashedPassword, login];
+
+  try {
+    const result = await db.query(query, values);
+    if (result.rows.length === 0) {
+      throw new Error(`Usuario con login '${login}' no encontrado.`);
+    }
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error reseteando clave del usuario:', err.message);
+    throw new Error(`Error reseteando clave del usuario: ${err.message}`);
+  }
+};
+
+// Función para resetear la clave de un usuario de dibujo (ALTER USER ... WITH PASSWORD ...)
+const reseteaClaveDibujo = async (username, password) => {
+  // Encripta la clave para guardar en la tabla si es necesario (no se usa en ALTER USER)
+  const hashedPassword = await bcrypt.hash(password, 10);
+  // Ejecuta el comando ALTER USER en la base de datos para el usuario de dibujo
+  const query = `ALTER USER ${username} WITH PASSWORD '${password}';`;
+  try {
+    await db.query(query); // Ejecuta el ALTER USER (no retorna filas)
+    return { username, password, hashedPassword };
+  } catch (err) {
+    console.error('Error reseteando clave del usuario de dibujo:', err.message);
+    throw new Error(`Error reseteando clave del usuario de dibujo: ${err.message}`);
+  }
+};
+
 module.exports = {
   autenticarUsuario,  
   ingresoUsuario,
@@ -237,5 +290,8 @@ module.exports = {
   cambiarEstadoUsuario,
   cambiarPrivAdmin,
   actualizarClaveUsuario,
+  creaUsuarioDibujo,
+  reseteaClaveUsuario,
+  reseteaClaveDibujo,
 };
 
