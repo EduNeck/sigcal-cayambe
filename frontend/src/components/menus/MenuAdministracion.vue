@@ -107,7 +107,7 @@ export default {
       items_seg: [
         { title: 'Ingreso Usuarios', route: '/ingreso-usuarios' },
         { title: 'Listado Usuarios', route: '/listado-usuarios' },
-        { title: 'Gestion de Roles', route: '/gestion-roles' },
+        //{ title: 'Gestion de Roles', route: '/gestion-roles' },
       ],
       items_cat: [
         { title: 'Catalogo Sistema', route: '/catalogo-sistema' },

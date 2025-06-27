@@ -15,7 +15,7 @@
 
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">Listado de Documentos</h2>
+        <h2 class="titulo-pantalla">Listado de Anexos Documentos</h2>
       </v-col>
       <v-col cols="12" class="d-flex justify-center flex-wrap">
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-close" @click="navigateToMenuUrbano">Salir</v-btn>
@@ -32,7 +32,7 @@
         >
           <template v-slot:top>
             <v-toolbar flat>
-              <v-toolbar-title>Documentos</v-toolbar-title>
+              <v-toolbar-title>Anexos Documentales</v-toolbar-title>
               <v-divider class="mx-4" inset vertical></v-divider>
               <v-spacer></v-spacer>
               <v-text-field

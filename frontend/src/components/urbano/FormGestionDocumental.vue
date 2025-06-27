@@ -4,7 +4,7 @@
   </v-app-bar>
   <v-container class="d-flex align-center justify-center fill-height" style="min-height: 50vh;">
     <v-card class="block-color" style="width: 60%;">
-      <v-card-title class="text-center titulo-pantalla">Gestión Documental</v-card-title>
+      <v-card-title class="text-center titulo-pantalla">Anexos Documentales</v-card-title>
       <v-card-text>
         <v-form ref="form" v-model="valid">
           <v-row>

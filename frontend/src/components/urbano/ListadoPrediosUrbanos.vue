@@ -22,6 +22,9 @@
       <v-col cols="12" class="d-flex justify-center flex-wrap">
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-plus" @click="navigateToFormFichaPredial">Nuevo</v-btn>
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-close" @click="navigateToMenuUrbano">Salir</v-btn>
+        <v-btn class="btn_app mx-2 my-2" append-icon="mdi-download" @click="descargarPDF">
+          Descargar PDF
+        </v-btn>
       </v-col>
     </v-row>
 
@@ -62,6 +65,8 @@
 <script>
 import axios from 'axios';
 import API_BASE_URL from '@/config/apiConfig';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default {
   name: 'ListadoPrediosUrbanos',
@@ -159,6 +164,26 @@ export default {
 
     navigateToMenuUrbano() {
       this.$router.push('/menu-predial');
+    },
+
+    descargarPDF() {
+      const doc = new jsPDF();
+      doc.text('Listado de Predios Urbanos', 14, 14);
+      // Excluye la columna de acciones
+      const columns = this.headers
+        .filter(h => h.value !== 'actions')
+        .map(h => ({ header: h.title, dataKey: h.value }));
+      // Prepara los datos
+      const rows = this.filteredPredios.map(predio =>
+        columns.map(col => predio[col.dataKey] || '')
+      );
+      autoTable(doc, {
+        head: [columns.map(col => col.header)],
+        body: rows,
+        startY: 20,
+        styles: { fontSize: 8 },
+      });
+      doc.save('listado_predios_urbanos.pdf');
     },
   },
 };

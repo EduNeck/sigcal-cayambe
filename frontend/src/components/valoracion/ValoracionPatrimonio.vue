@@ -1,40 +1,74 @@
 <template>
-  <v-app-bar color="#A9A9A9" :elevation="1" class="d-flex justify-center">
-    <v-app-bar-title class="text-center">URBANO</v-app-bar-title>
-  </v-app-bar>  
-  <v-container class="container">
+  <v-app-bar color="#BDBDBD" :elevation="1" class="app-bar-custom">
+    <v-app-bar-title class="app-bar-title-custom">Valoración Patrimonio</v-app-bar-title>
+  </v-app-bar>
+
+  <v-container class="container fill-height">
     <v-row justify="center">
       <v-col cols="12" class="text-center">
         <h2 class="titulo-pantalla">Valoración Patrimonio</h2>
       </v-col>
+
       <v-col cols="12" class="d-flex justify-center flex-wrap">
         <v-btn class="btn_app mx-2 my-2" append-icon="mdi-close" @click="navigateToMenu">Salir</v-btn>
-        <v-btn class="btn_app mx-2 my-2" color="primary" @click="generaValoracion">Refresh</v-btn>
+        <v-btn class="btn_app mx-2 my-2" color="primary" @click="generaValoracion">Refrescar</v-btn>
       </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-data-table
-          :headers="headers"
-          :items="valoracionPatrimonio"
-          :search="search"
-          class="elevation-1"
-        >
-          <template v-slot:top>
-            <v-toolbar flat>
-              <v-toolbar-title>Valoración Patrimonio</v-toolbar-title>
-              <v-divider class="mx-4" inset vertical></v-divider>
-              <v-spacer></v-spacer>
-              <v-text-field
-                v-model="search"
-                append-icon="mdi-magnify"
-                label="Buscar"
-                single-line
-                hide-details
-              ></v-text-field>
-            </v-toolbar>
-          </template>
-        </v-data-table>
+
+      <v-col cols="12" md="10" lg="9">
+        <v-card class="pa-4 neutral-card table-wrapper">
+          <v-data-table
+            :headers="headers"
+            :items="valoracionPatrimonio"
+            :search="search"
+            item-value="id_predio"
+            show-expand
+            class="elevation-1"
+          >
+            <template v-slot:top>
+              <v-toolbar flat class="d-flex flex-wrap justify-center align-center">
+                <v-toolbar-title class="toolbar-title text-center mr-4">Valoración Patrimonial</v-toolbar-title>
+                <v-text-field
+                  v-model="search"
+                  append-icon="mdi-magnify"
+                  label="Buscar"
+                  single-line
+                  hide-details
+                  class="white-text-field"
+                ></v-text-field>
+              </v-toolbar>
+            </template>
+
+            <!-- Slots personalizados con formato -->
+            <template v-slot:item.area_suelo_porcentual="{ item }">
+              {{ formatValue(item.area_suelo_porcentual, 'area_suelo_porcentual') }}
+            </template>
+            <template v-slot:item.avaluo_predio_porcentual="{ item }">
+              {{ formatValue(item.avaluo_predio_porcentual, 'avaluo_predio_porcentual') }}
+            </template>
+            <template v-slot:item.valor_suelo_porcentual="{ item }">
+              {{ formatValue(item.valor_suelo_porcentual, 'valor_suelo_porcentual') }}
+            </template>
+            <template v-slot:item.valor_construcciones_porcentual="{ item }">
+              {{ formatValue(item.valor_construcciones_porcentual, 'valor_construcciones_porcentual') }}
+            </template>
+            <template v-slot:item.valor_instalaciones_porcentual="{ item }">
+              {{ formatValue(item.valor_instalaciones_porcentual, 'valor_instalaciones_porcentual') }}
+            </template>
+
+            <!-- Detalle expandido -->
+            <template v-slot:expanded-row="{ item }">
+              <td :colspan="headers.length">
+                <v-card flat class="pa-3">
+                  <v-row>
+                    <v-col cols="12" sm="6" v-for="(value, key) in item" :key="key">
+                      <strong>{{ formatLabel(key) }}:</strong> {{ formatValue(value, key) }}
+                    </v-col>
+                  </v-row>
+                </v-card>
+              </td>
+            </template>
+          </v-data-table>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -49,29 +83,20 @@ export default {
   data() {
     return {
       search: '',
-      headers: [
-        { title: 'Tipo Predio', value: 'tipo_predio' },
-        { title: 'PH', value: 'ph' },
-        { title: 'Clave Catastral', value: 'clave_catastral' },
-        { title: 'Clave Anterior', value: 'clave_anterior' },
-        { title: 'Parroquia', value: 'parroquia' },
-        { title: 'Número Documento', value: 'numero_documento' },
-        { title: 'Alicuota', value: 'alicuota' },
-        { title: 'Porcentaje Participación', value: 'porcentaje_participacion' },
-        { title: 'Área Suelo Porcentual', value: 'area_suelo_porcentual' },
-        { title: 'Área Construcciones Porcentual', value: 'area_construcciones_porcentual' },
-        { title: 'Valor Suelo Porcentual', value: 'valor_suelo_porcentual' },
-        { title: 'Valor Construcciones Porcentual', value: 'valor_construcciones_porcentual' },
-        { title: 'Valor Instalaciones Porcentual', value: 'valor_instalaciones_porcentual' },
-        { title: 'Valor Adicionales Porcentual', value: 'valor_adicionales_porcentual' },
-        { title: 'Avalúo Predio Porcentual', value: 'avaluo_predio_porcentual' },
-        { title: 'Año Proceso', value: 'anio_proceso' },
-        { title: 'ID Tenencia Propiedad', value: 'id_tenencia_propiedad' },
-        { title: 'ID Predio', value: 'id_predio' },
-        { title: 'Propietario', value: 'propietario' },
-        { title: 'Fecha Proceso', value: 'fecha_proceso' },
-      ],
       valoracionPatrimonio: [],
+      headers: [
+        { title: 'Clave Catastral', value: 'clave_catastral' },
+        { title: 'Propietario', value: 'propietario' },
+        { title: 'Parroquia', value: 'parroquia' },
+        { title: 'PH', value: 'ph' },
+        { title: 'Área Suelo', value: 'area_suelo_porcentual' },
+        { title: 'Avalúo', value: 'avaluo_predio_porcentual' },
+        { title: 'Valor Suelo', value: 'valor_suelo_porcentual' },
+        { title: 'Valor Construcción', value: 'valor_construcciones_porcentual' },
+        { title: 'Valor Instalación', value: 'valor_instalaciones_porcentual' },
+        { title: 'Año', value: 'anio_proceso' },
+        { title: 'Expandir', value: 'data-table-expand' },
+      ],
     };
   },
   methods: {
@@ -86,6 +111,25 @@ export default {
     navigateToMenu() {
       this.$router.push('/menu-predial');
     },
+    formatLabel(key) {
+      return key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    },
+    formatValue(value, key = '') {
+      const num = parseFloat(value);
+      if (!isNaN(num)) {
+        if (key.toLowerCase().includes('valor') || key.toLowerCase().includes('avaluo')) {
+          return new Intl.NumberFormat('es-EC', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+          }).format(num);
+        }
+        return num.toFixed(2);
+      }
+      return value;
+    },
   },
   created() {
     this.generaValoracion();
@@ -96,19 +140,64 @@ export default {
 <style scoped>
 .titulo-pantalla {
   font-size: 2rem;
-  color: #ffffff;
+  color: #333333;
 }
 
 .container {
-  background-color: #114358;
+  background-color: #E8E8E8;
+}
+
+.app-bar-custom {
+  background-color: #BDBDBD;
+}
+
+.app-bar-title-custom {
+  width: 100%;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333333;
+  letter-spacing: 1px;
 }
 
 .btn_app {
-  background-color: #276E90;
-  color: #ffffff;
+  background-color: #8C8C8C;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 8px;
+  min-width: 120px;
+  font-size: 1rem;
+}
+
+.v-btn {
+  margin-top: 20px;
+}
+
+.white-text-field {
+  background-color: #FFFFFF !important;
+  border-radius: 8px;
+  min-width: 250px;
+  max-width: 300px;
+}
+
+.neutral-card {
+  background-color: #F7F6F2;
+  border: 1px solid #D6D6D6;
+  margin: 0 auto;
+}
+
+.toolbar-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .v-data-table {
-  margin-top: 20px;
+  min-width: 1000px;
 }
 </style>

@@ -1,5 +1,10 @@
 <template>
-  <v-container class="container">
+  <v-app-bar color="#BDBDBD" :elevation="1" class="d-flex justify-center">
+    <v-app-bar-title class="text-center">
+      Fito Corvini
+    </v-app-bar-title>
+  </v-app-bar>
+  <v-container class="container fill-height">
     <v-row justify="center">
       <v-col cols="12" class="text-center">
         <h2 class="titulo-pantalla">Formulario Fito Corvini</h2>
@@ -9,30 +14,32 @@
         <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-check" @click="submitForm">Guardar</v-btn>
         <v-btn class="btn_app mx-2 custom-text-color" append-icon="mdi-check" @click="navigateToMenu">Salir</v-btn>
       </v-col>
-      <v-col cols="12">
-        <v-data-table
-          :headers="headers"
-          :items="rows"
-          item-value="id"
-          class="elevation-1"
-          hide-default-footer
-        >
-          <template v-slot:[`item.desde`]="{ item }">
-            <v-text-field v-model="item.desde" label="Desde" hide-details></v-text-field>
-          </template>
-          <template v-slot:[`item.hasta`]="{ item }">
-            <v-text-field v-model="item.hasta" label="Hasta" hide-details></v-text-field>
-          </template>
-          <template v-slot:[`item.estado`]="{ item }">
-            <v-text-field v-model="item.estado" label="Estado" hide-details></v-text-field>
-          </template>
-          <template v-slot:[`item.factor`]="{ item }">
-            <v-text-field v-model="item.factor" label="Factor" hide-details></v-text-field>
-          </template>
-          <template v-slot:[`item.actions`]="{ item }">
-            <v-icon small @click="removeRow(item)">mdi-delete</v-icon>
-          </template>
-        </v-data-table>
+      <v-col cols="12" md="8">
+        <v-card class="pa-4 neutral-card">
+          <v-data-table
+            :headers="headers"
+            :items="rows"
+            item-value="id"
+            class="elevation-1"
+            hide-default-footer
+          >
+            <template v-slot:[`item.desde`]="{ item }">
+              <v-text-field v-model="item.desde" label="Desde" hide-details class="white-text-field"></v-text-field>
+            </template>
+            <template v-slot:[`item.hasta`]="{ item }">
+              <v-text-field v-model="item.hasta" label="Hasta" hide-details class="white-text-field"></v-text-field>
+            </template>
+            <template v-slot:[`item.estado`]="{ item }">
+              <v-text-field v-model="item.estado" label="Estado" hide-details class="white-text-field"></v-text-field>
+            </template>
+            <template v-slot:[`item.factor`]="{ item }">
+              <v-text-field v-model="item.factor" label="Factor" hide-details class="white-text-field"></v-text-field>
+            </template>
+            <template v-slot:[`item.actions`]="{ item }">
+              <v-icon small @click="removeRow(item)">mdi-delete</v-icon>
+            </template>
+          </v-data-table>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -94,19 +101,32 @@ export default {
 <style scoped>
 .titulo-pantalla {
   font-size: 2rem;
-  color: #ffffff;
+  color: #333333;
 }
 
 .container {
-  background-color: #114358;
+  background-color: #E8E8E8;
 }
 
 .btn_app {
-  background-color: #276E90;
-  color: #ffffff;
+  background-color: #8C8C8C;
+  color: #FFFFFF;
 }
 
 .v-btn {
   margin-top: 20px;
+}
+
+.white-text-field .v-input__control {
+  background-color: #FFFFFF !important;
+}
+
+.white-text-field .v-input__slot {
+  background-color: #FFFFFF !important;
+}
+
+.neutral-card {
+  background-color: #F7F6F2;
+  border: 1px solid #D6D6D6;
 }
 </style>
