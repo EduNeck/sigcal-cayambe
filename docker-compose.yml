@@ -1,19 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:14
-    container_name: cayambe-db
-    restart: always
-    environment:
-      POSTGRES_DB: ${PGDATABASE}
-      POSTGRES_USER: ${PGUSER}
-      POSTGRES_PASSWORD: ${PGPASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
   backend:
     build:
       context: .
@@ -24,10 +11,6 @@ services:
       - "3001:3001"
     env_file:
       - backend/.env.production
-    depends_on:
-      - postgres
-    environment:
-      PGHOST: postgres
     networks:
       - app-network
 
@@ -38,7 +21,7 @@ services:
     container_name: cayambe-frontend
     restart: always
     ports:
-      - "80:80"
+      - "8090:80"
     depends_on:
       - backend
     networks:
@@ -58,9 +41,6 @@ services:
       - backend
     networks:
       - app-network
-
-volumes:
-  postgres_data:
 
 networks:
   app-network:

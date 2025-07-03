@@ -23,6 +23,8 @@ app.use(cors({
     'http://192.168.3.3:5173',
     'http://192.168.3.3:3001',
     // URLs de producción
+    'http://172.23.7.55:8090',   // Frontend en producción
+    'http://172.23.7.55:3001',   // Backend en producción
     'http://servidor-produccion',
     'http://servidor-produccion:5173',
     'http://servidor-produccion:3001',
