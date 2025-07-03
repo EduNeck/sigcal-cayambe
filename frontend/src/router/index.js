@@ -13,6 +13,7 @@ import parametrizacionRoutes from './parametrizacion'
 import validacionesRoutes from './validaciones'
 import valoracionRoutes from './valoracion'
 import reportesRoutes from './reportes'
+import cemRoutes from './cem'
 
 // Página de inicio básica
 const routes = [
@@ -38,7 +39,8 @@ const routes = [
       ...parametrizacionRoutes,
       ...validacionesRoutes,
       ...valoracionRoutes,
-      ...reportesRoutes,   
+      ...reportesRoutes,  
+      ...cemRoutes, 
 
     ]
   }

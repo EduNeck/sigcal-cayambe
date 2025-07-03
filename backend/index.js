@@ -14,12 +14,20 @@ pool.query('SELECT NOW()')
 // ========== Configuración de CORS ==========
 app.use(cors({
   origin: [
+    // URLs de desarrollo
     'http://localhost',
     'http://localhost:5173',
     'http://localhost:3001',
+    // URLs de red local
     'http://192.168.3.3',
     'http://192.168.3.3:5173',
-    'http://192.168.3.3:3001'
+    'http://192.168.3.3:3001',
+    // URLs de producción
+    'http://servidor-produccion',
+    'http://servidor-produccion:5173',
+    'http://servidor-produccion:3001',
+    // Dominio real de producción si lo tienes
+    'https://sigcal.cayambe.gob.ec'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -48,6 +56,7 @@ app.get('/api/ping', async (req, res) => {
 app.use('/api', require('./routes/seguridadRoutes'));
 app.use('/api', require('./routes/avaluosRoutes'));
 app.use('/api', require('./routes/catalogoRoutes'));
+app.use('/api', require('./routes/cemTipoProyectoRoutes'));
 app.use('/api', require('./routes/catalogoFotosRoutes'));
 app.use('/api', require('./routes/catalogoProvinciaCantonRoutes'));
 app.use('/api', require('./routes/catastroBloquesRoutes'));
