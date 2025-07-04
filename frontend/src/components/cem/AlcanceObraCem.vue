@@ -1,12 +1,12 @@
 <template>
   <v-app-bar color="#BDBDBD" :elevation="1" class="d-flex justify-center">
-    <v-app-bar-title class="text-center">TIPOS DE PROYECTO</v-app-bar-title>
+    <v-app-bar-title class="text-center">ALCANCE DE OBRA</v-app-bar-title>
   </v-app-bar>
 
   <v-container class="container fill-height">
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">Gestión de Tipos de Proyecto</h2>
+        <h2 class="titulo-pantalla">Gestión de Alcance de Obra</h2>
       </v-col>
       
       <v-col cols="12" md="8">
@@ -15,9 +15,9 @@
 
             <!-- Formulario -->
             <v-col cols="12" sm="8">
-              <v-form ref="form" v-model="formValido" @submit.prevent="guardarTipoProyecto">
+              <v-form ref="form" v-model="formValido" @submit.prevent="guardarAlcance">
                 <v-text-field
-                  v-model="tipoProyecto.descripcion"
+                  v-model="alcance.descripcion"
                   label="Descripción"
                   :rules="[v => !!v || 'La descripción es requerida']"
                   class="white-text-field"
@@ -29,7 +29,7 @@
                     <v-btn
                       class="btn_app"
                       :disabled="!formValido"
-                      @click="guardarTipoProyecto"
+                      @click="guardarAlcance"
                       append-icon="mdi-check"
                     >
                       {{ modoEdicion ? 'Actualizar' : 'Crear' }}
@@ -58,13 +58,13 @@
               <v-card class="mt-6 data-table-card">
                 <v-data-table
                   :headers="headers"
-                  :items="tiposProyecto"
+                  :items="alcances"
                   :search="busqueda"
                   class="elevation-1"
                 >
                   <template v-slot:top>
                     <v-toolbar flat class="toolbar-custom">
-                      <v-toolbar-title class="toolbar-title">Tipos de Proyecto</v-toolbar-title>
+                      <v-toolbar-title class="toolbar-title">Alcances de Obra</v-toolbar-title>
                       <v-divider class="mx-4" inset vertical></v-divider>
                       <v-spacer></v-spacer>
                       <v-text-field
@@ -84,7 +84,7 @@
                     <v-icon
                       size="small"
                       class="me-2"
-                      @click="editarTipoProyecto(item.raw)"
+                      @click="editarAlcance(item.raw)"
                       color="#276E90"
                     >
                       mdi-pencil
@@ -112,7 +112,7 @@
           Confirmar eliminación
         </v-card-title>
         <v-card-text>
-          ¿Está seguro que desea eliminar este tipo de proyecto?
+          ¿Está seguro que desea eliminar este alcance de obra?
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -126,7 +126,7 @@
           <v-btn
             color="error"
             variant="elevated"
-            @click="eliminarTipoProyecto"
+            @click="eliminarAlcance"
           >
             Eliminar
           </v-btn>
@@ -150,107 +150,107 @@ import axios from 'axios';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
-  name: 'TipoProyectoCem',
+  name: 'AlcanceObraCem',
   data() {
     return {
       formValido: true,
       busqueda: '',
       modoEdicion: false,
       dialogoEliminar: false,
-      tipoProyectoAEliminar: null,
+      alcanceAEliminar: null,
       snackbar: {
         show: false,
         message: '',
         color: 'success'
       },
       headers: [
-        { title: 'ID', key: 'cem_id_tipo_proyecto', align: 'start', sortable: true },
+        { title: 'ID', key: 'cem_alcance_id', align: 'start', sortable: true },
         { title: 'Descripción', key: 'descripcion', align: 'start', sortable: true },
         { title: 'Acciones', key: 'acciones', sortable: false, align: 'center' }
       ],
-      tiposProyecto: [],
-      tipoProyecto: {
-        cem_id_tipo_proyecto: null,
+      alcances: [],
+      alcance: {
+        cem_alcance_id: null,
         descripcion: ''
       }
     };
   },
   methods: {
-    async cargarTiposProyecto() {
+    async cargarAlcances() {
       try {
-        console.log('📫 Solicitando lista de tipos de proyecto...');
-        const response = await axios.get(`${API_BASE_URL}/cem-obtieneProyectos`);
-        console.log('✅ Tipos de proyecto cargados:', response.data);
-        this.tiposProyecto = response.data;
+        console.log('📫 Solicitando lista de alcances de obra...');
+        const response = await axios.get(`${API_BASE_URL}/cem-obtieneAlcances`);
+        console.log('✅ Alcances cargados:', response.data);
+        this.alcances = response.data;
       } catch (error) {
-        console.error('❌ Error al cargar tipos de proyecto:', error);
-        this.mostrarSnackbar('Error al cargar los tipos de proyecto', 'error');
+        console.error('❌ Error al cargar alcances:', error);
+        this.mostrarSnackbar('Error al cargar los alcances de obra', 'error');
       }
     },
 
-    async guardarTipoProyecto() {
+    async guardarAlcance() {
       if (!this.$refs.form.validate()) return;
 
       try {
         if (this.modoEdicion) {
-          console.log('📝 Actualizando tipo de proyecto:', this.tipoProyecto);
+          console.log('📝 Actualizando alcance:', this.alcance);
           const response = await axios.put(
-            `${API_BASE_URL}/cem-actualizaTipoProyecto/${this.tipoProyecto.cem_id_tipo_proyecto}`,
-            { descripcion: this.tipoProyecto.descripcion }
+            `${API_BASE_URL}/cem-actualizaAlcance/${this.alcance.cem_alcance_id}`,
+            { descripcion: this.alcance.descripcion }
           );
-          console.log('✅ Tipo de proyecto actualizado:', response.data);
-          this.mostrarSnackbar('Tipo de proyecto actualizado exitosamente');
+          console.log('✅ Alcance actualizado:', response.data);
+          this.mostrarSnackbar('Alcance de obra actualizado exitosamente');
         } else {
-          console.log('📝 Creando nuevo tipo de proyecto:', this.tipoProyecto);
+          console.log('📝 Creando nuevo alcance:', this.alcance);
           const response = await axios.post(
-            `${API_BASE_URL}/cem-creaTipoProyecto`,
-            { descripcion: this.tipoProyecto.descripcion }
+            `${API_BASE_URL}/cem-creaAlcance`,
+            { descripcion: this.alcance.descripcion }
           );
-          console.log('✅ Tipo de proyecto creado:', response.data);
-          this.mostrarSnackbar('Tipo de proyecto creado exitosamente');
+          console.log('✅ Alcance creado:', response.data);
+          this.mostrarSnackbar('Alcance de obra creado exitosamente');
         }
         
         this.limpiarFormulario();
-        await this.cargarTiposProyecto();
+        await this.cargarAlcances();
       } catch (error) {
-        console.error('❌ Error al guardar tipo de proyecto:', error);
+        console.error('❌ Error al guardar alcance:', error);
         this.mostrarSnackbar(
-          `Error al ${this.modoEdicion ? 'actualizar' : 'crear'} el tipo de proyecto`,
+          `Error al ${this.modoEdicion ? 'actualizar' : 'crear'} el alcance de obra`,
           'error'
         );
       }
     },
 
-    editarTipoProyecto(item) {
-      this.tipoProyecto = { ...item };
+    editarAlcance(item) {
+      this.alcance = { ...item };
       this.modoEdicion = true;
     },
 
     confirmarEliminacion(item) {
-      this.tipoProyectoAEliminar = item;
+      this.alcanceAEliminar = item;
       this.dialogoEliminar = true;
     },
 
-    async eliminarTipoProyecto() {
+    async eliminarAlcance() {
       try {
-        console.log('🗑️ Eliminando tipo de proyecto:', this.tipoProyectoAEliminar);
+        console.log('🗑️ Eliminando alcance:', this.alcanceAEliminar);
         const response = await axios.delete(
-          `${API_BASE_URL}/cem-eliminaTipoProyecto/${this.tipoProyectoAEliminar.cem_id_tipo_proyecto}`
+          `${API_BASE_URL}/cem-eliminaAlcance/${this.alcanceAEliminar.cem_alcance_id}`
         );
-        console.log('✅ Tipo de proyecto eliminado:', response.data);
-        this.mostrarSnackbar('Tipo de proyecto eliminado exitosamente');
-        await this.cargarTiposProyecto();
+        console.log('✅ Alcance eliminado:', response.data);
+        this.mostrarSnackbar('Alcance de obra eliminado exitosamente');
+        await this.cargarAlcances();
       } catch (error) {
-        console.error('❌ Error al eliminar tipo de proyecto:', error);
-        this.mostrarSnackbar('Error al eliminar el tipo de proyecto', 'error');
+        console.error('❌ Error al eliminar alcance:', error);
+        this.mostrarSnackbar('Error al eliminar el alcance de obra', 'error');
       }
       this.dialogoEliminar = false;
-      this.tipoProyectoAEliminar = null;
+      this.alcanceAEliminar = null;
     },
 
     limpiarFormulario() {
-      this.tipoProyecto = {
-        cem_id_tipo_proyecto: null,
+      this.alcance = {
+        cem_alcance_id: null,
         descripcion: ''
       };
       this.modoEdicion = false;
@@ -268,7 +268,7 @@ export default {
     }
   },
   created() {
-    this.cargarTiposProyecto();
+    this.cargarAlcances();
   }
 };
 </script>

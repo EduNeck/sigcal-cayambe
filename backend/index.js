@@ -39,6 +39,12 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
+// ========== Middleware de logging ==========
+app.use((req, res, next) => {
+  console.log(`[BACKEND] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // ========== Rutas de prueba ==========
 app.get('/', (req, res) => {
   res.send('API SIGCAL funcionando');
@@ -59,6 +65,8 @@ app.use('/api', require('./routes/seguridadRoutes'));
 app.use('/api', require('./routes/avaluosRoutes'));
 app.use('/api', require('./routes/catalogoRoutes'));
 app.use('/api', require('./routes/cemTipoProyectoRoutes'));
+app.use('/api', require('./routes/cemAlcanceObraRoutes'));
+app.use('/api', require('./routes/cemProyectosRoutes'));
 app.use('/api', require('./routes/catalogoFotosRoutes'));
 app.use('/api', require('./routes/catalogoProvinciaCantonRoutes'));
 app.use('/api', require('./routes/catastroBloquesRoutes'));
@@ -77,12 +85,6 @@ app.use('/api', require('./routes/validacionesRoutes'));
 app.use('/api', require('./routes/valoracionRoutes'));
 app.use('/api', require('./routes/prediosAvaluoCompletoRoutes'));
 app.use('/api', require('./routes/croquisRoutes'));
-
-// ========== Middleware de logging ==========
-app.use((req, res, next) => {
-  console.log(`[BACKEND] ${req.method} ${req.originalUrl}`);
-  next();
-});
 
 // ========== Iniciar servidor ==========
 const PORT = process.env.PORT || 3001;

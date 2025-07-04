@@ -13,56 +13,173 @@
             </v-col>
 
             <!-- Formulario -->
-            <v-col cols="12" sm="10">
+            <v-col cols="12">
               <v-form ref="form" v-model="formValido" @submit.prevent="guardarProyecto">
-                <v-select
-                  v-model="proyecto.cem_id_tipo_proyecto"
-                  :items="tiposProyecto"
-                  item-title="descripcion"
-                  item-value="cem_id_tipo_proyecto"
-                  label="Tipo de Proyecto"
-                  :rules="[v => !!v || 'El tipo de proyecto es requerido']"
-                  class="input-field mb-4"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-select>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="proyecto.cem_nombre"
+                      label="Nombre del Proyecto"
+                      :rules="[v => !!v || 'El nombre es requerido']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                    ></v-text-field>
+                  </v-col>
 
-                <v-text-field
-                  v-model="proyecto.nombre"
-                  label="Nombre del Proyecto"
-                  :rules="[v => !!v || 'El nombre es requerido']"
-                  class="input-field mb-4"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-text-field>
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="proyecto.cem_id_tipo_proyecto"
+                      :items="tiposProyecto"
+                      :item-title="(item) => item.descripcion || ''"
+                      :item-value="(item) => item.cem_id_tipo_proyecto"
+                      label="Tipo de Proyecto"
+                      :rules="[v => !!v || 'El tipo de proyecto es requerido']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      return-object
+                    ></v-select>
+                  </v-col>
 
-                <v-textarea
-                  v-model="proyecto.descripcion"
-                  label="Descripción"
-                  :rules="[v => !!v || 'La descripción es requerida']"
-                  class="input-field mb-4"
-                  variant="outlined"
-                  density="comfortable"
-                  rows="3"
-                ></v-textarea>
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="proyecto.cem_alcance_id"
+                      :items="alcances"
+                      :item-title="(item) => item.descripcion || ''"
+                      :item-value="(item) => item.cem_alcance_id"
+                      label="Alcance de Obra"
+                      :rules="[v => !!v || 'El alcance es requerido']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      return-object
+                    ></v-select>
+                  </v-col>
 
-                <v-text-field
-                  v-model="proyecto.ubicacion"
-                  label="Ubicación"
-                  :rules="[v => !!v || 'La ubicación es requerida']"
-                  class="input-field mb-4"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-text-field>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_base_calculo"
+                      label="Base de Cálculo"
+                      type="number"
+                      :rules="[v => v >= 0 || 'El valor debe ser mayor o igual a 0']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      prefix="$"
+                    ></v-text-field>
+                  </v-col>
 
-                <v-text-field
-                  v-model="proyecto.responsable"
-                  label="Responsable"
-                  :rules="[v => !!v || 'El responsable es requerido']"
-                  class="input-field mb-4"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-text-field>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_porc_subsidio"
+                      label="Porcentaje de Subsidio"
+                      type="number"
+                      :rules="[v => (v >= 0 && v <= 100) || 'El porcentaje debe estar entre 0 y 100']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      suffix="%"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_plazo_retorno_anios"
+                      label="Plazo de Retorno (Años)"
+                      type="number"
+                      :rules="[v => v > 0 || 'El plazo debe ser mayor a 0']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_anio_inicio_obra"
+                      label="Año de Inicio de Obra"
+                      type="number"
+                      :rules="[v => v >= 2000 || 'Ingrese un año válido']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_anio_inicio_obligaciones"
+                      label="Año Inicio Obligaciones"
+                      type="number"
+                      :rules="[v => v >= proyecto.cem_anio_inicio_obra || 'Debe ser mayor o igual al año de inicio']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_base_imponible"
+                      label="Base Imponible"
+                      type="number"
+                      :rules="[v => v >= 0 || 'El valor debe ser mayor o igual a 0']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      prefix="$"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_valor_anualizado"
+                      label="Valor Anualizado"
+                      type="number"
+                      :rules="[v => v >= 0 || 'El valor debe ser mayor o igual a 0']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      prefix="$"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_porc_frente"
+                      label="Porcentaje por Frente"
+                      type="number"
+                      :rules="[v => (v >= 0 && v <= 100) || 'El porcentaje debe estar entre 0 y 100']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      suffix="%"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="proyecto.cem_porc_avaluo"
+                      label="Porcentaje por Avalúo"
+                      type="number"
+                      :rules="[v => (v >= 0 && v <= 100) || 'El porcentaje debe estar entre 0 y 100']"
+                      class="input-field"
+                      variant="outlined"
+                      density="comfortable"
+                      suffix="%"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-switch
+                      v-model="proyecto.cem_proyecto_finalizado"
+                      label="Proyecto Finalizado"
+                      color="success"
+                      class="input-field"
+                    ></v-switch>
+                  </v-col>
+                </v-row>
 
                 <v-row class="mt-4">
                   <v-col cols="12" class="d-flex justify-center gap-4">
@@ -83,6 +200,15 @@
                     >
                       Cancelar
                     </v-btn>
+                    <v-btn
+                      class="btn-action"
+                      @click="volverAlMenu"
+                      color="error"
+                      variant="elevated"
+                      append-icon="mdi-exit-to-app"
+                    >
+                      Salir
+                    </v-btn>
                   </v-col>
                 </v-row>
               </v-form>
@@ -97,44 +223,43 @@
                   :search="busqueda"
                   class="elevation-1"
                 >
-                  <template v-slot:top>
-                    <v-toolbar flat class="toolbar-custom">
-                      <v-toolbar-title class="toolbar-title">Listado de Proyectos</v-toolbar-title>
-                      <v-divider class="mx-4" inset vertical></v-divider>
-                      <v-spacer></v-spacer>
-                      <v-text-field
-                        v-model="busqueda"
-                        append-icon="mdi-magnify"
-                        label="Buscar"
-                        single-line
-                        hide-details
-                        class="search-field"
-                        variant="outlined"
-                        density="comfortable"
-                      ></v-text-field>
-                    </v-toolbar>
+                  <!-- Mostrar el ID en la columna -->
+                  <template v-slot:item.cem_proyecto_id="{ item }">
+                    <span>{{ item.cem_proyecto_id }}</span>
                   </template>
 
+                  <!-- Tipo de proyecto -->
+                  <template v-slot:item.tipo_proyecto="{ item }">
+                    {{ getTipoProyectoDescripcion(item.cem_id_tipo_proyecto) }}
+                  </template>
+                  
+                  <!-- Alcance -->
+                  <template v-slot:item.alcance_descripcion="{ item }">
+                    {{ getAlcanceDescripcion(item.cem_alcance_id) }}
+                  </template>
+
+                  <!-- Estado del proyecto -->
+                  <template v-slot:item.cem_proyecto_finalizado="{ item }">
+                    {{ item.cem_proyecto_finalizado ? 'SI' : 'NO' }}
+                  </template>
+
+                  <!-- Acciones -->
                   <template v-slot:item.acciones="{ item }">
                     <v-icon
                       size="small"
                       class="me-2"
-                      @click="editarProyecto(item.raw)"
+                      @click="editarProyecto(item)"
                       color="#276E90"
                     >
                       mdi-pencil
                     </v-icon>
                     <v-icon
                       size="small"
-                      @click="confirmarEliminacion(item.raw)"
+                      @click="confirmarEliminacion(item)"
                       color="error"
                     >
                       mdi-delete
                     </v-icon>
-                  </template>
-
-                  <template v-slot:item.tipo_proyecto="{ item }">
-                    {{ getTipoProyectoDescripcion(item.raw.cem_id_tipo_proyecto) }}
                   </template>
                 </v-data-table>
               </v-card>
@@ -189,7 +314,7 @@ import axios from 'axios';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
-  name: 'Proyecto',
+  name: 'ProyectoCem',
   data() {
     return {
       formValido: true,
@@ -197,66 +322,104 @@ export default {
       modoEdicion: false,
       dialogoEliminar: false,
       proyectoAEliminar: null,
+      loading: true,
+      alcances: [],
       snackbar: {
         show: false,
         message: '',
         color: 'success'
       },
       headers: [
-        { title: 'ID', key: 'cem_id_proyecto', align: 'start', sortable: true },
-        { title: 'Tipo', key: 'tipo_proyecto', align: 'start', sortable: true },
-        { title: 'Nombre', key: 'nombre', align: 'start', sortable: true },
-        { title: 'Descripción', key: 'descripcion', align: 'start', sortable: true },
-        { title: 'Ubicación', key: 'ubicacion', align: 'start', sortable: true },
-        { title: 'Responsable', key: 'responsable', align: 'start', sortable: true },
-        { title: 'Acciones', key: 'acciones', sortable: false, align: 'center' }
+        { title: 'ID', key: 'cem_proyecto_id', align: 'start', sortable: true, width: '80px' },
+        { title: 'Nombre', key: 'cem_nombre', align: 'start', sortable: true },
+        { title: 'Tipo Proyecto', key: 'tipo_proyecto', align: 'start', sortable: true },
+        { title: 'Alcance', key: 'alcance_descripcion', align: 'start', sortable: true },
+        { title: 'Finalizado', key: 'cem_proyecto_finalizado', align: 'start', sortable: true, width: '100px' },
+        { title: 'Acciones', key: 'acciones', sortable: false, align: 'center', width: '100px' }
       ],
       tiposProyecto: [],
       proyectos: [],
       proyecto: {
-        cem_id_proyecto: null,
+        cem_proyecto_id: null,
+        cem_nombre: '',
         cem_id_tipo_proyecto: null,
-        nombre: '',
-        descripcion: '',
-        ubicacion: '',
-        responsable: ''
+        cem_base_calculo: 0,
+        cem_porc_subsidio: 0,
+        cem_plazo_retorno_anios: 0,
+        cem_fecha_registro: new Date().toISOString().split('T')[0],
+        cem_proyecto_finalizado: false,
+        cem_anio_inicio_obligaciones: new Date().getFullYear(),
+        cem_base_imponible: 0,
+        cem_anio_finalizacion_obligaciones: new Date().getFullYear(),
+        cem_valor_anualizado: 0,
+        cem_anio_inicio_obra: new Date().getFullYear(),
+        cem_alcance_id: null,
+        cem_porc_frente: 0,
+        cem_porc_avaluo: 0,
+        cem_usuario_sistema: ''
       }
     };
   },
   methods: {
     async cargarTiposProyecto() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/cem-tipo-proyecto`);
-        this.tiposProyecto = response.data;
+        const response = await axios.get(`${API_BASE_URL}/cem-obtieneTipoProyectos`);
+        this.tiposProyecto = response.data || [];
       } catch (error) {
+        console.error('Error al cargar tipos de proyecto:', error);
         this.mostrarSnackbar('Error al cargar los tipos de proyecto', 'error');
+        this.tiposProyecto = [];
+      }
+    },
+
+    async cargarAlcances() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/cem-obtieneAlcances`);
+        this.alcances = response.data || [];
+      } catch (error) {
+        console.error('Error al cargar alcances:', error);
+        this.mostrarSnackbar('Error al cargar los alcances de obra', 'error');
+        this.alcances = [];
       }
     },
 
     async cargarProyectos() {
       try {
         const response = await axios.get(`${API_BASE_URL}/cem-proyectos`);
-        this.proyectos = response.data;
+        this.proyectos = (response.data || []).map(proyecto => ({
+          ...proyecto,
+          cem_proyecto_id: proyecto.cem_proyecto_id,
+          cem_nombre: proyecto.cem_nombre ?? '',
+          cem_base_calculo: proyecto.cem_base_calculo ?? 0,
+          cem_porc_subsidio: proyecto.cem_porc_subsidio ?? 0,
+          cem_proyecto_finalizado: !!proyecto.cem_proyecto_finalizado
+        }));
       } catch (error) {
+        console.error('Error al cargar proyectos:', error);
         this.mostrarSnackbar('Error al cargar los proyectos', 'error');
+        this.proyectos = [];
       }
     },
 
     async guardarProyecto() {
-      if (!this.$refs.form.validate()) return;
+      const valid = await this.$refs.form.validate();
+      if (!valid) return;
 
       try {
         if (this.modoEdicion) {
+          if (!this.proyecto.cem_proyecto_id) {
+            this.mostrarSnackbar('Error: el proyecto a actualizar no tiene un ID válido.', 'error');
+            return;
+          }
           await axios.put(
-            `${API_BASE_URL}/cem-proyectos/${this.proyecto.cem_id_proyecto}`,
+            `${API_BASE_URL}/actualiza-cem-proyectos/${this.proyecto.cem_proyecto_id}`,
             this.proyecto
           );
           this.mostrarSnackbar('Proyecto actualizado exitosamente');
         } else {
-          await axios.post(`${API_BASE_URL}/cem-proyectos`, this.proyecto);
+          await axios.post(`${API_BASE_URL}/inserta-proyectos-cem`, this.proyecto);          
           this.mostrarSnackbar('Proyecto creado exitosamente');
         }
-        
         this.limpiarFormulario();
         await this.cargarProyectos();
       } catch (error) {
@@ -280,7 +443,7 @@ export default {
     async eliminarProyecto() {
       try {
         await axios.delete(
-          `${API_BASE_URL}/cem-proyectos/${this.proyectoAEliminar.cem_id_proyecto}`
+          `${API_BASE_URL}/elimina-cem-proyectos/${this.proyectoAEliminar.cem_proyecto_id}`
         );
         this.mostrarSnackbar('Proyecto eliminado exitosamente');
         await this.cargarProyectos();
@@ -291,33 +454,71 @@ export default {
       this.proyectoAEliminar = null;
     },
 
-    getTipoProyectoDescripcion(id) {
+    getTipoProyectoDescripcion(item) {
+      if (!item || !this.tiposProyecto.length) {
+        return 'No disponible';
+      }
+      const id = typeof item === 'object' ? item.cem_id_tipo_proyecto : item;
       const tipo = this.tiposProyecto.find(t => t.cem_id_tipo_proyecto === id);
-      return tipo ? tipo.descripcion : 'No especificado';
+      return tipo ? tipo.descripcion : 'No encontrado';
+    },
+
+    getAlcanceDescripcion(item) {
+      if (!item || !this.alcances.length) {
+        return 'No disponible';
+      }
+      const id = typeof item === 'object' ? item.cem_alcance_id : item;
+      const alcance = this.alcances.find(a => a.cem_alcance_id === id);
+      return alcance ? alcance.descripcion : 'No encontrado';
     },
 
     limpiarFormulario() {
       this.proyecto = {
-        cem_id_proyecto: null,
+        cem_proyecto_id: null,
+        cem_nombre: '',
         cem_id_tipo_proyecto: null,
-        nombre: '',
-        descripcion: '',
-        ubicacion: '',
-        responsable: ''
+        cem_base_calculo: 0,
+        cem_porc_subsidio: 0,
+        cem_plazo_retorno_anios: 0,
+        cem_fecha_registro: new Date().toISOString().split('T')[0],
+        cem_proyecto_finalizado: false,
+        cem_anio_inicio_obligaciones: new Date().getFullYear(),
+        cem_base_imponible: 0,
+        cem_anio_finalizacion_obligaciones: new Date().getFullYear(),
+        cem_valor_anualizado: 0,
+        cem_anio_inicio_obra: new Date().getFullYear(),
+        cem_alcance_id: null,
+        cem_porc_frente: 0,
+        cem_porc_avaluo: 0,
+        cem_usuario_sistema: ''
       };
       this.modoEdicion = false;
-      this.$refs.form.resetValidation();
+      if (this.$refs.form) this.$refs.form.resetValidation();
     },
 
     mostrarSnackbar(mensaje, color = 'success') {
       this.snackbar.message = mensaje;
       this.snackbar.color = color;
       this.snackbar.show = true;
+    },
+
+    volverAlMenu() {
+      this.$router.push('/menu-predial');
     }
   },
-  created() {
-    this.cargarTiposProyecto();
-    this.cargarProyectos();
+  async created() {
+    try {
+      await Promise.all([
+        this.cargarTiposProyecto(),
+        this.cargarAlcances(),
+        this.cargarProyectos()
+      ]);
+    } catch (error) {
+      console.error('Error al cargar los datos iniciales:', error);
+      this.mostrarSnackbar('Error al cargar los datos. Por favor, intente nuevamente.', 'error');
+    } finally {
+      this.loading = false;
+    }
   }
 };
 </script>

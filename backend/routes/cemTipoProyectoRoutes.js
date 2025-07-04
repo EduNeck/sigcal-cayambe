@@ -3,8 +3,8 @@ const router = express.Router();
 const tipoProyectoModel = require('../db/models/cemTipoProyecto');
 
 // GET - Obtener todos los tipos de proyecto
-router.get('/cem-obtieneProyectos', async (req, res) => {
-    console.log('📨 GET /cem-obtienProyectos - Iniciando petición');
+router.get('/cem-obtieneTipoProyectos', async (req, res) => {
+    console.log('📨 GET /cem-obtieneTipoProyectos - Iniciando petición');
     try {
         console.log('⏳ Consultando base de datos...');
         const tipos = await tipoProyectoModel.obtieneProyectos();

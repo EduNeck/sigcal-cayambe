@@ -21,7 +21,7 @@ const cemProyectos = {
                 cem_porc_frente, 
                 cem_porc_avaluo, 
                 cem_usuario_sistema
-            FROM cem.cem_proyectos`;
+            FROM cem.cem_proyectos ORDER BY cem_proyecto_id ASC`;
         try {
             const result = await db.query(query);
             return result.rows;
@@ -170,7 +170,88 @@ const cemProyectos = {
             console.error('Error en delete cemProyectos:', error);
             throw error;
         }
-    }
+    },
+
+    // Obtener predios por proyecto
+    obtienePrediosPorProyecto: async () => {
+        const query = `
+            SELECT 
+                id, 
+                clave_vinculo, 
+                id_proyec, 
+                proyecto, 
+                cem_valor_anualizado, 
+                cem_anio_inicio_obligaciones, 
+                cem_anio_finalizacion_obligaciones, 
+                area_suelo_prop, 
+                area_construccion_prop, 
+                valor_suelo_prop, 
+                valor_inst_prop, 
+                valor_adic_prop, 
+                valor_construc_prop, 
+                valor_total_prop, 
+                anio_proceso, 
+                alcance_cod, 
+                alcance, 
+                frente_calculo, 
+                sumatoria_frente, 
+                sumatoria_avaluo, 
+                sumatoria_area, 
+                proporcional_frente, 
+                proporcional_avaluo, 
+                valor_cem, 
+                fecha
+            FROM cem.cem_por_predio_proyecto ORDER BY clave_vinculo
+        `;
+        try {
+            const result = await db.query(query);
+            return result.rows;
+        } catch (error) {
+            console.error('Error en obtienePrediosPorProyecto:', error);
+            throw error;
+        }
+    },
+
+    // Obtener predios por ID de proyecto
+    obtienePrediosPorProyectoId: async (idProyecto) => {
+        const query = `
+            SELECT 
+                id, 
+                clave_vinculo, 
+                id_proyec, 
+                proyecto, 
+                cem_valor_anualizado, 
+                cem_anio_inicio_obligaciones, 
+                cem_anio_finalizacion_obligaciones, 
+                area_suelo_prop, 
+                area_construccion_prop, 
+                valor_suelo_prop, 
+                valor_inst_prop, 
+                valor_adic_prop, 
+                valor_construc_prop, 
+                valor_total_prop, 
+                anio_proceso, 
+                alcance_cod, 
+                alcance, 
+                frente_calculo, 
+                sumatoria_frente, 
+                sumatoria_avaluo, 
+                sumatoria_area, 
+                proporcional_frente, 
+                proporcional_avaluo, 
+                valor_cem, 
+                fecha
+            FROM cem.cem_por_predio_proyecto
+            WHERE id_proyec = $1
+        `;
+        try {
+            const result = await db.query(query, [idProyecto]);
+            return result.rows;
+        } catch (error) {
+            console.error('Error en obtienePrediosPorProyectoId:', error);
+            throw error;
+        }
+    },
 };
 
 module.exports = cemProyectos;

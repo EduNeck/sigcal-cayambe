@@ -102,6 +102,15 @@ export default {
           ]
         },
         {
+          titulo: 'CEM',
+          items: [
+            { title: 'Proyectos Cem', route: '/proyecto-cem' },            
+            { title: 'Predios Proyecto', route: '/predios-proyecto-cem' },
+            { title: 'Tipo Proyectos', route: '/tipo-proyecto-cem' },            
+            { title: 'Alcance Obra', route: '/alcance-obra-cem' },            
+          ]
+        },
+        {
           titulo: 'CONTROL',
           items: [
             { title: 'Predios Digitados', route: '/control-predios-digitadosusuario' },

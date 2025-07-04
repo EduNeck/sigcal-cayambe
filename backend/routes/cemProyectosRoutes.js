@@ -14,7 +14,7 @@ router.get('/cem-proyectos', async (req, res) => {
 });
 
 // GET - Obtener un proyecto por ID
-router.get('/cem-proyectos/:id', async (req, res) => {
+router.get('/proyectos-cem-ById/:id', async (req, res) => {
     try {
         const proyecto = await cemProyectos.proyectoById(req.params.id);
         if (proyecto) {
@@ -29,23 +29,9 @@ router.get('/cem-proyectos/:id', async (req, res) => {
 });
 
 // POST - Crear un nuevo proyecto
-router.post('/cem-proyectos', async (req, res) => {
+router.post('/inserta-proyectos-cem', async (req, res) => {
     try {
-        const camposRequeridos = [
-            'cem_nombre',
-            'cem_id_tipo_proyecto',
-            'cem_usuario_sistema'
-        ];
-
-        for (const campo of camposRequeridos) {
-            if (!req.body[campo]) {
-                return res.status(400).json({ 
-                    message: `El campo ${campo} es requerido` 
-                });
-            }
-        }
-
-        const nuevoProyecto = await cemProyectos.create(req.body);
+        const nuevoProyecto = await cemProyectos.insertaProyecto(req.body);
         res.status(201).json(nuevoProyecto);
     } catch (error) {
         console.error('Error al crear proyecto:', error);
@@ -57,23 +43,9 @@ router.post('/cem-proyectos', async (req, res) => {
 });
 
 // PUT - Actualizar un proyecto
-router.put('/cem-proyectos/:id', async (req, res) => {
+router.put('/actualiza-cem-proyectos/:id', async (req, res) => {
     try {
-        const camposRequeridos = [
-            'cem_nombre',
-            'cem_id_tipo_proyecto',
-            'cem_usuario_sistema'
-        ];
-
-        for (const campo of camposRequeridos) {
-            if (!req.body[campo]) {
-                return res.status(400).json({ 
-                    message: `El campo ${campo} es requerido` 
-                });
-            }
-        }
-
-        const proyectoActualizado = await cemProyectos.update(req.params.id, req.body);
+        const proyectoActualizado = await cemProyectos.actualizaProyecto(req.params.id, req.body);
         if (proyectoActualizado) {
             res.json(proyectoActualizado);
         } else {
@@ -89,7 +61,7 @@ router.put('/cem-proyectos/:id', async (req, res) => {
 });
 
 // DELETE - Eliminar un proyecto
-router.delete('/cem-proyectos/:id', async (req, res) => {
+router.delete('/elimina-cem-proyectos/:id', async (req, res) => {
     try {
         const proyectoEliminado = await cemProyectos.eliminaProyecto(req.params.id);
         if (proyectoEliminado) {
@@ -99,6 +71,38 @@ router.delete('/cem-proyectos/:id', async (req, res) => {
         }
     } catch (error) {
         console.error('Error al eliminar proyecto:', error);
+        res.status(500).json({ 
+            message: 'Error interno del servidor',
+            error: error.message 
+        });
+    }
+});
+
+// GET - Obtener todos los predios por proyecto
+router.get('/cem-predios-proyecto', async (req, res) => {
+    try {
+        const predios = await cemProyectos.obtienePrediosPorProyecto();
+        res.json(predios);
+    } catch (error) {
+        console.error('Error al obtener predios por proyecto:', error);
+        res.status(500).json({ 
+            message: 'Error interno del servidor',
+            error: error.message 
+        });
+    }
+});
+
+// GET - Obtener predios por ID de proyecto
+router.get('/cem-predios-proyecto/:id', async (req, res) => {
+    try {
+        const predios = await cemProyectos.obtienePrediosPorProyectoId(req.params.id);
+        if (predios && predios.length > 0) {
+            res.json(predios);
+        } else {
+            res.status(404).json({ message: 'No se encontraron predios para este proyecto' });
+        }
+    } catch (error) {
+        console.error('Error al obtener predios del proyecto:', error);
         res.status(500).json({ 
             message: 'Error interno del servidor',
             error: error.message 
