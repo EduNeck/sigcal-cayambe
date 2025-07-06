@@ -271,9 +271,36 @@
                         <!-- Croquis Predio -->
                         <v-img v-if="croquisUrl" :src="croquisUrl" class="custom-img">Croquis Predio</v-img>
                         <v-img v-else :src="sinCroquis" class="custom-img">Sin Croquis</v-img>
-
                     </div>
-                </v-card-text>
+                </v-card-text>                
+                <!-- Fotos -->
+                <v-card-subtitle class="block-title-sub">
+                <p class="titulo-text-sub">FOTOS DEL PREDIO</p>
+                </v-card-subtitle>
+                <v-card-text>
+                    <v-row>
+                        <v-col
+                            v-for="(foto, idx) in fotosCertificadas"
+                            :key="foto?.id_foto || idx"
+                            cols="12" sm="6" md="4" lg="3"
+                            class="d-flex justify-center align-center mb-2"
+                        >
+                            <v-img
+                            :src="getFotoUrl(foto)"
+                            class="custom-img"
+                            max-width="170"
+                            max-height="130"
+                            :alt="foto.descripcion || `Foto ${idx+1}`"
+                            >
+                            {{ foto.descripcion || `Foto ${idx+1}` }}
+                            </v-img>
+                        </v-col>
+                        <v-col v-if="!fotosCertificadas.length" cols="12" class="text-center">
+                            <span class="styled-text">Sin fotos</span>
+                        </v-col>
+                    </v-row>
+
+                </v-card-text>           
 
                 <!-- Pie de página -->
                 <v-footer class="footer">
@@ -312,7 +339,8 @@ export default {
             sinFoto: sinFoto,
             sinCroquis: sinCroquis,
             croquisUrl: '',
-
+            fotosCertificadas: [],
+            foto: null,
             form: {
                 id_predio: null, 
                 clave_catastral: null, 
@@ -633,6 +661,28 @@ export default {
             }
         },
 
+        // Método para recuperar las fotos para certificado del predio
+        async recuperaFotosCertificadas(idPredio) {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/foto_certificado_by_id/${idPredio}`);
+                this.fotosCertificadas = response.data;
+            } catch (error) {
+                this.fotosCertificadas = [];
+            }
+        },
+
+        getFotoUrl(foto) {
+            if (!foto || !foto.foto) return this.sinFoto;
+            if (typeof foto.foto === "string" && foto.foto.length > 30) { // base64 decente
+                return `data:image/png;base64,${foto.foto}`;
+            } else if (foto.foto && foto.foto.data) {
+                const byteArray = new Uint8Array(foto.foto.data);
+                const blob = new Blob([byteArray], { type: 'image/png' });
+                return URL.createObjectURL(blob);
+            }
+            return this.sinFoto;
+        },
+
         // Método para recuperar el croquis usando la clave catastral del formulario
         async recuperarCroquis() {
             const clave = this.form.clave_catastral;
@@ -709,7 +759,6 @@ export default {
             }
         },
 
-
         salir() {
             this.$router.go(-1);
         },
@@ -727,7 +776,6 @@ export default {
             };
             html2pdf().from(element).set(opt).save();
         },        
-
        
         calculateTotalPages() {
             const element = document.getElementById('certificado');
@@ -759,6 +807,9 @@ export default {
         } else {
             console.error('No se recibió un ID de predio válido.');
         }
+
+        this.recuperaFotosCertificadas(idPredio);
+
     },
 };
 </script>

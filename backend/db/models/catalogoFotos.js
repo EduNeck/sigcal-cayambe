@@ -1,14 +1,14 @@
 const db = require('../config');
 
 // Función para insertar un registro en la tabla de Fotos de Predio`
-const insertFotoPredio = async (descripcion, fotoBuffer, principal, id_predio) => {
+const insertFotoPredio = async (descripcion, fotoBuffer, principal, id_predio, certificado) => {
     const query = `
-        INSERT INTO public.catastro_foto_predio (descripcion, foto, principal, id_predio, fecha_registro)
-        VALUES ($1, $2, $3, $4, NOW())
+        INSERT INTO public.catastro_foto_predio (descripcion, foto, principal, id_predio, certificado, fecha_registro)
+        VALUES ($1, $2, $3, $4, $5, NOW())
         RETURNING id_foto;
     `;
 
-    const values = [descripcion, fotoBuffer, principal, id_predio];
+    const values = [descripcion, fotoBuffer, principal, id_predio, certificado];
 
     try {
         const result = await db.query(query, values);
@@ -25,14 +25,29 @@ const insertFotoPredio = async (descripcion, fotoBuffer, principal, id_predio) =
 const updateFotoPredio = async (id, data) => {
     const query = `
         UPDATE public.catastro_foto_predio
-        SET descripcion = $1, foto = $2, principal = $3, id_predio = $4, fecha_registro = $5, digitador = $6, 
-        actualizador = $7, fecha_actualizacion_aud = $8
-        WHERE id_foto = $9
+        SET descripcion = $1,
+            foto = COALESCE($2, foto),
+            principal = $3,
+            id_predio = $4,
+            fecha_registro = $5,
+            digitador = $6,
+            actualizador = $7,
+            fecha_actualizacion_aud = $8,
+            certificado = $9
+        WHERE id_foto = $10
         RETURNING *;
     `;
     const values = [
-        data.descripcion, data.foto, data.principal, data.id_predio, data.fecha_registro, data.digitador, 
-        data.actualizador, data.fecha_actualizacion_aud, id
+        data.descripcion,              
+        data.foto,                     
+        data.principal,                
+        data.id_predio,                
+        data.fecha_registro,           
+        data.digitador,                
+        data.actualizador,             
+        data.fecha_actualizacion_aud,  
+        data.certificado,              
+        id                             
     ];
 
     try {
@@ -65,7 +80,8 @@ const getFotoPredioById = async (id) => {
 const getFotoPredioByIdPredio = async (id_predio) => {
     const query = `
         SELECT id_foto, descripcion, principal, 
-            CASE WHEN foto IS NOT NULL THEN encode(foto, 'base64') ELSE NULL END AS foto
+            CASE WHEN foto IS NOT NULL THEN encode(foto, 'base64') ELSE NULL END AS foto,
+            certificado
         FROM public.catastro_foto_predio
         WHERE id_predio = $1;
     `;
@@ -108,13 +124,33 @@ const deleteFotoPredioById = async (id) => {
     }
 };
 
+// Función para recuperar un registro de la tabla de Fotos de Predio por id
+const getFotoPredioCertificadoById = async (id) => {
+    const query = `
+        SELECT id_foto, foto, descripcion 
+        FROM public.catastro_foto_predio
+        WHERE id_predio = $1
+          AND principal = false
+          AND certificado = true;
+    `;
+    const values = [id];
+    try {
+        const result = await db.query(query, values);
+        return result.rows; // <-- Esto es un array (puede ser vacío)
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        throw err;
+    }
+};
+
 
 module.exports = {
     insertFotoPredio,
     updateFotoPredio,
     getFotoPredioById,
     getFotoPredioByIdPredio,
-    deleteFotoPredioById
+    deleteFotoPredioById,
+    getFotoPredioCertificadoById
 };
 
 

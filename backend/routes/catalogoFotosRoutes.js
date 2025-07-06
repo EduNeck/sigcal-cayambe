@@ -25,16 +25,42 @@ router.post('/inserta_foto', upload.single('foto'), async (req, res) => {
 });
 
 // Actualizar una foto existente
-router.put('/actualiza_foto/:id', async (req, res) => {
+router.put('/actualiza_foto/:id', upload.none(), async (req, res) => {
   const { id } = req.params;
+  const {
+    descripcion,
+    foto,
+    principal,
+    id_predio,
+    fecha_registro,
+    digitador,
+    actualizador,
+    fecha_actualizacion_aud,
+    certificado
+  } = req.body;
+
+  // Convierte booleanos (si llegan como 'true'/'false' string)
+  const data = {
+    descripcion,
+    foto: foto || null, // null si no hay imagen nueva
+    principal: principal === 'true' || principal === true,
+    id_predio,
+    fecha_registro,
+    digitador,
+    actualizador,
+    fecha_actualizacion_aud,
+    certificado: certificado === 'true' || certificado === true
+  };
+
   try {
-    const updatedRecord = await catalogoFotosModel.updateFotoPredio(id, req.body);
+    const updatedRecord = await catalogoFotosModel.updateFotoPredio(id, data);
     res.json(updatedRecord);
   } catch (err) {
     console.error('Error al actualizar foto:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Obtener foto por ID
 router.get('/foto_by_id/:id', async (req, res) => {
@@ -68,6 +94,30 @@ router.post('/elimina_foto_by_id/:id', async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Error al eliminar la foto:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Obtener todas las fotos por ID de predio
+router.get('/fotos_by_idPredio/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const data = await catalogoFotosModel.getFotoPredioByIdPredio(id);
+    res.json(data);
+  } catch (err) {
+    console.error('Error al obtener fotos por ID de predio:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Obtener foto certificada por ID
+router.get('/foto_certificado_by_id/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const data = await catalogoFotosModel.getFotoPredioCertificadoById(id);
+    res.json(data);
+  } catch (err) {
+    console.error('Error al obtener foto certificada por ID:', err);
     res.status(500).json({ error: err.message });
   }
 });
