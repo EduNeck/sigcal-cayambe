@@ -57,11 +57,11 @@ async function insertaCertificado(data) {
       nombre_canton, nombre_parroquia, direccion, tipo_tramite, propietario_nuevo, nuevo_documento,
       tipo_venta, cuantia, porcentaje_compra, valor_compra, observaciones, fecha_registro, usuario,
       tipo_certificado, numero_serie, fecha_adquisicion_anterior, valor_avaluo_anterior, sup_total_adquirida,
-      sup_transfiere, fecha_pos_def, valor_avaluo_pos_def, valor_const_pos_def, valor_otros_pos_def
+      sup_transfiere, fecha_pos_def, valor_avaluo_pos_def, valor_const_pos_def, valor_otros_pos_def, otro_tipo_tramite
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
       $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
-      $39, $40, $41, $42, $43
+      $39, $40, $41, $42, $43, $44
     ) RETURNING *
   `;
 
@@ -85,7 +85,8 @@ async function insertaCertificado(data) {
     parseFecha(data.fecha_adquisicion_anterior), normalizar(data.valor_avaluo_anterior, 'numero'),
     normalizar(data.sup_total_adquirida, 'numero'), normalizar(data.sup_transfiere, 'numero'),
     parseFecha(data.fecha_pos_def), normalizar(data.valor_avaluo_pos_def, 'numero'),
-    normalizar(data.valor_const_pos_def, 'numero'), normalizar(data.valor_otros_pos_def, 'numero')
+    normalizar(data.valor_const_pos_def, 'numero'), normalizar(data.valor_otros_pos_def, 'numero'),
+    (normalizar(data.otro_tipo_tramite) || '').toString().replace(/[{}]/g, '')
   ];
 
   try {
@@ -138,8 +139,9 @@ async function actualizaCertificado(id, data) {
       usuario = $29, codigo_qr = $30, numero_serie = $31, observaciones = $32, lindero_norte = $33,
       lindero_sur = $34, lindero_este = $35, lindero_oeste = $36, nombre_parroquia = $37, 
       direccion = $38, fecha_adquisicion_anterior = $39, valor_avaluo_anterior = $40, sup_total_adquirida = $41, 
-      sup_transfiere = $42, fecha_pos_def = $43, valor_avaluo_pos_def = $44, valor_const_pos_def = $45, valor_otros_pos_def = $46
-    WHERE id_certificado = $47
+      sup_transfiere = $42, fecha_pos_def = $43, valor_avaluo_pos_def = $44, valor_const_pos_def = $45, valor_otros_pos_def = $46,
+      otro_tipo_tramite = $47
+    WHERE id_certificado = $48
     RETURNING *
   `;
   const values = [
@@ -153,7 +155,7 @@ async function actualizaCertificado(id, data) {
     data.numero_serie, data.observaciones, data.lindero_norte, data.lindero_sur, data.lindero_este, 
     data.lindero_oeste, data.nombre_parroquia, data.direccion, data.fecha_adquisicion_anterior,
     data.valor_avaluo_anterior, data.sup_total_adquirida, data.sup_transfiere, data.fecha_pos_def,
-    data.valor_avaluo_pos_def, data.valor_const_pos_def, data.valor_otros_pos_def, id
+    data.valor_avaluo_pos_def, data.valor_const_pos_def, data.valor_otros_pos_def, data.otro_tipo_tramite, id
   ];
   const { rows } = await db.query(query, values);
   return rows[0];

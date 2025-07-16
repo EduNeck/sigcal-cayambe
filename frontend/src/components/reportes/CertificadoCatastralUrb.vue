@@ -54,7 +54,7 @@
         <v-card-title class="block-title fondo-sub">
           <v-card-title class="block-title fondo-sub">
             <p class="text-center">
-              CERTIFICADO DE AVALÚS Y CATASTROS 
+              CERTIFICADO DE AVALÚOS Y CATASTROS 
               <span v-if="form.tipo_predio == 1">URBANOS</span>
               <span v-else-if="form.tipo_predio == 2">RURALES</span>
               <span v-else>CATASTRALES</span>
@@ -105,7 +105,7 @@
         </v-card-title>
         <v-card-text class="block-text">
           <v-row>
-            <v-col cols="12" mt-1>              
+            <v-col cols="6" mt-1>              
               <v-select
                 v-model="form.tipo_tramite"             
                 :items="tipoTramites"
@@ -114,6 +114,15 @@
                 multiple
                 >
               </v-select>              
+            </v-col>
+            <v-col cols="6" v-if="form.tipo_tramite && (Array.isArray(form.tipo_tramite) ? form.tipo_tramite.includes('Otros') : form.tipo_tramite === 'Otros')">
+              <v-text-field
+                v-model="form.otro_tipo_tramite"
+                label="Especifique otro tipo de trámite"
+                outlined
+                dense
+                clearable
+              ></v-text-field>
             </v-col>
           </v-row>
         </v-card-text>
@@ -154,7 +163,9 @@
                 :items="tipoVenta"
                 item-text="descripcion"
                 item-value="descripcion"
-                multiple                
+                :rules="[v => !!v || 'El tipo de venta es requerido']"
+                single-line
+                @update:model-value="onTipoVentaChange"
               ></v-select>      
             </v-col>
             <v-col cols="6">
@@ -166,6 +177,11 @@
                 dense
                 type="number"
                 suffix="%"
+                :disabled="porcentajeDisabled"
+                :rules="[
+                  v => (form.tipo_venta && form.tipo_venta.includes('PARCIAL') ? !!v : true) || 'El porcentaje es requerido para venta parcial',
+                  v => (v >= 0 && v <= 100) || 'El porcentaje debe estar entre 0 y 100'
+                ]"
               ></v-text-field>
               <v-text-field
                 class="input-text"
@@ -175,6 +191,7 @@
                 dense
                 type="number"
                 prefix="$"
+                readonly
               ></v-text-field>     
             </v-col>
             <v-col cols="10">
@@ -266,9 +283,44 @@ export default {
       },
       tipoTramites: [],
       ciudadanoRecuperado: [],
-      tipoVenta: [],
-      pdfGenerado: false 
+      tipoVenta: [
+        { descripcion: 'COMPLETA', value: 'COMPLETA' },
+        { descripcion: 'PARCIAL', value: 'PARCIAL' }
+      ],
+      pdfGenerado: false,
+      porcentajeDisabled: false
     };
+  },
+
+  watch: {
+    'form.tipo_venta': {
+      handler(newValue) {
+        console.log('Tipo venta cambió a:', newValue);
+        if (newValue === 'COMPLETA') {
+          this.porcentajeDisabled = true;
+          this.form.porcentaje_compra = '100';
+          this.calcularCuantia();
+        } else if (newValue === 'PARCIAL') {
+          this.porcentajeDisabled = false;
+          this.form.porcentaje_compra = '';
+          this.form.cuantia = '0.00';
+        }
+      }
+    },
+    'form.porcentaje_compra': {
+      handler(newValue) {
+        if (this.form.tipo_venta === 'PARCIAL' && newValue !== '') {
+          console.log('Porcentaje cambió a:', newValue);
+          this.calcularCuantia();
+        }
+      },
+      immediate: true
+    },
+    'form.avaluo_predio_porcentual': {
+      handler(newValue) {
+        this.calcularCuantia();
+      }
+    }
   },
 
   methods: {
@@ -439,6 +491,77 @@ export default {
       if (ciudadano) {
         this.form.nuevo_documento = ciudadano.numero_documento;
       }
+    },
+
+    onTipoVentaChange(value) {
+      console.log('Tipo venta seleccionado:', value);
+      if (value === 'COMPLETA') {
+        console.log('Venta completa seleccionada');
+        this.porcentajeDisabled = true;
+        this.form.porcentaje_compra = '100';
+        if (this.form.avaluo_predio_porcentual) {
+          this.form.cuantia = parseFloat(this.form.avaluo_predio_porcentual).toFixed(2);
+        }
+      } else if (value === 'PARCIAL') {
+        console.log('Venta parcial seleccionada');
+        this.porcentajeDisabled = false;
+        this.form.porcentaje_compra = '';
+        this.form.cuantia = '';
+      }
+    },
+
+    calcularCuantia() {
+      console.log('Calculando cuantía:', {
+        tipo_venta: this.form.tipo_venta,
+        porcentaje: this.form.porcentaje_compra,
+        avaluo: this.form.avaluo_predio_porcentual
+      });
+
+      // Si no hay avalúo, no podemos calcular
+      if (!this.form.avaluo_predio_porcentual) {
+        this.form.cuantia = '0.00';
+        return;
+      }
+
+      // Convertir el avalúo a número y verificar que sea válido
+      let avaluoTotal = Number(this.form.avaluo_predio_porcentual.replace(/[^0-9.-]+/g, ''));
+      if (isNaN(avaluoTotal)) {
+        this.form.cuantia = '0.00';
+        return;
+      }
+
+      // Si es venta completa, la cuantía es el avalúo total
+      if (this.form.tipo_venta === 'COMPLETA') {
+        this.form.cuantia = avaluoTotal.toFixed(2);
+        return;
+      }
+
+      // Para venta parcial, calculamos el porcentaje del avalúo
+      if (this.form.tipo_venta === 'PARCIAL') {
+        if (!this.form.porcentaje_compra) {
+          this.form.cuantia = '0.00';
+          return;
+        }
+
+        // Convertir el porcentaje a número
+        const porcentaje = Number(this.form.porcentaje_compra);
+        if (isNaN(porcentaje) || porcentaje < 0 || porcentaje > 100) {
+          this.form.cuantia = '0.00';
+          return;
+        }
+
+        // Calcular el valor parcial (porcentaje del avalúo total)
+        const valorParcial = (avaluoTotal * porcentaje) / 100;
+        this.form.cuantia = valorParcial.toFixed(2);
+        
+        console.log('Cálculo realizado:', {
+          avaluoTotal,
+          porcentaje,
+          valorParcial: this.form.cuantia
+        });
+      }
+
+      console.log('Cuantía calculada:', this.form.cuantia);
     },
   },
 

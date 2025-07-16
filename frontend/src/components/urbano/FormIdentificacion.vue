@@ -6,13 +6,14 @@
       </v-col>
       <!-- Botones -->
       <v-col cols="12" class="d-flex justify-center flex-wrap">
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-refresh" @click="refrescarIdentificacion" :disabled="!Boolean(getIdPredio)" v-if="canEdit"></v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevoRegistro" v-if="canEdit">Nuevo</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="Boolean(Boolean(getIdPredio))" v-if="canEdit">Guardar</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Eliminar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>       
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file" @click="valorar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Valorar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-printer" @click="imprimirFicha" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Imprimir Ficha</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" color="error" append-icon="mdi-delete" @click="eliminar" :disabled="!Boolean(getIdPredio)" v-if="canEdit"></v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>        
       </v-col>
     </v-row>
 
@@ -292,7 +293,22 @@
     </v-snackbar>       
     <v-snackbar v-model="snackbarNotaPush" :timeout="3000" color="success" rounded="pill">
       {{ snackbarNota }}
-    </v-snackbar>        
+    </v-snackbar>
+
+    <!-- DIALOGO DE CONFIRMACIÓN -->
+    <template v-if="confirmDelete">
+      <v-dialog v-model="confirmDelete" max-width="400">
+        <v-card>
+          <v-card-title class="headline" style="white-space: normal; word-break: break-word;">¿Está seguro de que desea eliminar este Predio?</v-card-title>
+          <v-card-text>Esta acción no se puede deshacer.</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="grey" text @click="confirmDelete = false; snackbarError = 'Eliminación cancelada'; snackbarErrorPush = true;">Cancelar</v-btn>
+            <v-btn color="red" text @click="confirmarEliminacion">Eliminar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </template>
   </v-container>
 </template>
 
@@ -364,6 +380,7 @@ export default {
       sinPredio: sinPredio,
       sinCroquis: sinCroquis,
       croquisUrl : '',
+      confirmDelete: false,
      };
   },
 
@@ -792,6 +809,19 @@ export default {
       }
     },
 
+    async refrescarIdentificacion() {
+      if (this.getIdPredio) {
+        await this.cargaPredio(this.getIdPredio);
+        this.recuperaFotos(this.getIdPredio);
+        this.caragaAreaGeo();
+        this.snackbarOk = 'Datos de identificación actualizados';
+        this.snackbarOkPush = true;
+      } else {
+        this.snackbarError = 'No hay un predio seleccionado para refrescar';
+        this.snackbarErrorPush = true;
+      }
+    },    
+
     // Limpiar Campos
     limpiarCampos() {
       console.log('Limpiando campos');
@@ -903,13 +933,21 @@ export default {
 
     // Eliminar predio
     async eliminar() {
-      console.log('Eliminando predio:', this.idPredio);
+      console.log('Eliminando predio', this.idPredio);
       if (!this.idPredio) {
         this.snackbarError = 'No hay un predio seleccionado para eliminar';
         this.snackbarErrorPush = true;
         return;
       }
+      console.log('Eliminando predio 1');
+      this.confirmDelete = true;
+    },
+
+    async confirmarEliminacion() {
+      console.log('Confirmando eliminación de predio');
+      this.confirmDelete = false;
       try {
+        console.log('Eliminando predio');        
         await axios.post(`${API_BASE_URL}/elimina_predio_by_id/${this.idPredio}`);
         this.snackbarOk = 'Predio eliminado exitosamente';
         this.snackbarOkPush = true;
