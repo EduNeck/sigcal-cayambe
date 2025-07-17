@@ -105,7 +105,7 @@ export default {
   methods: {
     ingresoUrbano() {
       this.$store.commit('setTipoPredio', 1);
-      this.snackbarTexto = 'Ingresando al módulo urbano...';
+      this.snackbarTexto = 'Ingresando al módulo Urbano...';
       this.snackbarIngresando = true;
       setTimeout(() => {
         this.$router.push('/menu-predial');
@@ -113,7 +113,7 @@ export default {
     },
     ingresoRural() {
       this.$store.commit('setTipoPredio', 2);
-      this.snackbarTexto = 'Ingresando al módulo rural...';
+      this.snackbarTexto = 'Ingresando al módulo Rural...';
       this.snackbarIngresando = true;
       setTimeout(() => {
         this.$router.push('/menu-predial');
@@ -122,10 +122,12 @@ export default {
   },
 
   created() {
+    console.log('------------------------------');
     console.log('Usuario logueado:', this.userLogin);
     console.log('Nombre del usuario:', this.userName);
     console.log('Tipo primario:', this.userTypePrimario);
     console.log('Tipo secundario:', this.userTypeSecundario);
+    console.log('Usuario activo:', this.userActivo);
     console.log('Es admin:', this.userAdmin);
     console.log('Permiso acceso urbano:', this.canAccessUrbano);
     console.log('Permiso acceso rural:', this.canAccessRural);

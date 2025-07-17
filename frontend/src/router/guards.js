@@ -1,17 +1,15 @@
-// Función para validar acceso a menús urbano o rural
 export function puedeAccederMenu(userTipoPri, userTipoSec, path, menuAccessUrb, menuAccessRur) {
-    return (
-      ['U', 'R'].includes(userTipoPri) &&
-      ['U', 'R'].includes(userTipoSec) &&
-      (menuAccessUrb.includes(path) || menuAccessRur.includes(path))
-    );
+  // Admin accede a todo
+  if (userTipoPri === 'A') {
+    return menuAccessUrb.includes(path) || menuAccessRur.includes(path);
   }
-  
-  // Función para validar acceso a valoración
-  export function puedeAccederValoracion(userValUrb, userValRur, path, menuValoraUrb, menuValoraRur) {
-    return (
-      (userValUrb === 'Y' && menuValoraUrb.includes(path)) ||
-      (userValRur === 'Y' && menuValoraRur.includes(path))
-    );
-  }
-  
+
+  // Usuario con acceso a ambos (urbano y rural)
+  const tieneAccesoUrbano = userTipoPri === 'U' || userTipoSec === 'U';
+  const tieneAccesoRural  = userTipoPri === 'R' || userTipoSec === 'R';
+
+  return (
+    (tieneAccesoUrbano && menuAccessUrb.includes(path)) ||
+    (tieneAccesoRural && menuAccessRur.includes(path))
+  );
+}
