@@ -1,4 +1,9 @@
-const db = require('../config');
+const { pool } = require('../config');
+
+// Consulta de parámetros generales (alias para consultarParametros)
+async function getParametrosGenerales() {
+  return await consultarParametros();
+}
 
 // Ingreso de parámetros
 async function insertarParametro(parametro) {
@@ -52,6 +57,7 @@ async function consultarParametrosByDescripcion(descripcion) {
 }
 
 module.exports = {
+  getParametrosGenerales,
   insertarParametro,
   modificarParametro,
   eliminarParametro,

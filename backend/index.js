@@ -85,6 +85,8 @@ app.use('/api', require('./routes/validacionesRoutes'));
 app.use('/api', require('./routes/valoracionRoutes'));
 app.use('/api', require('./routes/prediosAvaluoCompletoRoutes'));
 app.use('/api', require('./routes/croquisRoutes'));
+app.use('/api', require('./routes/consultaWsRoutes'));
+
 
 // ========== Iniciar servidor ==========
 const PORT = process.env.PORT || 3001;
