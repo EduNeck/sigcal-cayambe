@@ -79,7 +79,6 @@ app.use('/api', require('./routes/catastroViasRoutes'));
 app.use('/api', require('./routes/certificadoCatastralRoutes'));
 app.use('/api', require('./routes/certificadoLinderosRoutes'));
 app.use('/api', require('./routes/geoConsultasRoutes'));
-app.use('/api', require('./routes/parametrosGeneralesRoutes'));
 app.use('/api', require('./routes/reporteFichaRoutes'));
 app.use('/api', require('./routes/validacionesRoutes'));
 app.use('/api', require('./routes/valoracionRoutes'));
