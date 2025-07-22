@@ -9,6 +9,7 @@
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!getIdPredio || !!idTenencia" v-if="canEdit">Guardar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizaTenencia" :disabled="!idTenencia" v-if="canEdit">Actualizar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idTenencia" v-if="canEdit">Eliminar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file-document" @click="consultarRegistroPropiedad" :disabled="!getIdPredio">Reg. Propiedad</v-btn>
       </v-col>
 
     </v-row>              
@@ -284,6 +285,21 @@
       {{ snackbarOk }}
     </v-snackbar>
 
+    <!-- Modal para Consulta Registro de la Propiedad -->
+    <v-dialog v-model="dialogConsultaRegistro" max-width="1200px" persistent>
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span class="text-h5">Consulta Registro de la Propiedad</span>
+          <v-btn icon @click="cerrarModal" variant="plain">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="pa-0">
+          <ConsultaWsRegistro />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -292,9 +308,13 @@ import axios from 'axios';
 import { mapActions, mapGetters } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
 import API_BASE_URL from '@/config/apiConfig';
+import ConsultaWsRegistro from '@/components/ws/ConsultaWsRegistro.vue';
 
 export default {
   name: 'TabTenencia',
+  components: {
+    ConsultaWsRegistro
+  },
   data() {
     return {
       form: {
@@ -339,6 +359,7 @@ export default {
       snackbarError: '',
       snackbarOkPush: false,
       snackbarOk: '',
+      dialogConsultaRegistro: false,
       
     }
   },
@@ -780,6 +801,16 @@ export default {
       this.limpiarFormulario();
       this.idTenencia = null;
       this.cargaCiudadanoTenecia(); 
+    },
+
+    // Método para consultar el Registro de la Propiedad
+    consultarRegistroPropiedad() {
+      console.log('Consultando Registro de la Propiedad');
+      this.dialogConsultaRegistro = true;
+    },
+
+    cerrarModal() {
+      this.dialogConsultaRegistro = false;
     }
   }
 }
