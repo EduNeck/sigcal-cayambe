@@ -296,10 +296,6 @@ export default {
     },
 
     sincronizarDatos() {
-      console.log('=== DEBUG SINCRONIZACIÓN ===');
-      console.log('Objeto seleccionado completo:', this.seleccionado);
-      console.log('FECHA_INSCRIPCION raw:', this.seleccionado.FECHA_INSCRIPCION);
-      console.log('Tipo de FECHA_INSCRIPCION:', typeof this.seleccionado.FECHA_INSCRIPCION);
 
       // Preparar los datos para sincronizar con el formulario de tenencia
       const fechaFormateada = this.formatearFechaParaFormulario(this.seleccionado.FECHA_INSCRIPCION);
@@ -310,8 +306,6 @@ export default {
         folio: this.seleccionado.NUM_FOLIO || '',
         numero_registro: this.seleccionado.NUM_INSCRPCION || ''
       };
-
-      console.log('Fecha después de formatear:', fechaFormateada);
       console.log('Datos completos para sincronización:', datosSincronizacion);
 
       // Emitir evento al componente padre
@@ -322,9 +316,6 @@ export default {
     },
 
     formatearFechaParaFormulario(fecha) {
-      console.log('=== FORMATEAR FECHA ===');
-      console.log('Fecha recibida:', fecha);
-      console.log('Tipo:', typeof fecha);
       
       if (!fecha) {
         console.log('Fecha vacía, retornando cadena vacía');

@@ -13,6 +13,7 @@
       <v-tab>Vías</v-tab>
       <v-tab>Bloques</v-tab>
       <v-tab>Mejoras</v-tab>
+      <v-tab>Colindantes</v-tab>
       <v-tab>Observaciones</v-tab>
       <v-tab>Foto Fachada</v-tab>
       <v-tab>Salir</v-tab>
@@ -26,6 +27,7 @@
       <v-window-item><VentanaVias/></v-window-item>
       <v-window-item><VentanaBloques/></v-window-item>
       <v-window-item><VentanaMejoras/></v-window-item>
+      <v-window-item><GeoLinderos/></v-window-item>
       <v-window-item><TabObservaciones/></v-window-item>
       <v-window-item><TabFotoPredio/></v-window-item>
       <v-window-item>
@@ -52,6 +54,7 @@ import VentanaMejoras from './VentanaMejoras.vue';
 import TabObservaciones from './FormObservaciones.vue';
 import TabFotoPredio from './FormFotoPredio.vue';
 import CaracteristicasRurales from './FormCaracteristicasRurales.vue';
+import GeoLinderos from '../geo/GeoLinderos.vue';
 import { mapGetters } from 'vuex';
 
 export default {
@@ -70,7 +73,8 @@ export default {
     VentanaMejoras,
     TabObservaciones,
     TabFotoPredio,
-    CaracteristicasRurales
+    CaracteristicasRurales,
+    GeoLinderos
   },
   computed: {            
     ...mapGetters(['getTipoPredio']),

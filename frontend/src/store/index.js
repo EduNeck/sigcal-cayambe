@@ -9,6 +9,7 @@ export default createStore({
     idMejora: null,
     idFoto: null,
     idCiudadano: null,
+    clave_catastral: null,
     tipoPredio: null,
     user: JSON.parse(localStorage.getItem('user')) || {
       login: '',
@@ -39,6 +40,8 @@ export default createStore({
     clearIdFoto(state) { state.idFoto = null; },
     setIdCiudadano(state, id) { state.idCiudadano = id; },
     clearIdCiudadano(state) { state.idCiudadano = null; },
+    setClaveCatastral(state, clave) { state.clave_catastral = clave; },
+    clearClaveCatastral(state) { state.clave_catastral = null; },
     setUser(state, user) {
       state.user = {
         login: user.login,
@@ -90,6 +93,8 @@ export default createStore({
     resetIdFoto({ commit }) { commit('clearIdFoto'); },
     updateIdCiudadano({ commit }, id) { commit('setIdCiudadano', id); },
     resetIdCiudadano({ commit }) { commit('clearIdCiudadano'); },
+    updateClaveCatastral({ commit }, clave) { commit('setClaveCatastral', clave); },
+    resetClaveCatastral({ commit }) { commit('clearClaveCatastral'); },
     updateUser({ commit }, user) { commit('setUser', user); },
     clearUser({ commit }) { commit('clearUser'); },
     updateTipoPredio({ commit }, tipo) { commit('setTipoPredio', tipo); }
@@ -102,6 +107,7 @@ export default createStore({
     getIdMejora: (state) => state.idMejora,
     getIdFoto: (state) => state.idFoto,
     getIdCiudadano: (state) => state.idCiudadano,
+    getClaveCatastral: (state) => state.clave_catastral,
     getTipoPredio: (state) => state.tipoPredio,
     isAuthenticated: (state) => !!state.user.login,
     userLogin: (state) => state.user.login,

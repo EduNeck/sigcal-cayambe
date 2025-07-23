@@ -471,7 +471,8 @@ export default {
   methods: {
     ...mapActions([
     'updateIdPredio','updateIdTenencia','updateIdVia','updateIdBloque','updateIdMejora', 'updateIdFoto', 
-    'resetIdPredio','resetIdTenencia','resetIdVia','resetIdBloque','resetIdMejora', 'resetIdFoto'
+    'resetIdPredio','resetIdTenencia','resetIdVia','resetIdBloque','resetIdMejora', 'resetIdFoto',
+    'updateClaveCatastral', 'resetClaveCatastral'
     ]),
 
     // Obtener parroquia
@@ -594,7 +595,10 @@ export default {
         if (response.data && response.data.id) {
           this.idPredio = response.data.id;
           this.updateIdPredio(response.data.id);
+          // Establecer la clave catastral en el store
+          this.updateClaveCatastral(this.form.clave_catastral);
           console.log('Respuesta recibida del backend:', response.data);
+          console.log('Clave catastral establecida en store:', this.form.clave_catastral);
         }
 
       } catch (error) {
@@ -717,6 +721,10 @@ export default {
 
         this.idPredio = idPredio;
 
+        // ✅ Establecer la clave catastral en el store
+        this.updateClaveCatastral(this.form.clave_catastral);
+        console.log('Clave catastral establecida en store:', this.form.clave_catastral);
+
         // ✅ Generar croquis
         this.croquisUrl = await generarUrlCroquis(this.form.clave_catastral, 5);
 
@@ -777,6 +785,7 @@ export default {
       this.limpiarCampos();
       this.fotoRecuperadaUrl = '';
       this.croquisUrl = '';
+      this.resetClaveCatastral();
     },
 
     // Actualizar clave catastral
@@ -862,6 +871,7 @@ export default {
       this.resetIdBloque();
       this.resetIdMejora();  
       this.resetIdFoto();
+      this.resetClaveCatastral();
     },
 
     // Limitar dígitos
@@ -881,6 +891,7 @@ export default {
       this.idMejora = null;
       this.idFoto = null;
       this.fotoRecuperadaUrl = '';
+      this.resetClaveCatastral();
       this.$router.push('/menu-predial');
     },
 
@@ -951,6 +962,7 @@ export default {
         await axios.post(`${API_BASE_URL}/elimina_predio_by_id/${this.idPredio}`);
         this.snackbarOk = 'Predio eliminado exitosamente';
         this.snackbarOkPush = true;
+        this.resetClaveCatastral(); // Limpiar clave catastral del store
         this.nuevoRegistro(); // Limpiar el formulario después de eliminar
       } catch (error) {
         console.error('Error al eliminar el predio:', error);

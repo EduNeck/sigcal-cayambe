@@ -7,7 +7,7 @@ const getCatalogoByTipoAtributo = async (id_tipo_atributo, tipo_exclusivo) => {
     SELECT id,  descripcion
     FROM public.catastro_catalogo 
     WHERE id_tipo_atributo = $1 AND tipo_exclusivo = $2
-    ORDER BY id ASC;
+    ORDER BY descripcion ASC;
   `;
   try {
     const result = await db.query(query, [id_tipo_atributo, tipo_exclusivo]);

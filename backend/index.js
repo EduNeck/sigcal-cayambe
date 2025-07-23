@@ -85,6 +85,7 @@ app.use('/api', require('./routes/valoracionRoutes'));
 app.use('/api', require('./routes/prediosAvaluoCompletoRoutes'));
 app.use('/api', require('./routes/croquisRoutes'));
 app.use('/api', require('./routes/consultaWsRoutes'));
+app.use('/api', require('./routes/geoLinderosRoutes'));
 
 
 // ========== Iniciar servidor ==========
