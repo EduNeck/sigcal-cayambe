@@ -151,7 +151,7 @@
 
           <v-col cols="12" sm="6" md="2">
             <v-text-field label="Fecha de Protocolización" 
-              v-model="form.fecha_inscripcion" 
+              v-model="form.fecha_escritura"               
               type="date" >
             </v-text-field>
           </v-col>            
@@ -197,7 +197,10 @@
               v-model="form.id_provincia" 
               item-text="title" 
               item-value="id"   
-              @click="onProvinciaRegistro"             
+              @change="onProvinciaRegistro"
+              disabled
+              hint="Provincia fija: Pichincha"
+              persistent-hint             
             ></v-select>
           </v-col>
 
@@ -208,13 +211,15 @@
               v-model="form.id_canton" 
               item-text="title" 
               item-value="id" 
-              @click="onProvinciaRegistro"
+              disabled
+              hint="Cantón fijo: Cayambe"
+              persistent-hint
             ></v-select>
           </v-col>
 
           <v-col cols="12" sm="6" md="2">
             <v-text-field label="Fecha de Registro" 
-              v-model="form.fecha_escritura" 
+              v-model="form.fecha_inscripcion"               
               type="date" >
             </v-text-field>
           </v-col>            
@@ -295,7 +300,7 @@
           </v-btn>
         </v-card-title>
         <v-card-text class="pa-0">
-          <ConsultaWsRegistro />
+          <ConsultaWsRegistro @sincronizar-datos="recibirDatosSincronizados" />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -331,8 +336,8 @@ export default {
         numero_notaria: '',
         area_registro: '',
         id_unidad: null,
-        id_provincia: null,
-        id_canton: null,
+        id_provincia: 17, 
+        id_canton: 1702, 
         fecha_escritura: '',
         repertorio: '',
         folio: '',
@@ -391,6 +396,12 @@ export default {
     this.unidadAreas = await this.cargaCatalogo(8,0); 
     await this.cargaProvincias();   
     await this.cargaCiudadanoTenecia();
+
+    // Establecer Pichincha como provincia por defecto para registro
+    this.form.id_provincia = 17;
+    this.form.id_canton = 1702; // Establecer cantón fijo
+    // Cargar cantones de Pichincha automáticamente
+    await this.cargaCantonesByProvinciaRegistro(17);
 
     console.log('Componente TabTenencia montado');
     // Validar idPredio
@@ -774,8 +785,8 @@ export default {
         numero_notaria: '',
         area_registro: '',
         id_unidad: null,
-        id_provincia: null,
-        id_canton: null,
+        id_provincia: 17, // Siempre Pichincha
+        id_canton: 1702, // Siempre cantón fijo (ID: 1702)
         fecha_escritura: '',
         repertorio: '',
         folio: '',
@@ -787,6 +798,8 @@ export default {
         propietario_anterior: '',     
         representante: 2,
       };
+      // Cargar cantones de Pichincha después de limpiar
+      this.cargaCantonesByProvinciaRegistro(17);
     },
 
     navigateToMenuUrbano() {
@@ -811,6 +824,52 @@ export default {
 
     cerrarModal() {
       this.dialogConsultaRegistro = false;
+    },
+
+    recibirDatosSincronizados(datos) {
+      console.log('=== RECIBIR DATOS EN FORMULARIO TENENCIA ===');
+      console.log('Datos recibidos completos:', datos);
+      console.log('Fecha recibida:', datos.fecha_inscripcion);
+      console.log('Tipo de fecha recibida:', typeof datos.fecha_inscripcion);
+      
+      // Sincronizar los datos del WS con el formulario de tenencia
+      if (datos.fecha_inscripcion) {
+        console.log('Valor ANTES de asignar:', this.form.fecha_inscripcion);
+        this.form.fecha_inscripcion = datos.fecha_inscripcion;
+        console.log('Valor DESPUÉS de asignar:', this.form.fecha_inscripcion);
+      }
+      
+      if (datos.repertorio) {
+        this.form.repertorio = datos.repertorio;
+        console.log('Repertorio asignado:', datos.repertorio);
+      }
+      
+      if (datos.folio) {
+        this.form.folio = datos.folio;
+        console.log('Folio asignado:', datos.folio);
+      }
+      
+      if (datos.numero_registro) {
+        this.form.numero_registro = datos.numero_registro;
+        console.log('Número registro asignado:', datos.numero_registro);
+      }
+
+      // Forzar reactividad de Vue
+      this.$forceUpdate();
+
+      // Cerrar el modal después de la sincronización
+      this.dialogConsultaRegistro = false;
+
+      // Mostrar mensaje de éxito
+      this.snackbarOk = 'Datos sincronizados exitosamente';
+      this.snackbarOkPush = true;
+
+      console.log('Estado final del formulario:', {
+        fecha_inscripcion: this.form.fecha_inscripcion,
+        repertorio: this.form.repertorio,
+        folio: this.form.folio,
+        numero_registro: this.form.numero_registro
+      });
     }
   }
 }

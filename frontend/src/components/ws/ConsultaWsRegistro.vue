@@ -154,6 +154,15 @@
             </v-col>
           </v-row>
         </v-card-text>
+        <v-card-actions class="px-4 pb-4">
+          <v-spacer />
+          <v-btn color="success" variant="elevated" @click="sincronizarDatos" prepend-icon="mdi-sync">
+            Sincronizar
+          </v-btn>
+          <v-btn color="grey" variant="outlined" @click="dialogo = false">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -284,6 +293,100 @@ export default {
           ? `• ${partes[0].trim()}: ${partes[2].trim()} (${partes[1].trim()})`
           : `• ${comp.trim()}`;
       }).join('\n');
+    },
+
+    sincronizarDatos() {
+      console.log('=== DEBUG SINCRONIZACIÓN ===');
+      console.log('Objeto seleccionado completo:', this.seleccionado);
+      console.log('FECHA_INSCRIPCION raw:', this.seleccionado.FECHA_INSCRIPCION);
+      console.log('Tipo de FECHA_INSCRIPCION:', typeof this.seleccionado.FECHA_INSCRIPCION);
+
+      // Preparar los datos para sincronizar con el formulario de tenencia
+      const fechaFormateada = this.formatearFechaParaFormulario(this.seleccionado.FECHA_INSCRIPCION);
+      
+      const datosSincronizacion = {
+        fecha_inscripcion: fechaFormateada,
+        repertorio: this.seleccionado.NUM_REPERTORIO || '',
+        folio: this.seleccionado.NUM_FOLIO || '',
+        numero_registro: this.seleccionado.NUM_INSCRPCION || ''
+      };
+
+      console.log('Fecha después de formatear:', fechaFormateada);
+      console.log('Datos completos para sincronización:', datosSincronizacion);
+
+      // Emitir evento al componente padre
+      this.$emit('sincronizar-datos', datosSincronizacion);
+
+      // Cerrar el diálogo
+      this.dialogo = false;
+    },
+
+    formatearFechaParaFormulario(fecha) {
+      console.log('=== FORMATEAR FECHA ===');
+      console.log('Fecha recibida:', fecha);
+      console.log('Tipo:', typeof fecha);
+      
+      if (!fecha) {
+        console.log('Fecha vacía, retornando cadena vacía');
+        return '';
+      }
+      
+      // Convertir a string si es necesario
+      const fechaStr = String(fecha).trim();
+      console.log('Fecha como string:', fechaStr);
+      
+      try {
+        // Si la fecha viene en formato ISO (2023-12-31T00:00:00.000Z)
+        if (fechaStr.includes('T')) {
+          const resultado = fechaStr.split('T')[0];
+          console.log('Formato ISO detectado, resultado:', resultado);
+          return resultado;
+        }
+        
+        // Si la fecha viene en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+        if (fechaStr.includes('/')) {
+          const partes = fechaStr.split('/');
+          console.log('Formato DD/MM/YYYY detectado, partes:', partes);
+          if (partes.length === 3) {
+            const dia = partes[0].padStart(2, '0');
+            const mes = partes[1].padStart(2, '0');
+            const anio = partes[2];
+            const resultado = `${anio}-${mes}-${dia}`;
+            console.log('Resultado conversión DD/MM/YYYY:', resultado);
+            return resultado;
+          }
+        }
+        
+        // Si la fecha viene en formato DD-MM-YYYY, convertir a YYYY-MM-DD
+        if (fechaStr.includes('-') && !fechaStr.startsWith('20')) {
+          const partes = fechaStr.split('-');
+          console.log('Formato DD-MM-YYYY detectado, partes:', partes);
+          if (partes.length === 3 && partes[2].length === 4) {
+            const dia = partes[0].padStart(2, '0');
+            const mes = partes[1].padStart(2, '0');
+            const anio = partes[2];
+            const resultado = `${anio}-${mes}-${dia}`;
+            console.log('Resultado conversión DD-MM-YYYY:', resultado);
+            return resultado;
+          }
+        }
+        
+        // Intentar usar Date para formatear fechas complejas
+        const fechaObj = new Date(fechaStr);
+        if (!isNaN(fechaObj.getTime())) {
+          const resultado = fechaObj.toISOString().split('T')[0];
+          console.log('Conversión usando Date object:', resultado);
+          return resultado;
+        }
+        
+        // Si ya está en formato YYYY-MM-DD, devolverla tal como está
+        console.log('Devolviendo fecha sin cambios:', fechaStr);
+        return fechaStr;
+      } catch (error) {
+        console.error('Error al formatear fecha:', error);
+        console.log('Retornando fecha original por error:', fechaStr);
+        return fechaStr;
+      }
     }
   }
 };
