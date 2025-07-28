@@ -11,6 +11,11 @@ export default createStore({
     idCiudadano: null,
     clave_catastral: null,
     tipoPredio: null,
+    fotoUrl: null, // 📸 URL de la foto actual del predio
+    tenenciasCount: 0, // 🏠 Contador de tenencias para reactividad
+    viasCount: 0, // 🛣️ Contador de vías para reactividad
+    bloquesCount: 0, // 🏗️ Contador de bloques para reactividad
+    mejorasCount: 0, // 🔧 Contador de mejoras para reactividad
     user: JSON.parse(localStorage.getItem('user')) || {
       login: '',
       name: '',
@@ -42,6 +47,16 @@ export default createStore({
     clearIdCiudadano(state) { state.idCiudadano = null; },
     setClaveCatastral(state, clave) { state.clave_catastral = clave; },
     clearClaveCatastral(state) { state.clave_catastral = null; },
+    setFotoUrl(state, url) { state.fotoUrl = url; }, // 📸 Mutation para URL de foto
+    clearFotoUrl(state) { state.fotoUrl = null; },
+    incrementTenenciasCount(state) { state.tenenciasCount++; }, // 🏠 Incrementar contador de tenencias
+    resetTenenciasCount(state) { state.tenenciasCount = 0; }, // 🏠 Resetear contador de tenencias
+    incrementViasCount(state) { state.viasCount++; }, // 🛣️ Incrementar contador de vías
+    resetViasCount(state) { state.viasCount = 0; }, // 🛣️ Resetear contador de vías
+    incrementBloquesCount(state) { state.bloquesCount++; }, // 🏗️ Incrementar contador de bloques
+    resetBloquesCount(state) { state.bloquesCount = 0; }, // 🏗️ Resetear contador de bloques
+    incrementMejorasCount(state) { state.mejorasCount++; }, // 🔧 Incrementar contador de mejoras
+    resetMejorasCount(state) { state.mejorasCount = 0; }, // 🔧 Resetear contador de mejoras
     setUser(state, user) {
       state.user = {
         login: user.login,
@@ -97,7 +112,17 @@ export default createStore({
     resetClaveCatastral({ commit }) { commit('clearClaveCatastral'); },
     updateUser({ commit }, user) { commit('setUser', user); },
     clearUser({ commit }) { commit('clearUser'); },
-    updateTipoPredio({ commit }, tipo) { commit('setTipoPredio', tipo); }
+    updateTipoPredio({ commit }, tipo) { commit('setTipoPredio', tipo); },
+    updateFotoUrl({ commit }, url) { commit('setFotoUrl', url); }, // 📸 Action para URL de foto
+    resetFotoUrl({ commit }) { commit('clearFotoUrl'); },
+    incrementTenenciasCount({ commit }) { commit('incrementTenenciasCount'); }, // 🏠 Action para incrementar contador
+    resetTenenciasCount({ commit }) { commit('resetTenenciasCount'); }, // 🏠 Action para resetear contador
+    incrementViasCount({ commit }) { commit('incrementViasCount'); }, // 🛣️ Action para incrementar contador
+    resetViasCount({ commit }) { commit('resetViasCount'); }, // 🛣️ Action para resetear contador
+    incrementBloquesCount({ commit }) { commit('incrementBloquesCount'); }, // 🏗️ Action para incrementar contador
+    resetBloquesCount({ commit }) { commit('resetBloquesCount'); }, // 🏗️ Action para resetear contador
+    incrementMejorasCount({ commit }) { commit('incrementMejorasCount'); }, // 🔧 Action para incrementar contador
+    resetMejorasCount({ commit }) { commit('resetMejorasCount'); } // 🔧 Action para resetear contador
   },
   getters: {
     getIdPredio: (state) => state.idPredio,
@@ -108,6 +133,11 @@ export default createStore({
     getIdFoto: (state) => state.idFoto,
     getIdCiudadano: (state) => state.idCiudadano,
     getClaveCatastral: (state) => state.clave_catastral,
+    getFotoUrl: (state) => state.fotoUrl, // 📸 Getter para URL de foto
+    getTenenciasCount: (state) => state.tenenciasCount, // 🏠 Getter para contador de tenencias
+    getViasCount: (state) => state.viasCount, // 🛣️ Getter para contador de vías
+    getBloquesCount: (state) => state.bloquesCount, // 🏗️ Getter para contador de bloques
+    getMejorasCount: (state) => state.mejorasCount, // 🔧 Getter para contador de mejoras
     getTipoPredio: (state) => state.tipoPredio,
     isAuthenticated: (state) => !!state.user.login,
     userLogin: (state) => state.user.login,

@@ -283,12 +283,17 @@
   
 <script>
 import axios from 'axios';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import { useBloquesEvents } from '@/composables/useBloquesEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
-  name: 'TabBloques',
+  name: 'TabBloques', // 🏗️ Force refresh - Fixed mapActions duplication issue
+  setup() {
+    const { emitBloquesUpdated } = useBloquesEvents();
+    return { emitBloquesUpdated };
+  },
   data() {
     return {
       form: {
@@ -395,6 +400,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(['incrementBloquesCount']), // 🏗️ Action para incrementar contador de bloques
   
     async cargaCatalogo(id_tipo_atributo, tipo) {
       try {
@@ -478,6 +484,10 @@ export default {
         console.log('Respuesta del servidor:', this.idBloque);        
         this.snackbarOk = 'Bloque guardado con éxito';
         this.snackbarOkPush = true;
+        
+        // 🏗️ Emitir evento y actualizar contador para reactividad
+        this.emitBloquesUpdated();
+        this.incrementBloquesCount();
       } catch (error) {
         console.error('Error al guardar el bloque:', error);        
         this.snackbarError = 'Error al guardar el bloque';
@@ -522,6 +532,10 @@ export default {
         console.log('Respuesta del servidor:', response.data);        
         this.snackbarOk = 'Bloque actualizado con éxito';
         this.snackbarOkPush = true;
+        
+        // 🏗️ Emitir evento y actualizar contador para reactividad
+        this.emitBloquesUpdated();
+        this.incrementBloquesCount();
       } catch (error) {
         console.error('Error al actualizar el bloque:', error);        
         this.snackbarError = 'Error al actualizar el bloque';
@@ -566,6 +580,10 @@ export default {
         this.snackbarOk = 'bloques eliminado exitosamente';
         this.snackbarOkPush = true;
         this.limpiarCampos(); 
+        
+        // 🏗️ Emitir evento y actualizar contador para reactividad
+        this.emitBloquesUpdated();
+        this.incrementBloquesCount(); 
       } catch (error) {
         console.error('Error al eliminar el bloques:', error);
         this.snackbarError = 'Error al eliminar el bloques';

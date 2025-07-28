@@ -59,10 +59,15 @@
 <script>
 import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex';
+import { useViasEvents } from '@/composables/useViasEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'TabListadoVias',
+  setup() {
+    const { onViasUpdated } = useViasEvents();
+    return { onViasUpdated };
+  },
 
   data() {
     return {
@@ -100,6 +105,12 @@ export default {
       console.log('Componente montado');
       console.log('ID DEL PREDIO:', this.getIdPredio);
       await this.recuperaVias(this.getIdPredio);
+      
+      // 🛣️ Listener para reactividad de vías
+      this.onViasUpdated(() => {
+        console.log('🛣️ Evento de vías actualizado detectado, recargando listado...');
+        this.recargarDatos();
+      });
     } catch (error) {
       console.error('Error al montar el componente:', error);
     }

@@ -22,8 +22,8 @@
     <v-window class="custom-window" v-show="isWindowVisible">
       <v-card-title class="window-title">INFORMACIÓN</v-card-title>
       <div class="ma-4 d-flex" >
-        <!-- Foto Predio -->
-        <v-img v-if="fotoRecuperadaUrl" :src="fotoRecuperadaUrl" class="custom-img">
+        <!-- Foto Predio - 📸 Usar computed reactivo -->
+        <v-img v-if="fotoRecuperadaUrlReactiva" :src="fotoRecuperadaUrlReactiva" class="custom-img">
           <div class="img-title">Foto Predio</div>
         </v-img>
         <v-img
@@ -317,13 +317,20 @@ import axios from 'axios';
 import { mapActions } from 'vuex';
 import { mapGetters } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import useFotoEvents from '@/composables/useFotoEvents';
 import API_BASE_URL from '@/config/apiConfig';
 import sinPredio from '@/assets/sin-foto.png';
 import sinCroquis from '@/assets/sin-croquis.png';
 import { generarUrlCroquis } from '@/components/utils/croquisUtils';
 
 export default {
-  name: 'TabIdentificacion',  
+  name: 'TabIdentificacion',
+  setup() {
+    const { onFotoUpdated } = useFotoEvents();
+    return {
+      onFotoUpdated
+    };
+  },
 
   data() {    
     return {      
@@ -425,10 +432,18 @@ export default {
     } catch (error) {
       console.error('Error al montar el componente:', error);
     }
+
+    // 📸 Configurar listener para actualizaciones de foto
+    this.onFotoUpdated(() => {
+      console.log('🔄 FormIdentificacion: Foto actualizada detectada, recargando...');
+      if (this.getIdPredio) {
+        this.recuperaFotos(this.getIdPredio);
+      }
+    });
   },
   
   computed: {
-    ...mapGetters(['isConsultaPrimario', 'userName', 'getTipoPredio', 'getIdPredio']),
+    ...mapGetters(['isConsultaPrimario', 'userName', 'getTipoPredio', 'getIdPredio', 'getFotoUrl']),
     
     tipoClaseContainer() {
       return this.getTipoPredio === 1 ? 'urbano-container' : 'rural-container';
@@ -464,6 +479,11 @@ export default {
     canEdit() {
       const { canEdit } = useUserRoles();
       return canEdit.value;
+    },
+
+    // 📸 Computed para obtener la foto reactiva del store
+    fotoRecuperadaUrlReactiva() {
+      return this.getFotoUrl || this.fotoRecuperadaUrl || '';
     }
   },
 
@@ -472,7 +492,7 @@ export default {
     ...mapActions([
     'updateIdPredio','updateIdTenencia','updateIdVia','updateIdBloque','updateIdMejora', 'updateIdFoto', 
     'resetIdPredio','resetIdTenencia','resetIdVia','resetIdBloque','resetIdMejora', 'resetIdFoto',
-    'updateClaveCatastral', 'resetClaveCatastral'
+    'updateClaveCatastral', 'resetClaveCatastral', 'updateFotoUrl', 'resetFotoUrl'
     ]),
 
     // Obtener parroquia
@@ -756,8 +776,10 @@ export default {
               this.fotoRecuperadaUrl = URL.createObjectURL(blob);
             }            
             this.fotoRecuperadaUrl = `data:image/png;base64,${fotosPredio.foto}`;
+            this.updateFotoUrl(this.fotoRecuperadaUrl); // 📸 Actualizar store
           } else {
             this.fotoRecuperadaUrl = '';
+            this.updateFotoUrl(null); // 📸 Limpiar store
             this.snackbarNota = 'No se encontró una imagen asociada';
             this.snackbarNotaPush = true;
           }
@@ -765,6 +787,7 @@ export default {
           this.snackbarNota = 'No se encontraron fotos para este predio';
           this.snackbarNotaPush = true;
           this.fotoRecuperadaUrl = '';
+          this.updateFotoUrl(null); // 📸 Limpiar store
         }
       } catch (error) {
         console.error('Error al recuperar la foto:', error);

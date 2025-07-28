@@ -97,12 +97,17 @@
 
 <script>
 import axios from 'axios';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import { useMejorasEvents } from '@/composables/useMejorasEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
-    name: 'TabMejoras',
+    name: 'TabMejoras', // 🔧 Force refresh - Fixed mapActions duplication issue
+    setup() {
+        const { emitMejorasUpdated } = useMejorasEvents();
+        return { emitMejorasUpdated };
+    },
     data() {
         return {
             form: {
@@ -168,6 +173,7 @@ export default {
 
 
     methods: {
+        ...mapActions(['incrementMejorasCount']), // 🔧 Action para incrementar contador de mejoras
         async cargaCatalogo() {
             try {
                 this.tipoObra = await this.cargaCatalogos(59,0); 
@@ -238,6 +244,10 @@ export default {
             console.log('ID de la mejora creada:', this.idMejora);
             this.snackbarOk = 'Mejora creada con éxito';
             this.snackbarOkPush = true;
+            
+            // 🔧 Emitir evento y actualizar contador para reactividad
+            this.emitMejorasUpdated();
+            this.incrementMejorasCount();
           } catch (error) {
             console.error('Error al guardar la mejora', error);
             this.snackbarError = `Error al guardar la mejora: ${error.message}`;
@@ -264,6 +274,10 @@ export default {
             console.log('Mejora actualizada con éxito:', response.data);
             this.snackbarOk = 'Mejora actualizada con éxito';
             this.snackbarOkPush = true;
+            
+            // 🔧 Emitir evento y actualizar contador para reactividad
+            this.emitMejorasUpdated();
+            this.incrementMejorasCount();
           } catch (error) {
             console.error('Error al actualizar la mejora', error);
             this.snackbarError = `Error al actualizar la mejora: ${error.message}`;
@@ -283,6 +297,10 @@ export default {
             this.snackbarOk = 'mejora eliminado exitosamente';
             this.snackbarOkPush = true;
             this.nuevo();
+            
+            // 🔧 Emitir evento y actualizar contador para reactividad
+            this.emitMejorasUpdated();
+            this.incrementMejorasCount();
           } catch (error) {
             console.error('Error al eliminar el mejora:', error);
             this.snackbarError = 'Error al eliminar el mejora';

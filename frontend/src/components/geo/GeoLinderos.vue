@@ -471,20 +471,20 @@ export default {
 }
 
 /* Estilo para la fila seleccionada */
-.v-data-table >>> .selected-row {
+.v-data-table :deep(.selected-row) {
   background-color: #e3f2fd !important;
 }
 
-.v-data-table >>> .selected-row:hover {
+.v-data-table :deep(.selected-row:hover) {
   background-color: #bbdefb !important;
 }
 
 /* Hacer las filas clickeables */
-.v-data-table >>> tbody tr {
+.v-data-table :deep(tbody tr) {
   cursor: pointer;
 }
 
-.v-data-table >>> tbody tr:hover {
+.v-data-table :deep(tbody tr:hover) {
   background-color: #f5f5f5 !important;
 }
 </style>

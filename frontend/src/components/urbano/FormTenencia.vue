@@ -312,11 +312,19 @@
 import axios from 'axios';
 import { mapActions, mapGetters } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import useTenenciaEvents from '@/composables/useTenenciaEvents';
 import API_BASE_URL from '@/config/apiConfig';
 import ConsultaWsRegistro from '@/components/ws/ConsultaWsRegistro.vue';
 
 export default {
   name: 'TabTenencia',
+  setup() {
+    const { emitTenenciaUpdated, onTenenciaUpdated } = useTenenciaEvents();
+    return {
+      emitTenenciaUpdated,
+      onTenenciaUpdated
+    };
+  },
   components: {
     ConsultaWsRegistro
   },
@@ -420,19 +428,16 @@ export default {
       console.log('Cargando datos de la tenencia:', this.idTenencia);
       await this.cargarDatosTenencia(this.idTenencia);
     }
-  
-      try {
-        const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
-        const propietario = response.data;
-        console.log('Datos del propietario cargados:', propietario);
-        // Asignar los datos del propietario al formulario
-        this.form.id_propietario = propietario.id_ciudadano;
-        console.log('ID del propietario:', this.form.id_propietario);
-      } catch (error) {
-        console.error('Error al cargar los datos del propietario:', error);        
-      }
-    },
+
+    // 🏠 Listener para reactividad de tenencias
+    this.onTenenciaUpdated(() => {
+      console.log('🏠 Evento de tenencia actualizado detectado');
+      // Aquí podrías actualizar datos si es necesario
+    });
+  },
   methods: {
+    ...mapActions(['updateIdTenencia', 'incrementTenenciasCount']),
+    
     async cargarDatosPropietario(id_propietario) {
       try {
         const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
@@ -685,6 +690,8 @@ export default {
         console.log('ID TENENCIA: ', this.idTenencia);               
         this.snackbarOk = 'Tenencia creada con éxito';
         this.snackbarOkPush = true;
+        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
+        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
       } catch (error) {     
         console.error('Error al guardar tenencia:', error);
         this.snackbarError = 'Error al guardar la tenencia';
@@ -742,6 +749,8 @@ export default {
         console.log('Respuesta de actualización:', response.data);
         this.snackbarOk = 'Tenencia actualizada con éxito';
         this.snackbarOkPush = true;
+        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
+        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
       } catch (error) {
         console.error('Error al actualizar la tenencia:', error.message || error);
         this.snackbarError = 'Error al actualizar la tenencia';
@@ -761,6 +770,8 @@ export default {
         await axios.post(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
         this.snackbarOk = 'tenencia eliminado exitosamente';
         this.snackbarOkPush = true;
+        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
+        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
         this.nuevoRegistro(); // Limpiar el formulario después de eliminar
       } catch (error) {
         console.error('Error al eliminar el tenencia:', error);

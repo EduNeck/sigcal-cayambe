@@ -131,12 +131,17 @@
 
 <script>
 import axios from 'axios';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import { useViasEvents } from '@/composables/useViasEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'TabVias',
+  setup() {
+    const { emitViasUpdated } = useViasEvents();
+    return { emitViasUpdated };
+  },
   data() {
     return {
       form: {
@@ -207,6 +212,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(['incrementViasCount']), // 🛣️ Action para incrementar contador de vías
     async cargaCatalogos() {
       try {
         this.tipoVias = await this.cargaCatalogo(21,0); 
@@ -270,6 +276,10 @@ export default {
         console.log('ID de la nueva vía:', this.idVia);
         this.snackbarOk = 'Vía guardada con éxito';
         this.snackbarOkPush = true;
+        
+        // 🛣️ Emitir evento y actualizar contador para reactividad
+        this.emitViasUpdated();
+        this.incrementViasCount();
       } catch (error) {
         console.error('Error al guardar la vía:', error);
         this.snackbarError = `Error al guardar la vía: ${error.message}`;
@@ -303,6 +313,10 @@ export default {
         console.log('Respuesta del servidor:', response.data);
         this.snackbarOk = 'Vía actualizada con éxito';
         this.snackbarOkPush = true;
+        
+        // 🛣️ Emitir evento y actualizar contador para reactividad
+        this.emitViasUpdated();
+        this.incrementViasCount();
       } catch (error) {
         console.error('Error al actualizar la vía:', error);
         this.snackbarError = `Error al actualizar la vía: ${error.message}`;
@@ -336,6 +350,10 @@ export default {
         this.snackbarOk = 'Vias eliminado exitosamente';
         this.snackbar = true;
         this.limpiarFormulario(); // Limpiar el formulario después de eliminar
+        
+        // 🛣️ Emitir evento y actualizar contador para reactividad
+        this.emitViasUpdated();
+        this.incrementViasCount();
       } catch (error) {
         console.error('Error al eliminar el Vias:', error);
         this.snackbarError = 'Error al eliminar el Vias';

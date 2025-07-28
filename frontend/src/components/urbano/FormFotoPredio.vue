@@ -126,12 +126,19 @@
 
 <script>
 import axios from 'axios';
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters, mapMutations, mapActions } from 'vuex';
 import useUserRoles from '@/composables/useUserRoles';
+import useFotoEvents from '@/composables/useFotoEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'TabFotoPredio',
+  setup() {
+    const { emitFotoUpdated } = useFotoEvents();
+    return {
+      emitFotoUpdated
+    };
+  },
   data() {
     return {
       form: {
@@ -185,6 +192,7 @@ export default {
 
   methods: {
     ...mapMutations(['setIdFoto']),
+    ...mapActions(['updateFotoUrl']),
 
     onFileChange(e) {
       const file = e.target.files[0];
@@ -213,8 +221,9 @@ export default {
         this.snackbarOk = 'Foto guardada correctamente';
         this.snackbarOkPush = true;
         await this.recuperaFotos(this.getIdPredio);
+        this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
         this.nuevo();
-      } catch (error) {S
+      } catch (error) {
         
         this.snackbarError = 'Error al guardar la foto';
         this.snackbarErrorPush = true;
@@ -231,12 +240,15 @@ export default {
           const principal = data.find(f => f.principal);
           if (principal) {
             this.fotoRecuperadaUrl = this.getFotoUrl(principal);
+            this.updateFotoUrl(this.fotoRecuperadaUrl); // 📸 Actualizar store
           } else {
             this.fotoRecuperadaUrl = this.getFotoUrl(data[0]);
+            this.updateFotoUrl(this.fotoRecuperadaUrl); // 📸 Actualizar store
           }
         } else {
           this.fotos = [];
           this.fotoRecuperadaUrl = '';
+          this.updateFotoUrl(null); // 📸 Limpiar store
           this.snackbarNota = 'No se encontraron fotos para este predio';
           this.snackbarNotaPush = true;
         }
@@ -283,6 +295,7 @@ export default {
           this.snackbarOk = 'Foto eliminada correctamente';
           this.snackbarOkPush = true;
           await this.recuperaFotos(this.getIdPredio);
+          this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
           this.nuevo();
         } catch (error) {
           this.snackbarError = 'Error al eliminar la foto';
@@ -312,6 +325,7 @@ export default {
         this.snackbarOk = 'Foto actualizada correctamente';
         this.snackbarOkPush = true;
         await this.recuperaFotos(this.getIdPredio);
+        this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
         this.nuevo();
       } catch (error) {
         this.snackbarError = 'Error al actualizar la foto';
@@ -326,6 +340,7 @@ export default {
           this.snackbarOk = 'Foto eliminada correctamente';
           this.snackbarOkPush = true;
           await this.recuperaFotos(this.getIdPredio);
+          this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
           this.nuevo();
         } catch (error) {
           this.snackbarError = 'Error al eliminar la foto';

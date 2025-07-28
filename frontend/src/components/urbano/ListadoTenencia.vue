@@ -65,10 +65,17 @@
 <script>
 import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex';
+import useTenenciaEvents from '@/composables/useTenenciaEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'TabListadoTenencia',
+  setup() {
+    const { onTenenciaUpdated } = useTenenciaEvents();
+    return {
+      onTenenciaUpdated
+    };
+  },
 
   data() {
     return {
@@ -109,6 +116,15 @@ export default {
     try {      
       console.log('ID DEL PREDIO:', this.getIdPredio);
       await this.recuperaTenecia(this.getIdPredio);
+      
+      // 🏠 Configurar listener para actualizaciones de tenencia
+      this.onTenenciaUpdated(() => {
+        console.log('🔄 ListadoTenencia: Tenencia actualizada detectada, recargando...');
+        if (this.getIdPredio) {
+          this.recuperaTenecia(this.getIdPredio);
+        }
+      });
+      
     } catch (error) {
       console.error('Error al montar el componente:', error);
     }

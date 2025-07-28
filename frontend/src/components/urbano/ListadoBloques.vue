@@ -59,11 +59,16 @@
 <script>
 import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex';
+import { useBloquesEvents } from '@/composables/useBloquesEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 
 export default {
   name: 'TabListadoBloques',
+  setup() {
+    const { onBloquesUpdated } = useBloquesEvents();
+    return { onBloquesUpdated };
+  },
   data() {
     return {
       search: '',
@@ -108,6 +113,12 @@ export default {
       } else {
         console.log('No hay ID de predio disponible');
       }
+      
+      // 🏗️ Listener para reactividad de bloques
+      this.onBloquesUpdated(() => {
+        console.log('🏗️ Evento de bloques actualizado detectado, recargando listado...');
+        this.recargarDatos();
+      });
     } catch (error) {
       console.error('Error al montar el componente:', error);
     }

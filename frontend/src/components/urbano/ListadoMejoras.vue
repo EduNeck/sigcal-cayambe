@@ -59,10 +59,15 @@
 <script>
 import axios from 'axios';
 import { mapGetters, mapActions } from 'vuex';
+import { useMejorasEvents } from '@/composables/useMejorasEvents';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
     name: 'TabListadoMejoras',
+    setup() {
+        const { onMejorasUpdated } = useMejorasEvents();
+        return { onMejorasUpdated };
+    },
 
     data() {
         return {
@@ -104,6 +109,12 @@ export default {
             console.log('Componente montado');
             console.log('ID DEL PREDIO:', this.getIdPredio);
             await this.recuperaMejoras(this.getIdPredio);
+            
+            // 🔧 Listener para reactividad de mejoras
+            this.onMejorasUpdated(() => {
+                console.log('🔧 Evento de mejoras actualizado detectado, recargando listado...');
+                this.recargarDatos();
+            });
         } catch (error) {
             console.error('Error al montar el componente:', error);
         }
