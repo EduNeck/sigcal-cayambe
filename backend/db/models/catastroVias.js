@@ -3,12 +3,12 @@ const db = require('../config');
 // Método para insertar datos en la tabla catastroVias
 const insertCatastroVias = async (data) => {
     const query = `
-        INSERT INTO public.catastro_vias (via_principal, via_secundaria, nombre_via, longitud, id_tipo_via, id_aceras_bordillos, id_predio, id_material_via, num_inmueble) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+        INSERT INTO public.catastro_vias (via_principal, via_secundaria, nombre_via, longitud, id_tipo_via, id_aceras_bordillos, id_predio, id_material_via, num_inmueble, codigo_via) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
         RETURNING id_vias`;
     const values = [
         data.via_principal, data.via_secundaria, data.nombre_via, data.longitud, data.id_tipo_via,
-        data.id_aceras_bordillos, data.id_predio, data.id_material_via, data.num_inmueble
+        data.id_aceras_bordillos, data.id_predio, data.id_material_via, data.num_inmueble, data.codigo_via
     ];
 
     const integerFields = [
@@ -54,13 +54,13 @@ const insertCatastroVias = async (data) => {
 const updateCatastroVias = async (id, data) => {
     const query = `
         UPDATE public.catastro_vias 
-        SET via_principal = $1, via_secundaria = $2, nombre_via = $3, longitud = $4, id_tipo_via = $5, id_aceras_bordillos = $6, id_predio = $7, fecha_registro = $8, id_material_via = $9, num_inmueble = $10
-        WHERE id_vias = $11
+        SET via_principal = $1, via_secundaria = $2, nombre_via = $3, longitud = $4, id_tipo_via = $5, id_aceras_bordillos = $6, id_predio = $7, fecha_registro = $8, id_material_via = $9, num_inmueble = $10, codigo_via = $11
+        WHERE id_vias = $12
         RETURNING *;
     `;
     const values = [
         data.via_principal, data.via_secundaria, data.nombre_via, data.longitud, data.id_tipo_via,
-        data.id_aceras_bordillos, data.id_predio, data.fecha_registro, data.id_material_via, data.num_inmueble, id
+        data.id_aceras_bordillos, data.id_predio, data.fecha_registro, data.id_material_via, data.num_inmueble, data.codigo_via, id
     ];
 
     try {
@@ -104,7 +104,7 @@ const getCatastroVistaViasByPredio = async (id_predio) => {
     const query = `
         SELECT  id_vias, via_principal, via_secundaria, nombre_via, longitud, id_tipo_via, tipo_via, id_aceras_bordillos, 
                 aceras_bordillos, id_material_via, material_via, num_inmueble, id_predio, fecha_registro, digitador, 
-                actualizador, fecha_actualizacion_aud
+                actualizador, fecha_actualizacion_aud, codigo_via
         FROM public.vista_vias_completa
         WHERE id_predio = $1 ORDER BY id_vias ASC
     `;

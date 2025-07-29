@@ -175,8 +175,9 @@ const updateCaracteristicasPredio = async (id, data) => {
       num_permiso_construccion = $8, id_agua = $9, id_sanitarias = $10, id_energia_electrica = $11, 
       aceras = $12, bordillos = $13, alumbrado = $14, aseo_calles = $15, recoleccion_basura = $16, 
       id_eliminacion_basura = $17, transporte_urbano = $18, telefonia_fija = $19, telefonia_satelital = $20, 
-      internet = $21, fecha_actualizacion = $22, actualizador = $23
-    WHERE id_predio = $24
+      internet = $21, fecha_actualizacion = $22, actualizador = $23, agua_potable_via = $24, alcantarillado_via = $25, 
+      energia_electrica_via = $26
+    WHERE id_predio = $27
     RETURNING id_predio;
   `;
   const values = [
@@ -184,7 +185,8 @@ const updateCaracteristicasPredio = async (id, data) => {
     data.id_localizacion_manzana, data.permiso_construccion, data.num_permiso_construccion, data.id_agua, 
     data.id_sanitarias, data.id_energia_electrica, data.aceras, data.bordillos, data.alumbrado, data.aseo_calles, 
     data.recoleccion_basura, data.id_eliminacion_basura, data.transporte_urbano, data.telefonia_fija, 
-    data.telefonia_satelital, data.internet, data.fecha_actualizacion, data.actualizador ,id
+    data.telefonia_satelital, data.internet, data.fecha_actualizacion, data.actualizador, data.agua_potable_via, 
+    data.alcantarillado_via, data.energia_electrica_via, id
   ];
 
   // Validar que los valores no sean vacíos para los campos que esperan enteros

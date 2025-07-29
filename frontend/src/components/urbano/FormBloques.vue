@@ -340,11 +340,20 @@ export default {
       valida: [ 'SI' , 'NO' ],
       idBloque: null,
       idPredio: null,
+      areaCalculationTimeout: null, // Para el debounce del cálculo automático
       snackbarErrorPush: false,
       snackbarOkPush: false,
       snackbarOk: '',
       snackbarError: ''   
     };
+  },
+
+  watch: {
+    // Watcher para calcular automáticamente el área cuando se llenan todos los campos necesarios
+    'form.cod_bloq'() { this.calcularAreaAutomaticamente(); },
+    'form.cod_piso'() { this.calcularAreaAutomaticamente(); },
+    'form.cod_uni'() { this.calcularAreaAutomaticamente(); },
+    'form.id_tipo_piso'() { this.calcularAreaAutomaticamente(); }
   },
 
   computed: {
@@ -402,6 +411,75 @@ export default {
   methods: {
     ...mapActions(['incrementBloquesCount']), // 🏗️ Action para incrementar contador de bloques
   
+    async obtenerAreaBloque() {
+      // Validar que tenemos todos los parámetros necesarios
+      if (!this.idPredio || !this.form.cod_bloq || !this.form.cod_piso || 
+          !this.form.cod_uni || !this.form.id_tipo_piso) {
+        console.warn('⚠️ Faltan parámetros para consultar el área del bloque');
+        return;
+      }
+
+      try {
+        // Primero necesitamos obtener la clave catastral del predio
+        const predioResponse = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${this.idPredio}`);
+        const claveCatastral = predioResponse.data.clave_catastral;
+        
+        if (!claveCatastral) {
+          console.warn('⚠️ No se pudo obtener la clave catastral del predio');
+          return;
+        }
+
+        // Convertir getTipoPredio a tipoZona (asumiendo que es la misma lógica)
+        const tipoZona = this.getTipoPredio;
+
+        // Ajustar id_tipo_piso restando 4
+        const tipoPixoAjustado = this.form.id_tipo_piso - 4;
+        console.log('🔧 Ajustando id_tipo_piso:', this.form.id_tipo_piso, '→', tipoPixoAjustado);
+
+        // Llamar al servicio de área de bloque
+        const areaResponse = await axios.get(
+          `${API_BASE_URL}/geo_consultas/area_bloque/${claveCatastral}/${this.form.cod_bloq}/${this.form.cod_piso}/${this.form.cod_uni}/${tipoPixoAjustado}/${tipoZona}`
+        );
+
+        if (areaResponse.data && (typeof areaResponse.data === 'number' || (typeof areaResponse.data === 'string' && !isNaN(parseFloat(areaResponse.data))))) {
+          // Convertir a número si es string
+          const areaValue = typeof areaResponse.data === 'number' ? areaResponse.data : parseFloat(areaResponse.data);
+          this.form.area_construida = areaValue;
+          console.log('✅ Área del bloque obtenida:', areaValue);
+          
+          // Mostrar mensaje con el área obtenida
+          this.snackbarOk = `Área del bloque calculada: ${areaValue} m²`;
+          this.snackbarOkPush = true;
+        } else {
+          console.warn('⚠️ No se encontró área para este bloque');
+          this.snackbarError = 'No se encontró área para este bloque';
+          this.snackbarErrorPush = true;
+        }
+
+      } catch (error) {
+        console.error('❌ Error al obtener el área del bloque:', error);
+        if (error.response?.status === 404) {
+          console.warn('⚠️ No se encontró área para este bloque en la base de datos');
+        }
+      }
+    },
+
+    // Método para calcular área automáticamente con debounce
+    calcularAreaAutomaticamente() {
+      // Limpiar timeout anterior si existe
+      if (this.areaCalculationTimeout) {
+        clearTimeout(this.areaCalculationTimeout);
+      }
+      
+      // Establecer nuevo timeout para evitar múltiples llamadas
+      this.areaCalculationTimeout = setTimeout(() => {
+        if (this.form.cod_bloq && this.form.cod_piso && this.form.cod_uni && 
+            this.form.id_tipo_piso && this.idPredio && !this.form.area_construida) {
+          this.obtenerAreaBloque();
+        }
+      }, 500); // Esperar 500ms después del último cambio
+    },
+
     async cargaCatalogo(id_tipo_atributo, tipo) {
       try {
         const response = await axios.get(`${API_BASE_URL}/catalogo/${id_tipo_atributo}/${tipo}`);
@@ -533,7 +611,7 @@ export default {
         this.snackbarOk = 'Bloque actualizado con éxito';
         this.snackbarOkPush = true;
         
-        // 🏗️ Emitir evento y actualizar contador para reactividad
+        //Emitir evento y actualizar contador para reactividad
         this.emitBloquesUpdated();
         this.incrementBloquesCount();
       } catch (error) {
@@ -560,12 +638,66 @@ export default {
             this.$store.commit('setTipoPredio', predio.id_tipo_predio);
             console.log('Tipo de predio recuperado y almacenado en Vuex:', predio.id_tipo_predio);
           }
+
+          // Cargar área del bloque automáticamente después de cargar los datos
+          console.log('Iniciando carga automática del área del bloque...');
+          await this.cargarAreaBloqueAutomatico(predio.clave_catastral);
         }
       } catch (error) {
         console.error('Error al recuperar los datos del bloque:', error);
         this.snackbarError = 'Error al recuperar los datos del bloque';
         this.snackbarErrorPush = true;
       }
+    },
+
+    async cargarAreaBloqueAutomatico(claveCatastral) {      
+      // Validar que tenemos todos los parámetros necesarios
+      if (!claveCatastral || !this.form.cod_bloq || !this.form.cod_piso || 
+          !this.form.cod_uni || !this.form.id_tipo_piso) {
+        console.warn('Faltan parámetros para consultar el área del bloque automáticamente');
+        console.log('Parámetros faltantes:');
+        if (!claveCatastral) console.log('  - Clave Catastral');
+        if (!this.form.cod_bloq) console.log('  - cod_bloq');
+        if (!this.form.cod_piso) console.log('  - cod_piso');
+        if (!this.form.cod_uni) console.log('  - cod_uni');
+        if (!this.form.id_tipo_piso) console.log('  - id_tipo_piso');
+        return;
+      }
+
+      try {
+        const tipoZona = this.getTipoPredio;
+        
+        // Ajustar id_tipo_piso restando 4
+        const tipoPixoAjustado = this.form.id_tipo_piso - 4;        
+        const urlCompleta = `${API_BASE_URL}/geo_consultas/area_bloque/${claveCatastral}/${this.form.cod_bloq}/${this.form.cod_piso}/${this.form.cod_uni}/${tipoPixoAjustado}/${tipoZona}`;
+        const areaResponse = await axios.get(urlCompleta);      
+
+        if (areaResponse.data && (typeof areaResponse.data === 'number' || (typeof areaResponse.data === 'string' && !isNaN(parseFloat(areaResponse.data))))) {
+          // Convertir a número si es string
+          const areaValue = typeof areaResponse.data === 'number' ? areaResponse.data : parseFloat(areaResponse.data);
+          this.form.area_construida = areaValue;
+          console.log('Área del bloque cargada automáticamente:', areaValue);
+          
+          // Mostrar mensaje con el área cargada automáticamente
+          this.snackbarOk = `Área del bloque cargada automáticamente: ${areaValue} m²`;
+          this.snackbarOkPush = true;
+        } else {
+          console.warn('No se encontró área para este bloque o la respuesta no es válida');
+          console.log('Respuesta recibida:', areaResponse.data);
+        }
+
+      } catch (error) {
+        console.error('Error al obtener el área del bloque automáticamente:', error);
+        if (error.response) {
+          console.error('Detalles del error:');
+          console.error('  - Status:', error.response.status);
+          console.error('  - Data:', error.response.data);
+          console.error('  - Headers:', error.response.headers);
+        }
+        if (error.response?.status === 404) {
+          console.warn('No se encontró área para este bloque en la base de datos (404)');
+        }
+      }      
     },
 
     async eliminar() {
@@ -581,7 +713,7 @@ export default {
         this.snackbarOkPush = true;
         this.limpiarCampos(); 
         
-        // 🏗️ Emitir evento y actualizar contador para reactividad
+        //Emitir evento y actualizar contador para reactividad
         this.emitBloquesUpdated();
         this.incrementBloquesCount(); 
       } catch (error) {
@@ -625,6 +757,13 @@ export default {
     },
      
   },
+
+  beforeDestroy() {
+    // Limpiar timeout al destruir el componente
+    if (this.areaCalculationTimeout) {
+      clearTimeout(this.areaCalculationTimeout);
+    }
+  }
 };
 </script>
   

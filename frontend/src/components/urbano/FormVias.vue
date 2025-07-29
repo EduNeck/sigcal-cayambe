@@ -113,6 +113,15 @@
                             :rules="[v => v === '' || v === null || typeof v === 'string' || 'Debe ser un texto válido']"
                             ></v-text-field>
                         </v-col>
+
+                        <v-col cols="12" sm="6" md="6">
+                            <v-text-field
+                            v-model="form.codigo_vias"
+                            label="Código de Vías"
+                            type="text"
+                            :rules="[v => v === '' || v === null || typeof v === 'string' || 'Debe ser un texto válido']"
+                            ></v-text-field>
+                        </v-col>
                     </v-row>
             </v-card-text>
         </v-card>        
@@ -153,7 +162,8 @@ export default {
         id_aceras_bordillos: null,
         fecha_registro: '',
         id_material_via: null,
-        num_inmueble: ''
+        num_inmueble: '',
+        codigo_vias: ''
       },
       valida: ['SI', 'NO'],
       tipoVias: [],
@@ -265,7 +275,8 @@ export default {
         id_tipo_via: this.form.id_tipo_via,
         id_aceras_bordillos: this.form.id_aceras_bordillos,
         id_material_via: this.form.id_material_via,
-        num_inmueble: this.form.num_inmueble || null 
+        num_inmueble: this.form.num_inmueble || null,
+        codigo_vias: this.form.codigo_vias || null
       };
 
       console.log('Datos a guardar:', nuevaVia);
@@ -303,7 +314,8 @@ export default {
         id_tipo_via: this.form.id_tipo_via,
         id_aceras_bordillos: this.form.id_aceras_bordillos,
         id_material_via: this.form.id_material_via,
-        num_inmueble: this.form.num_inmueble || null, 
+        num_inmueble: this.form.num_inmueble || null,
+        codigo_vias: this.form.codigo_vias || null,
         id_predio: this.getIdPredio
       };
 
@@ -371,7 +383,8 @@ export default {
         id_aceras_bordillos: null,
         fecha_registro: '',
         id_material_via: null,
-        num_inmueble: ''
+        num_inmueble: '',
+        codigo_vias: ''
       };
     },
 

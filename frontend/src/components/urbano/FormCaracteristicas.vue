@@ -136,15 +136,6 @@
           <v-col cols="12" sm="6" md="2">
             <v-select 
               :items="valida" 
-              label="Alumbrado Público" 
-              v-model="form.alumbrado" 
-              item-text="title" 
-              item-value="id" 
-            ></v-select>
-          </v-col>
-          <v-col cols="12" sm="6" md="2">
-            <v-select 
-              :items="valida" 
               label="Aseo de Calles" 
               v-model="form.aseo_calles" 
               item-text="title" 
@@ -174,6 +165,50 @@
               :items="valida" 
               label="Transporte Urbano" 
               v-model="form.transporte_urbano" 
+              item-text="title" 
+              item-value="id" 
+            ></v-select>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+    <!-- Bloque Redes Públicas en la Vía -->
+    <v-card class="mb-3 fill-width" :class="['block-color', tipoClaseBlock]">
+      <v-card-title class="centered-title">REDES PÚBLICAS EN LA VÍA</v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" sm="6" md="3">
+            <v-select 
+              :items="valida" 
+              label="Agua Potable en la Vía" 
+              v-model="form.agua_potable_via" 
+              item-text="title" 
+              item-value="id" 
+            ></v-select>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-select 
+              :items="valida" 
+              label="Alcantarillado en la Vía" 
+              v-model="form.alcantarillado_via" 
+              item-text="title" 
+              item-value="id" 
+            ></v-select>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-select 
+              :items="valida" 
+              label="Energía Eléctrica en la Vía" 
+              v-model="form.energia_electrica_via" 
+              item-text="title" 
+              item-value="id" 
+            ></v-select>
+          </v-col>
+          <v-col cols="12" sm="6" md="3">
+            <v-select 
+              :items="valida" 
+              label="Alumbrado Público" 
+              v-model="form.alumbrado" 
               item-text="title" 
               item-value="id" 
             ></v-select>
@@ -256,6 +291,9 @@ export default {
         recoleccion_basura: null,
         id_eliminacion_basura: null,
         transporte_urbano: null,
+        agua_potable_via: null,
+        alcantarillado_via: null,
+        energia_electrica_via: null,
         telefonia_fija: null,
         telefonia_satelital: null,
         internet: null,
@@ -374,6 +412,9 @@ export default {
         this.form.recoleccion_basura = data.recoleccion_basura ? 'SI' : 'NO';
         this.form.id_eliminacion_basura = data.id_eliminacion_basura;
         this.form.transporte_urbano = data.transporte_urbano ? 'SI' : 'NO';
+        this.form.agua_potable_via = data.agua_potable_via ? 'SI' : 'NO';
+        this.form.alcantarillado_via = data.alcantarillado_via ? 'SI' : 'NO';
+        this.form.energia_electrica_via = data.energia_electrica_via ? 'SI' : 'NO';
         this.form.telefonia_fija = data.telefonia_fija ? 'SI' : 'NO';
         this.form.telefonia_satelital = data.telefonia_satelital ? 'SI' : 'NO';
         this.form.internet = data.internet ? 'SI' : 'NO';
@@ -409,6 +450,9 @@ export default {
         recoleccion_basura: this.form.recoleccion_basura === 'SI',
         id_eliminacion_basura: parseOrNull(this.form.id_eliminacion_basura),
         transporte_urbano: this.form.transporte_urbano === 'SI',
+        agua_potable_via: this.form.agua_potable_via === 'SI',
+        alcantarillado_via: this.form.alcantarillado_via === 'SI',
+        energia_electrica_via: this.form.energia_electrica_via === 'SI',
         telefonia_fija: this.form.telefonia_fija === 'SI',
         telefonia_satelital: this.form.telefonia_satelital === 'SI',
         internet: this.form.internet === 'SI',
@@ -448,6 +492,9 @@ export default {
         recoleccion_basura: null,
         id_eliminacion_basura: null,
         transporte_urbano: null,
+        agua_potable_via: null,
+        alcantarillado_via: null,
+        energia_electrica_via: null,
         telefonia_fija: null,
         telefonia_satelital: null,
         internet: null,

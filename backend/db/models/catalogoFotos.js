@@ -83,7 +83,7 @@ const getFotoPredioByIdPredio = async (id_predio) => {
             CASE WHEN foto IS NOT NULL THEN encode(foto, 'base64') ELSE NULL END AS foto,
             certificado
         FROM public.catastro_foto_predio
-        WHERE id_predio = $1;
+        WHERE id_predio = $1 AND principal = true;
     `;
     
     const values = [id_predio];

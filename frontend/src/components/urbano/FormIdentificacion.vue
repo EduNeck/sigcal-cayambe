@@ -806,9 +806,19 @@ export default {
     nuevoRegistro() {
       this.idPredio = null;
       this.limpiarCampos();
+      
+      // Limpiar todas las variables relacionadas con fotos
       this.fotoRecuperadaUrl = '';
+      this.updateFotoUrl(null); // Limpiar foto del store
+      this.resetFotoUrl(); // Reset completo del store de fotos
+      
+      // Limpiar croquis
       this.croquisUrl = '';
+      
+      // Limpiar clave catastral
       this.resetClaveCatastral();
+      
+      console.log('✅ Nuevo registro: fotos y datos limpiados');
     },
 
     // Actualizar clave catastral
