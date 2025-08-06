@@ -20,6 +20,7 @@ import reportesRoutes from './reportes';
 import cemRoutes from './cem';
 import consultaWsRoutes from './wsRegistro';
 import geoRoutes from './geo';
+import administracionRoutes from './administracion';
 
 // Definición de rutas
 const routes = [
@@ -49,6 +50,7 @@ const routes = [
       ...cemRoutes,
       ...consultaWsRoutes,
       ...geoRoutes,
+      ...administracionRoutes,
     ]
   }
 ];

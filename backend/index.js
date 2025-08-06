@@ -64,6 +64,7 @@ app.get('/api/ping', async (req, res) => {
 app.use('/api', require('./routes/seguridadRoutes'));
 app.use('/api', require('./routes/avaluosRoutes'));
 app.use('/api', require('./routes/catalogoRoutes'));
+app.use('/api', require('./routes/catalogoBarriosViasRoutes'));
 app.use('/api', require('./routes/cemTipoProyectoRoutes'));
 app.use('/api', require('./routes/cemAlcanceObraRoutes'));
 app.use('/api', require('./routes/cemProyectosRoutes'));

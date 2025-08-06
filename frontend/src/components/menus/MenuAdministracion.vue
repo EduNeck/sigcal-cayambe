@@ -111,6 +111,7 @@ export default {
       ],
       items_cat: [
         { title: 'Catalogo Sistema', route: '/catalogo-sistema' },
+        { title: 'Barrios y Vías', route: '/catalogo-barrios-vias' },
       ]
     };
   },
