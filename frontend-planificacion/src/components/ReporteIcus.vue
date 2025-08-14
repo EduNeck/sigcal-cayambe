@@ -7,7 +7,7 @@
 
     <!-- Mensaje de error -->
     <div v-if="error" class="error-container">
-      <div class="error-icon">⚠️</div>
+      <div class="error-icon"></div>
       <p>{{ error }}</p>
       <button @click="cargarDatosIcus" class="retry-button">
         Reintentar
@@ -297,6 +297,7 @@ export default {
         } else if (error.request) this.error = 'No se pudo conectar con el servidor'
       } finally { this.cargando = false }
     },
+
     async cargarListaIcus(page = 1, limit = 10, search = '') {
       this.cargando = true; this.error = null
       try {
@@ -305,6 +306,7 @@ export default {
       } catch (e) { this.error = 'Error al cargar la lista de ICUS'; throw e }
       finally { this.cargando = false }
     },
+
     formatearArea(v){ if(!v) return '-'; return Number(v).toFixed(2) },
     formatearFecha(f){ if(!f) return '-'; return new Date(f).toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'}) },
     getCompatibilidadClass(c){
@@ -315,6 +317,7 @@ export default {
       if (comp.includes('condicion')) return 'condicionado'
       return ''
     },
+
     imprimirReporte(){ window.print() },
     async generarQR(){
       try{
@@ -330,14 +333,14 @@ export default {
 <style scoped>
 /* ===== Escala compacta global ===== */
 .compacto {
-  --pad-xl: 10mm;   /* antes 20mm */
+  --pad-xl: 10mm;   
   --pad-lg: 12px;
   --pad-md: 8px;
   --pad-sm: 4px;
   --gap-lg: 12px;
   --gap-md: 8px;
   --gap-sm: 6px;
-  --fs-base: 11px;  /* antes 12px */
+  --fs-base: 11px;  
   --fs-small: 9.5px;
   --fs-xs: 9px;
   --line: 1.25;
@@ -392,18 +395,44 @@ export default {
 }
 
 /* Fecha header */
-.fecha-informe-header { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb; }
-.fecha-contenedor { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
-.fecha-contenedor label { font-weight: 700; color: #374151; font-size: var(--fs-small); }
-.fecha-valor { background: #f3f4f6; padding: 3px 8px; border-radius: 3px; border: 1px solid #d1d5db; font-weight: 700; color: #1f2937; font-size: var(--fs-small); }
+.fecha-informe-header { 
+    margin-top: 6px; 
+    padding-top: 6px; 
+    border-top: 1px solid #e5e7eb; 
+}
+.fecha-contenedor { 
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    gap: 6px; 
+}
+.fecha-contenedor label { 
+    font-weight: 700; 
+    color: #374151; 
+    font-size: var(--fs-small); 
+}
+.fecha-valor { 
+    background: #f3f4f6; 
+    padding: 3px 8px; 
+    border-radius: 3px; 
+    border: 1px solid #d1d5db; 
+    font-weight: 700; 
+    color: #1f2937; 
+    font-size: var(--fs-small); 
+}
 
 /* Contenido */
-.reporte-contenido { margin-bottom: 8mm; }
+.reporte-contenido { 
+    margin-bottom: 8mm; 
+}
 
 /* Bloques */
-.bloque-reporte { margin-bottom: 8mm; page-break-inside: avoid; }
+.bloque-reporte { 
+    margin-bottom: 8mm; 
+    page-break-inside: avoid; 
+}
 .bloque-1 {
-  border: var(--border) solid #c7d2fe; /* más liviano */
+  border: var(--border) solid #c7d2fe; 
   border-radius: 6px;
   padding: var(--pad-lg);
   background-color: #f8fafc;
@@ -432,7 +461,12 @@ export default {
 }
 
 /* Headers de sección */
-.seccion-header { position: absolute; top: -12px; right: 8px; z-index: 2; }
+.seccion-header { 
+    position: absolute; 
+    top: -12px; 
+    right: 8px; 
+    z-index: 2; 
+}
 .fecha-reporte, .icus-numero {
   padding: 3px 8px;
   border-radius: 4px;
@@ -441,8 +475,14 @@ export default {
   text-transform: uppercase;
   letter-spacing: .3px;
 }
-.fecha-reporte { background: #1e40af; color: #fff; }
-.icus-numero    { background: #059669; color: #fff; }
+.fecha-reporte { 
+    background: #1e40af; 
+    color: #fff; 
+}
+.icus-numero    { 
+    background: #059669; 
+    color: #fff; 
+}
 
 /* Títulos */
 h3 {
@@ -455,7 +495,13 @@ h3 {
   text-transform: uppercase;
   letter-spacing: .4px;
 }
-.subseccion { margin-bottom: 8px; padding: 6px; background: #fafcff; border: 1px solid #e2e8f0; border-radius: 4px; }
+.subseccion { 
+    margin-bottom: 8px; 
+    padding: 6px; 
+    background: #fafcff; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 4px; 
+}
 .subseccion h4 {
   font-size: 11px;
   font-weight: 700;
@@ -468,9 +514,24 @@ h3 {
 }
 
 /* Campos */
-.campo-grupo { display: flex; margin-bottom: 4px; align-items: flex-start; }
-.campo-grupo label { font-weight: 700; color: #374151; min-width: 130px; margin-right: 8px; font-size: var(--fs-small); }
-.campo-grupo span  { flex: 1; color: #1f2937; font-size: var(--fs-small); }
+.campo-grupo { 
+    display: flex; 
+    margin-bottom: 4px; 
+    align-items: flex-start; 
+}
+.campo-grupo label { 
+    font-weight: 700; 
+    color: #374151; 
+    
+    min-width: 130px; 
+    margin-right: 8px; 
+    font-size: var(--fs-small); 
+}
+.campo-grupo span  { 
+    flex: 1; 
+    color: #1f2937; 
+    font-size: var(--fs-small); 
+}
 
 /* Mapa */
 .mapa-container {
@@ -481,10 +542,26 @@ h3 {
   background: #f3f4f6;
   margin: 6px 0; /* antes 10px */
 }
-.mapa-placeholder p { margin: 0 0 4px 0; font-weight: 700; font-size: 12px; }
-.mapa-placeholder span { font-size: var(--fs-small); color: #374151; }
-.sin-geometria { text-align: center; color: #9ca3af; font-style: italic; }
-.coordenadas-info { text-align: center; color: #6b7280; font-size: 9px; margin-top: 4px; }
+.mapa-placeholder p { 
+    margin: 0 0 4px 0; 
+    font-weight: 700; 
+    font-size: 12px; 
+}
+.mapa-placeholder span { 
+    font-size: var(--fs-small); 
+    color: #374151; 
+}
+.sin-geometria { 
+    text-align: center; 
+    color: #9ca3af; 
+    font-style: italic; 
+}
+.coordenadas-info { 
+    text-align: center; 
+    color: #6b7280; 
+    font-size: 9px; 
+    margin-top: 4px; 
+}
 
 /* Grids pequeños */
 .areas-predial, .areas-grid, .info-grid {
@@ -492,10 +569,24 @@ h3 {
 }
 
 /* Compatibilidad */
-.compatibilidad span { padding: 2px 5px; border-radius: 3px; font-weight: 700; font-size: var(--fs-small); }
-.compatible { background: #dcfce7; color: #166534; }
-.no-compatible { background: #fecaca; color: #dc2626; }
-.condicionado { background: #fef3c7; color: #d97706; }
+.compatibilidad span { 
+    padding: 2px 5px; 
+    border-radius: 3px; 
+    font-weight: 700; 
+    font-size: var(--fs-small); 
+}
+.compatible { 
+    background: #dcfce7; 
+    color: #166534; 
+}
+.no-compatible { 
+    background: #fecaca; 
+    color: #dc2626; 
+}
+.condicionado { 
+    background: #fef3c7; 
+    color: #d97706; 
+}
 
 /* Notas */
 .notas-contenido {
@@ -509,11 +600,43 @@ h3 {
 }
 
 /* QR */
-.qr-info { margin-top: 10px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; }
-.qr-info h4 { font-size: 11px; font-weight: 700; color: #374151; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: .3px; }
-.qr-container { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.qr-code { width: 96px; height: 96px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; padding: 4px; }
-.qr-descripcion { max-width: 280px; word-break: break-all; color: #6b7280; font-size: 8.5px; line-height: 1.25; }
+.qr-info { 
+    margin-top: 10px; 
+    padding: 10px; 
+    background: #f8fafc; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 6px; 
+    text-align: center; 
+}
+.qr-info h4 { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: #374151; 
+    margin: 0 0 6px 0; 
+    text-transform: uppercase; 
+    letter-spacing: .3px; 
+}
+.qr-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 6px; 
+}
+.qr-code { 
+    width: 96px; 
+    height: 96px; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 4px; 
+    background: #fff; 
+    padding: 4px; 
+}
+.qr-descripcion { 
+    max-width: 280px; 
+    word-break: break-all; 
+    color: #6b7280; 
+    font-size: 8.5px; 
+    line-height: 1.25; 
+}
 
 /* Footer */
 .reporte-footer {
@@ -530,47 +653,179 @@ h3 {
 /* Impresión */
 @media print {
   @page { size: A4; margin: 12mm; } /* antes 15mm */
-  .reporte-icus { width: 100%; min-height: auto; margin: 0; padding: 0; box-shadow: none; font-size: 10.5px; }
-  .reporte-header { page-break-after: avoid; margin-bottom: 8mm; padding-bottom: 5mm; }
-  .fecha-informe-header { margin-top: 4px; padding-top: 4px; border-top: 1px solid #000!important; }
+  .reporte-icus { 
+    width: 100%; 
+    min-height: auto; 
+    margin: 0; 
+    padding: 0; 
+    box-shadow: none; 
+    font-size: 10.5px; 
+}
+  .reporte-header { 
+    page-break-after: avoid; 
+    margin-bottom: 8mm; 
+    padding-bottom: 5mm; 
+}
+  .fecha-informe-header { 
+    margin-top: 4px; 
+    padding-top: 4px; 
+    border-top: 1px solid #000!important; 
+  }
   .fecha-contenedor { justify-content: center; }
-  .fecha-valor { border: 1px solid #000!important; background: #f0f0f0!important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .logo { width: 40px; height: 40px; }
-  .titulo-principal { font-size: 14px; }
-  .subtitulo { font-size: 11px; }
-  .bloque-reporte { page-break-inside: avoid; margin-bottom: 8mm; }
-  .bloque-1 { border: 1px solid #1e40af; padding: 8px; }
-  .bloque-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mapa-container { min-height: 120px; }
-  .fecha-reporte, .icus-numero { font-size: 9px; padding: 2px 6px; }
-  .seccion-header { top: -10px; right: 6px; }
-  .subseccion { margin-bottom: 6px; padding: 6px; page-break-inside: avoid; }
-  .subseccion h4 { font-size: 10px; margin-bottom: 4px; }
-  .campo-grupo { margin-bottom: 3px; }
-  .campo-grupo label { font-size: 8.5px; min-width: 110px; }
-  .campo-grupo span { font-size: 8.5px; }
-  .resultado-texto { font-size: 10.5px!important; }
-  .qr-info { page-break-inside: avoid; border: 1px solid #000!important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .qr-code { width: 88px!important; height: 88px!important; border: 1px solid #000!important; }
-  .qr-descripcion { font-size: 8px!important; color: #000!important; }
-  .reporte-footer { position: fixed; bottom: 8mm; left: 0; right: 0; padding: 4mm 12mm; }
+  .fecha-valor { 
+    border: 1px solid #000!important; 
+    background: #f0f0f0!important; 
+    -webkit-print-color-adjust: exact; 
+    print-color-adjust: exact; 
+}
+  .logo { 
+    width: 40px; 
+    height: 40px; 
+  }
+  .titulo-principal { 
+    font-size: 14px; 
+  }
+  .subtitulo { 
+    font-size: 11px; 
+  }
+  .bloque-reporte { 
+    page-break-inside: avoid; 
+    margin-bottom: 8mm; 
+  }
+  .bloque-1 { 
+    border: 1px solid #1e40af; 
+    padding: 8px; 
+  }
+  .bloque-grid { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+  }
+  .mapa-container { 
+    min-height: 120px; 
+  }
+  .fecha-reporte, .icus-numero { 
+    font-size: 9px; 
+    padding: 2px 6px; 
+  }
+  .seccion-header { 
+    top: -10px; 
+    right: 6px; 
+  }
+  .subseccion { 
+    margin-bottom: 6px; 
+    padding: 6px; 
+    page-break-inside: avoid; 
+  }
+  .subseccion h4 { 
+    font-size: 10px; 
+    margin-bottom: 4px; 
+  }
+  .campo-grupo { 
+    margin-bottom: 3px; 
+  }
+  .campo-grupo label { 
+    font-size: 8.5px; 
+    min-width: 110px; 
+  }
+  .campo-grupo span { 
+    font-size: 8.5px; 
+  }
+  .resultado-texto { 
+    font-size: 10.5px!important; 
+  }
+  .qr-info { 
+    page-break-inside: avoid; 
+    border: 1px solid #000!important; 
+    -webkit-print-color-adjust: exact; 
+    print-color-adjust: exact; 
+  }
+  .qr-code { 
+    width: 88px!important; 
+    height: 88px!important; 
+    border: 1px solid #000!important; 
+  }
+  .qr-descripcion { 
+    font-size: 8px!important; 
+    color: #000!important; 
+  }
+  .reporte-footer { 
+    position: fixed; 
+    bottom: 8mm; 
+    left: 0; 
+    right: 0; 
+    padding: 4mm 12mm; 
+  }
 }
 
 /* Pantalla */
 @media screen {
-  .reporte-icus { box-shadow: 0 3px 10px rgba(0,0,0,.08); margin: 16px auto; }
-  .reporte-footer { position: relative; bottom: auto; left: auto; right: auto; }
+  .reporte-icus { 
+    box-shadow: 0 3px 10px rgba(0,0,0,.08); 
+    margin: 16px auto; 
+  }
+  .reporte-footer { 
+    position: relative; 
+    bottom: auto; 
+    left: auto; 
+    right: auto; 
+  }
 }
 
 /* Sección de compatibilidad (look liviano) */
-.compatibilidad-uso-suelo { background: #f8f9fa; border-left: 3px solid #0ea5e9; }
-.informe-compatibilidad { background: #eef6ff; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #cfe8ff; }
-.resultado-principal label { font-weight: 700; font-size: 12px; color: #495057; display: block; margin-bottom: 6px; }
-.resultado-texto { font-size: 12px; line-height: 1.35; color: #374151; background: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #dee2e6; display: block; white-space: pre-wrap; }
+.compatibilidad-uso-suelo { 
+    background: #f8f9fa; 
+    border-left: 3px solid #0ea5e9; 
+}
+.informe-compatibilidad { 
+    background: #eef6ff; 
+    padding: 10px; 
+    margin-bottom: 8px; 
+    border-radius: 6px; 
+    border: 1px solid #cfe8ff; 
+}
+.resultado-principal label { 
+    font-weight: 700; 
+    font-size: 12px; 
+    color: #495057; 
+    display: block; 
+    margin-bottom: 6px; 
+}
+.resultado-texto { 
+    font-size: 12px; 
+    line-height: 1.35; 
+    color: #374151; 
+    background: #f8f9fa; 
+    padding: 8px; 
+    border-radius: 4px; 
+    border: 1px solid #dee2e6; 
+    display: block; 
+    white-space: pre-wrap; 
+}
 
 /* Estados de error (sin cambios funcionales) */
-.error-container { text-align: center; padding: 24px; color: #e74c3c; background: #fdf2f2; border: 1px solid #fecaca; border-radius: 6px; margin: 12px; }
-.error-container .error-icon { font-size: 40px; margin-bottom: 12px; }
-.error-container .retry-button { margin-top: 10px; padding: 8px 16px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-.error-container .retry-button:hover { background: #2980b9; }
+.error-container { 
+    text-align: center; 
+    padding: 24px; 
+    color: #e74c3c; 
+    background: #fdf2f2; 
+    border: 1px solid #fecaca; 
+    border-radius: 6px; 
+    margin: 12px; 
+}
+.error-container .error-icon { 
+    font-size: 40px; 
+    margin-bottom: 12px; 
+}
+.error-container .retry-button { 
+    margin-top: 10px; 
+    padding: 8px 16px; 
+    background: #3498db; 
+    color: #fff; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+}
+.error-container .retry-button:hover { 
+    background: #2980b9; 
+}
 </style>
