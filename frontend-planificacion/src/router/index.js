@@ -3,6 +3,8 @@ import LoginView from '../views/LoginView.vue'
 import SolicitarTramite from '../components/SolicitarTramite.vue'
 import GeneraReportes from '../components/GeneraReportes.vue'
 import ReporteIRM from '../components/ReporteIRM.vue'
+import ReporteIcus from '../components/ReporteIcus.vue'
+import PruebaReporte from '../views/PruebaReporte.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -21,6 +23,16 @@ const routes = [
     path: '/reporte-irm',
     name: 'ReporteIRM',
     component: ReporteIRM,
+  },
+  {
+    path: '/reporte-icus',
+    name: 'ReporteIcus',
+    component: ReporteIcus,
+  },
+  {
+    path: '/prueba-reporte',
+    name: 'PruebaReporte',
+    component: PruebaReporte,
   }
 ]
 
