@@ -1,0 +1,25 @@
+# Ignorar node_modules para evitar problemas de arquitectura
+backend/node_modules
+frontend/node_modules
+backend-planificacion/node_modules
+frontend-planificacion/node_modules
+
+# Ignorar archivos de desarrollo
+*.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+.env.development
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de build/dist
+backend/dist
+frontend/dist
+frontend-planificacion/dist
+
+# Ignorar archivos temporales
+*.tmp
+*.temp

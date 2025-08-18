@@ -1,7 +1,39 @@
-FROM node:18
+FROM node:18-alpine as builder
+
+# Instalar dependencias del sistema para compilar módulos nativos
+RUN apk add --no-cache make gcc g++ python3
+
 WORKDIR /app
+
+# Copiar archivos de dependencias
 COPY backend/package*.json ./
-RUN npm install
+
+# Instalar todas las dependencias (incluyendo devDependencies para build)
+RUN npm ci
+
+# Copiar código fuente
 COPY backend/ .
+
+# Eliminar devDependencies y reinstalar solo producción
+RUN npm prune --production
+
+# Etapa de producción
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar solo node_modules compilados y código desde el builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app .
+
+# Crear usuario no-root por seguridad
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Cambiar ownership
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
 EXPOSE 3001
+
 CMD ["node", "index.js"]

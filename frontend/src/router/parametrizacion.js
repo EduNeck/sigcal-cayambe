@@ -9,7 +9,7 @@ export default [
       component: () => import('@/components/parametrizacion/BusquedaCiudadano.vue'), 
       meta: { requiresAuth: true } },    
     { path: '/catalogo-sistema',
-      component: () => import('@/components/parametrizacion/CatalogoDominios.vue'), 
+      component: () => import('@/components/admin/CatalogoDominios.vue'), 
       meta: { requiresAuth: true } },
   ];
   
