@@ -40,6 +40,10 @@
             <label>Fecha del Informe:</label>
             <span class="fecha-valor">{{ fechaReporte }}</span>
           </div>
+          <!-- Número ICUS debajo de la fecha -->
+          <div class="icus-numero-header">
+            <span class="icus-numero-principal">ICUS N° {{ datosFinales.id || 'S/N' }}</span>
+          </div>
         </div>
       </div>
 
@@ -127,11 +131,6 @@
 
             <!-- Sección: Implantación Gráfica del Lote -->
             <div class="seccion implantacion-grafica">
-              <div class="seccion-header">
-                <div class="icus-numero">
-                  ICUS N° {{ datosFinales.id || 'S/N' }}
-                </div>
-              </div>
               <h3>IMPLANTACIÓN GRÁFICA DEL LOTE</h3>
               
               <div class="mapa-container">
@@ -218,9 +217,6 @@
               <h4>CÓDIGO QR DE VERIFICACIÓN</h4>
               <div class="qr-container">
                 <img :src="qrCodeDataUrl" alt="Código QR del ICUS" class="qr-code" />
-                <div class="qr-descripcion">
-                  <small>{{ textoQR }}</small>
-                </div>
               </div>
             </div>
 
@@ -419,6 +415,26 @@ export default {
     font-weight: 700; 
     color: #1f2937; 
     font-size: var(--fs-small); 
+}
+
+/* Número ICUS en header */
+.icus-numero-header {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 8px;
+}
+
+.icus-numero-principal {
+  background-color: #059669;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Contenido */
@@ -678,6 +694,23 @@ h3 {
     -webkit-print-color-adjust: exact; 
     print-color-adjust: exact; 
 }
+
+  /* Número ICUS en impresión */
+  .icus-numero-header {
+    justify-content: center;
+    margin-top: 6px;
+    padding-top: 4px;
+  }
+
+  .icus-numero-principal {
+    background-color: #059669 !important;
+    color: white !important;
+    border: 1px solid #000 !important;
+    font-size: 11px !important;
+    padding: 4px 12px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   .logo { 
     width: 40px; 
     height: 40px; 
