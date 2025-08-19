@@ -37,7 +37,21 @@
             <v-expansion-panel-text>
               <!-- Crear Barrio -->
               <v-row align="center" class="mb-4">
-                <v-col cols="12" md="8">
+                <v-col cols="12" md="4">
+                  <v-select
+                    v-model="parroquiaSeleccionada"
+                    :items="parroquias"
+                    item-title="descripcion"
+                    item-value="dpa"
+                    label="Seleccionar Parroquia"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-map-marker"
+                    placeholder="Seleccione una parroquia"
+                    clearable
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="6">
                   <v-text-field
                     v-model="nuevoBarrioNombre"
                     label="Nombre del nuevo barrio"
@@ -45,13 +59,14 @@
                     density="comfortable"
                     prepend-inner-icon="mdi-home-plus"
                     placeholder="Ingrese el nombre del barrio"
+                    :disabled="!parroquiaSeleccionada"
                   ></v-text-field>
                 </v-col>
-                <v-col cols="12" md="4">
+                <v-col cols="12" md="2">
                   <v-btn
                     color="green"
                     variant="elevated"
-                    :disabled="!nuevoBarrioNombre || nuevoBarrioNombre.trim() === ''"
+                    :disabled="!parroquiaSeleccionada || !nuevoBarrioNombre || nuevoBarrioNombre.trim() === ''"
                     :loading="creandoBarrio"
                     @click="crearNuevoBarrio"
                     prepend-icon="mdi-home-plus"
@@ -65,19 +80,35 @@
 
               <!-- Agregar Calles -->
               <v-row align="center">
-                <v-col cols="12" md="4">
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="parroquiaParaCalle"
+                    :items="parroquias"
+                    item-title="descripcion"
+                    item-value="dpa"
+                    label="Seleccionar Parroquia"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-map-marker"
+                    clearable
+                    @update:model-value="cargarBarriosPorParroquia"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="3">
                   <v-select
                     v-model="barrioParaAgregarCalle"
-                    :items="barriosUnicos"
+                    :items="barriosFiltrados"
                     item-title="nombre_barrio"
                     item-value="id_barrio"
                     label="Seleccionar Barrio"
                     variant="outlined"
                     density="comfortable"
                     prepend-inner-icon="mdi-home-group"
+                    :disabled="!parroquiaParaCalle || barriosFiltrados.length === 0"
+                    clearable
                   ></v-select>
                 </v-col>
-                <v-col cols="12" md="5">
+                <v-col cols="12" md="4">
                   <v-text-field
                     v-model="nuevaCalleNombre"
                     label="Nombre de la nueva calle"
@@ -88,7 +119,7 @@
                     placeholder="Ingrese el nombre de la calle"
                   ></v-text-field>
                 </v-col>
-                <v-col cols="12" md="3">
+                <v-col cols="12" md="2">
                   <v-btn
                     color="green"
                     variant="elevated"
@@ -113,10 +144,24 @@
             <v-expansion-panel-text>
               <!-- Edición de Barrios -->
               <v-row align="center" class="mb-4">
-                <v-col cols="12" md="5">
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="parroquiaParaEditarBarrio"
+                    :items="parroquias"
+                    item-title="descripcion"
+                    item-value="dpa"
+                    label="Seleccionar Parroquia"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-map-marker"
+                    clearable
+                    @update:model-value="cargarBarriosParaEdicionPorParroquia"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="3">
                   <v-select
                     v-model="barrioSeleccionadoParaEditarNombre"
-                    :items="barriosUnicos"
+                    :items="barriosParaEdicion"
                     item-title="nombre_barrio"
                     item-value="id_barrio"
                     label="Seleccionar Barrio a Editar"
@@ -124,10 +169,11 @@
                     density="comfortable"
                     prepend-inner-icon="mdi-home-group"
                     clearable
+                    :disabled="!parroquiaParaEditarBarrio || barriosParaEdicion.length === 0"
                     @update:model-value="seleccionarBarrioParaEditarNombre"
                   ></v-select>
                 </v-col>
-                <v-col cols="12" md="5">
+                <v-col cols="12" md="4">
                   <v-text-field
                     v-model="nuevoNombreBarrio"
                     label="Nuevo nombre de barrio"
@@ -155,10 +201,24 @@
 
               <!-- Edición de Calles -->
               <v-row align="center">
-                <v-col cols="12" md="4">
+                <v-col cols="12" md="3">
+                  <v-select
+                    v-model="parroquiaParaEditarCalle"
+                    :items="parroquias"
+                    item-title="descripcion"
+                    item-value="dpa"
+                    label="Seleccionar Parroquia"
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-map-marker"
+                    clearable
+                    @update:model-value="cargarBarriosParaEdicionCallePorParroquia"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="3">
                   <v-select
                     v-model="barrioSeleccionadoParaEdicion"
-                    :items="barriosUnicos"
+                    :items="barriosParaEdicionCalle"
                     item-title="nombre_barrio"
                     item-value="id_barrio"
                     label="Seleccionar Barrio"
@@ -166,10 +226,11 @@
                     density="comfortable"
                     prepend-inner-icon="mdi-home-group"
                     clearable
+                    :disabled="!parroquiaParaEditarCalle || barriosParaEdicionCalle.length === 0"
                     @update:model-value="cargarCallesParaEdicion"
                   ></v-select>
                 </v-col>
-                <v-col cols="12" md="3">
+                <v-col cols="12" md="2">
                   <v-select
                     v-model="calleSeleccionadaParaEdicion"
                     :items="callesParaEdicion"
@@ -184,7 +245,7 @@
                     @update:model-value="seleccionarCalleParaEdicion"
                   ></v-select>
                 </v-col>
-                <v-col cols="12" md="4">
+                <v-col cols="12" md="3">
                   <v-text-field
                     v-model="nuevoNombreCalle"
                     label="Nuevo nombre de calle"
@@ -242,6 +303,15 @@
             <v-chip size="small" color="primary" variant="elevated">
               {{ item.id }}
             </v-chip>
+          </template>
+
+          <!-- Columna de Parroquia -->
+          <template v-slot:item.nombre_parroquia="{ item }">
+            <div class="d-flex align-center" v-if="item.nombre_parroquia">
+              <v-icon class="mr-2" size="small" color="info">mdi-map-marker</v-icon>
+              <span class="font-weight-medium">{{ item.nombre_parroquia }}</span>
+            </div>
+            <span v-else class="text-grey">-</span>
           </template>
 
           <!-- Columna de ID Barrio -->
@@ -311,6 +381,9 @@ export default {
       items: [],
       panelAbierto: null, // Para controlar qué panel de expansión está abierto
       
+      // Datos de parroquias
+      parroquias: [],
+      
       // Grid headers
       headers: [
         {
@@ -319,6 +392,12 @@ export default {
           sortable: true,
           key: 'id',
           width: '80px'
+        },
+        {
+          title: 'Parroquia',
+          key: 'nombre_parroquia',
+          sortable: true,
+          width: '200px'
         },
         {
           title: 'ID Barrio',
@@ -354,20 +433,27 @@ export default {
       barriosUnicos: [],
       
       // Creación de barrios y calles
+      parroquiaSeleccionada: null,
       nuevoBarrioNombre: '',
       creandoBarrio: false,
+      parroquiaParaCalle: null,
+      barriosFiltrados: [],
       barrioParaAgregarCalle: null,
       barrioInfoParaCalle: null,
       nuevaCalleNombre: '',
       agregandoCalle: false,
       
       // Edición de barrios
+      parroquiaParaEditarBarrio: null,
+      barriosParaEdicion: [],
       barrioSeleccionadoParaEditarNombre: null,
       barrioSeleccionadoInfo: null,
       nuevoNombreBarrio: '',
       guardandoEdicionBarrio: false,
       
       // Edición de calles
+      parroquiaParaEditarCalle: null,
+      barriosParaEdicionCalle: [],
       barrioSeleccionadoParaEdicion: null,
       callesParaEdicion: [],
       calleSeleccionadaParaEdicion: null,
@@ -394,11 +480,90 @@ export default {
   },
   
   async mounted() {
+    await this.cargarParroquias();
     await this.cargarDatos();
     await this.cargarBarriosUnicos();
   },
   
   methods: {
+    // Cargar parroquias
+    async cargarParroquias() {
+      try {
+        console.log('Cargando parroquias desde:', `${API_BASE_URL}/catastro_parroquia`);
+        const response = await axios.get(`${API_BASE_URL}/catastro_parroquia`);
+        this.parroquias = response.data;
+        console.log('Parroquias cargadas:', this.parroquias);
+      } catch (error) {
+        console.error('Error al cargar parroquias:', error);
+        this.mostrarError('Error al cargar las parroquias');
+      }
+    },
+
+    // Cargar barrios filtrados por parroquia
+    async cargarBarriosPorParroquia() {
+      if (!this.parroquiaParaCalle) {
+        this.barriosFiltrados = [];
+        this.barrioParaAgregarCalle = null;
+        return;
+      }
+
+      try {
+        // Filtrar barrios por parroquia desde los datos existentes
+        // Nota: Necesitaremos modificar el backend para incluir información de parroquia
+        this.barriosFiltrados = this.barriosUnicos.filter(barrio => {
+          // Por ahora mostrar todos los barrios - necesitará ajuste en backend
+          return true;
+        });
+      } catch (error) {
+        console.error('Error al cargar barrios por parroquia:', error);
+        this.mostrarError('Error al cargar los barrios');
+      }
+    },
+
+    // Cargar barrios para edición por parroquia
+    async cargarBarriosParaEdicionPorParroquia() {
+      if (!this.parroquiaParaEditarBarrio) {
+        this.barriosParaEdicion = [];
+        this.barrioSeleccionadoParaEditarNombre = null;
+        this.nuevoNombreBarrio = '';
+        return;
+      }
+
+      try {
+        // Filtrar barrios por parroquia
+        this.barriosParaEdicion = this.barriosUnicos.filter(barrio => {
+          // Por ahora mostrar todos los barrios - necesitará ajuste en backend
+          return true;
+        });
+      } catch (error) {
+        console.error('Error al cargar barrios para edición:', error);
+        this.mostrarError('Error al cargar los barrios');
+      }
+    },
+
+    // Cargar barrios para edición de calles por parroquia
+    async cargarBarriosParaEdicionCallePorParroquia() {
+      if (!this.parroquiaParaEditarCalle) {
+        this.barriosParaEdicionCalle = [];
+        this.barrioSeleccionadoParaEdicion = null;
+        this.callesParaEdicion = [];
+        this.calleSeleccionadaParaEdicion = null;
+        this.nuevoNombreCalle = '';
+        return;
+      }
+
+      try {
+        // Filtrar barrios por parroquia
+        this.barriosParaEdicionCalle = this.barriosUnicos.filter(barrio => {
+          // Por ahora mostrar todos los barrios - necesitará ajuste en backend
+          return true;
+        });
+      } catch (error) {
+        console.error('Error al cargar barrios para edición de calles:', error);
+        this.mostrarError('Error al cargar los barrios');
+      }
+    },
+
     async cargarDatos() {
       this.cargando = true;
       try {

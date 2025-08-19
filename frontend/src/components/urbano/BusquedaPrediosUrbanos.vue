@@ -75,16 +75,22 @@
       };
     },
   
-    async mounted() {
-      try {
-        console.log('Componente montado');
-        this.regimen = await this.cargarCatalogo(2,0);         
-      } catch (error) {
-        console.error('Error al montar el componente:', error);
-      }
-    },
-  
-    methods: {
+  async mounted() {
+    try {
+      console.log('Componente montado');
+      this.regimen = await this.cargarCatalogo(2,0);
+      
+      // Agregar la opción "TODOS" al inicio del array
+      this.regimen.unshift({
+        id: 'todos',
+        descripcion: 'TODOS',
+        tipoNombre: 'TODOS',
+        title: 'TODOS'
+      });
+    } catch (error) {
+      console.error('Error al montar el componente:', error);
+    }
+  },    methods: {
       // Método para cargar los catálogos
       async cargarCatalogo(id_tipo_atributo, tipo) {
         try {
@@ -110,39 +116,40 @@
         }
       },
   
-      // Ajuste en la función buscar para manejar errores y mejorar la navegación
-      buscar() {
-        if (this.$refs.form.validate()) {
-          try {
-            // ✅ Conversión de número a texto
-            const tipoTexto = this.$store.state.tipoPredio === 1 ? 'URBANO' : 'RURAL';
+    // Ajuste en la función buscar para manejar errores y mejorar la navegación
+    buscar() {
+      if (this.$refs.form.validate()) {
+        try {
+          // ✅ Conversión de número a texto
+          const tipoTexto = this.$store.state.tipoPredio === 1 ? 'URBANO' : 'RURAL';
 
-            this.$router.push({
-              path: '/listado-predios-urb',
-              query: {
-                clave_catastral: this.form.clave_catastral,
-                clave_catastral_anterior: this.form.clave_catastral_anterior,
-                nombres: this.form.nombres,
-                numero_documento: this.form.numero_documento,
-                id_regimen_propiedad: this.form.id_regimen_propiedad,
-                tipo_predio: tipoTexto   
-              }
-            });
-          } catch (error) {
-            console.error('Error al navegar:', error);
-          }
-        } else {
-          console.log('Formulario inválido');
+          // Si se selecciona "TODOS", no enviar valor para régimen de propiedad
+          const regimenValue = this.form.id_regimen_propiedad === 'TODOS' ? '' : this.form.id_regimen_propiedad;
+
+          this.$router.push({
+            path: '/listado-predios-urb',
+            query: {
+              clave_catastral: this.form.clave_catastral,
+              clave_catastral_anterior: this.form.clave_catastral_anterior,
+              nombres: this.form.nombres,
+              numero_documento: this.form.numero_documento,
+              id_regimen_propiedad: regimenValue,
+              tipo_predio: tipoTexto   
+            }
+          });
+        } catch (error) {
+          console.error('Error al navegar:', error);
         }
-      },  
-  
-      limpiar() {
+      } else {
+        console.log('Formulario inválido');
+      }
+    },      limpiar() {
         this.form = {
           clave_catastral: '',
           clave_catastral_anterior: '',
           nombres: '',
           numero_documento: '',
-          regimen_propiedad: ''          
+          id_regimen_propiedad: ''          
         };
       },
   

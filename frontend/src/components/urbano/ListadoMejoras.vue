@@ -79,7 +79,7 @@ export default {
                 { title: 'Id Mejoras', value: 'mejoras' },
                 { title: 'Tipo Obra', value: 'tipo_obra' },
                 { title: 'Material', value: 'material' },
-                { title: 'Área', value: 'area' },
+                { title: 'Cantidad / Dimensión', value: 'area' },
                 { title: 'Estado', value: 'estado' },                
                 { title: 'Condición Física', value: 'condicion_fisica' },
                 { title: 'Año de Construcción', value: 'anio_construccion' }

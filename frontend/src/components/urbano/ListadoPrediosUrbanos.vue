@@ -84,9 +84,9 @@ export default {
         { title: 'Tipo Predio', value: 'tipo_predio' },
         { title: 'Régimen Propiedad', value: 'regimen_propiedad' },
         { title: 'Parroquia', value: 'parroquia' },
-        { title: 'Eje Principal', value: 'eje_principal' },
-        { title: 'Eje Secundario', value: 'eje_secundario' },
-        { title: 'Sector', value: 'sector' },
+        { title: 'Propietario', value: 'propietario' },
+        { title: 'Documento Propietario', value: 'documento_propietario' },
+        { title: 'Uso', value: 'uso' },
       ],
     };
   },

@@ -19,7 +19,7 @@
           <v-card-title :class="['centered-title', tipoClaseTitle]">Información de la Vía</v-card-title>
           <v-card-text>
             <v-row>
-              <v-col cols="12" sm="6" md="6">
+              <v-col cols="12" sm="6" md="12">
                 <v-select
                   v-model="form.via_principal"
                   :items="valida"
@@ -27,19 +27,50 @@
                   required
                 ></v-select>
               </v-col>
-
-              <v-col cols="12" sm="6" md="6">
-                <v-select
-                  v-model="form.via_secundaria"
-                  :items="valida"
-                  label="Vía Secundaria"                  
-                  required
-                ></v-select>
-              </v-col>
             </v-row>
           </v-card-text>
         </v-card>
-        <!-- Segundo Bloque -->
+        <!-- Segundo Bloque - Selección de Barrio y Calle -->
+        <v-card :class="['mb-3', 'block-color', tipoClaseBlock]">
+            <v-card-title :class="['centered-title', tipoClaseTitle]">Selección de Barrio y Calle</v-card-title>
+            <v-card-text>
+                <v-row>
+                    <v-col cols="12" sm="6" md="6">
+                        <v-select
+                            v-model="barrioSeleccionado"
+                            :items="barrios"
+                            item-title="nombre_barrio"
+                            item-value="id_barrio"
+                            label="Seleccionar Barrio"
+                            variant="outlined"
+                            density="comfortable"
+                            prepend-inner-icon="mdi-home-city"
+                            placeholder="Seleccione un barrio"
+                            clearable
+                            @update:model-value="cargarCallesPorBarrio"
+                        ></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="6">
+                        <v-select
+                            v-model="calleSeleccionada"
+                            :items="calles"
+                            item-title="nombre_calle"
+                            item-value="nombre_calle"
+                            label="Seleccionar Calle"
+                            variant="outlined"
+                            density="comfortable"
+                            prepend-inner-icon="mdi-road"
+                            placeholder="Seleccione una calle"
+                            clearable
+                            :disabled="!barrioSeleccionado || calles.length === 0"
+                            @update:model-value="copiarNombreCalle"
+                        ></v-select>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+        </v-card>
+        
+        <!-- Tercer Bloque -->
         <v-card :class="['mb-3', 'block-color', tipoClaseBlock]">
             <v-card-title :class="['centered-title', tipoClaseTitle]">Datos de la Vía</v-card-title>
             <v-card-text>
@@ -55,7 +86,7 @@
                 </v-row>
             </v-card-text>
         </v-card>
-        <!-- Tercero Bloque -->
+        <!-- Cuarto Bloque -->
         <v-card :class="['mb-3', 'block-color', tipoClaseBlock]">
             <v-card-title :class="['centered-title', tipoClaseTitle]">Caracteristicas de la Via</v-card-title>
                 <v-card-text>
@@ -155,7 +186,6 @@ export default {
     return {
       form: {
         via_principal: '',
-        via_secundaria: '',
         nombre_via: '',
         longitud: '',
         id_tipo_via: null,
@@ -169,6 +199,13 @@ export default {
       tipoVias: [],
       acerasBordillos: [],
       materialVias: [],
+      
+      // Datos para barrios y calles
+      barrios: [],
+      calles: [],
+      barrioSeleccionado: null,
+      calleSeleccionada: null,
+      
       idPredio: null,
       idVia: null,
       snackbar: false,   
@@ -228,6 +265,9 @@ export default {
         this.tipoVias = await this.cargaCatalogo(21,0); 
         this.acerasBordillos = await this.cargaCatalogo(22,0);
         this.materialVias = await this.cargaCatalogo(23,0);
+        
+        // Cargar barrios disponibles
+        await this.cargarBarrios();
       } catch (error) {
         console.error('Error al obtener los catálogos:', error);
       }
@@ -258,6 +298,47 @@ export default {
       }
     },
 
+    // Cargar barrios únicos
+    async cargarBarrios() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/catalogo_barrios`);
+        this.barrios = response.data;
+      } catch (error) {
+        console.error('Error al cargar barrios:', error);
+        this.snackbarError = 'Error al cargar la lista de barrios';
+        this.snackbarErrorPush = true;
+      }
+    },
+
+    // Cargar calles por barrio seleccionado
+    async cargarCallesPorBarrio(idBarrio) {
+      if (!idBarrio) {
+        this.calles = [];
+        this.calleSeleccionada = null;
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/catalogo_calles_por_barrio/${idBarrio}`);
+        console.log('Calles cargadas para barrio:', idBarrio, response.data);
+        this.calles = response.data;
+        this.calleSeleccionada = null; // Limpiar selección anterior
+      } catch (error) {
+        console.error('Error al cargar calles:', error);
+        this.snackbarError = 'Error al cargar las calles del barrio seleccionado';
+        this.snackbarErrorPush = true;
+        this.calles = [];
+      }
+    },
+
+    // Copiar nombre de calle al campo nombre_via
+    copiarNombreCalle(nombreCalle) {
+      if (nombreCalle) {
+        this.form.nombre_via = nombreCalle;
+        console.log('Nombre de calle copiado:', nombreCalle);
+      }
+    },
+
     async guardar() {
       // Validar campos requeridos
       if (!this.form.nombre_via || !this.form.id_tipo_via || !this.form.id_aceras_bordillos || !this.form.id_material_via || !this.form.longitud) {
@@ -269,7 +350,6 @@ export default {
       const nuevaVia = {
         id_predio: this.getIdPredio,
         via_principal: this.form.via_principal === 'SI',
-        via_secundaria: this.form.via_secundaria === 'SI',
         nombre_via: this.form.nombre_via,
         longitud: this.form.longitud || 0,
         id_tipo_via: this.form.id_tipo_via,
@@ -308,7 +388,6 @@ export default {
 
       const viaActualizada = {
         via_principal: this.form.via_principal === 'SI',
-        via_secundaria: this.form.via_secundaria === 'SI',
         nombre_via: this.form.nombre_via,
         longitud: Number(this.form.longitud) || 0,
         id_tipo_via: this.form.id_tipo_via,
@@ -376,7 +455,6 @@ export default {
     limpiarFormulario() {
       this.form = {
         via_principal: '',
-        via_secundaria: '',
         nombre_via: '',
         longitud: '',
         id_tipo_via: null,
@@ -386,6 +464,11 @@ export default {
         num_inmueble: '',
         codigo_vias: ''
       };
+      
+      // Limpiar selecciones de barrio y calle
+      this.barrioSeleccionado = null;
+      this.calleSeleccionada = null;
+      this.calles = [];
     },
 
     nuevo() {

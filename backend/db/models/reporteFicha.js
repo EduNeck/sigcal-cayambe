@@ -28,7 +28,7 @@ const obtieneDatosPredio = async (params) => {
 
   if (numero_documento && numero_documento.trim() !== '') {
     queryParams.push(numero_documento.trim());
-    query += ` AND numero_documento = $${queryParams.length}`;
+    query += ` AND documento_propietario = $${queryParams.length}`;
   }
 
   if (nombres && nombres.trim() !== '') {
