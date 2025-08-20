@@ -350,6 +350,7 @@ export default {
       const nuevaVia = {
         id_predio: this.getIdPredio,
         via_principal: this.form.via_principal === 'SI',
+        via_secundaria: false, // Valor por defecto
         nombre_via: this.form.nombre_via,
         longitud: this.form.longitud || 0,
         id_tipo_via: this.form.id_tipo_via,
@@ -388,6 +389,7 @@ export default {
 
       const viaActualizada = {
         via_principal: this.form.via_principal === 'SI',
+        via_secundaria: false, // Valor por defecto
         nombre_via: this.form.nombre_via,
         longitud: Number(this.form.longitud) || 0,
         id_tipo_via: this.form.id_tipo_via,
