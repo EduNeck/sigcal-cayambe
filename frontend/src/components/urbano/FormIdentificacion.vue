@@ -50,7 +50,7 @@
               label="Tipo Predio"   
               v-model="form.id_tipo_predio"             
               :items="tipoPredios"
-              item-text="descripcion"
+              item-title="descripcion"
               item-value="id"
               required>
             </v-select>
@@ -61,10 +61,10 @@
               label="Regimen de Propiedad" 
               v-model="form.id_regimen_propiedad"  
               :items="regimens"
-              item-text="descripcion" 
+              item-title="descripcion" 
               item-value="id" 
               required >
-            ></v-select>
+            </v-select>
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
@@ -107,7 +107,7 @@
               label="Parroquia" 
               v-model="form.id_par" 
               :items="formateaParroquias"
-              item-text="descripcion" 
+              item-title="descripcion" 
               item-value="dpa" 
               required 
               @input="actualizaClaveCatastral">
@@ -183,7 +183,7 @@
             <v-col cols="12" sm="6" md="2" v-if="form.id_regimen_propiedad === 4"> 
               <v-select
               label="Tipo de Piso" v-model="form.id_tipo_piso" :items="tipoPisos" 
-              item-text="descripcion" item-value="id" required  
+              item-title="descripcion" item-value="id" required  
               @input="actualizaClaveCatastral">
             </v-select> 
             </v-col> 
@@ -232,7 +232,7 @@
               :items="unidadAreas"
               label="Unidad de Área" 
               v-model="form.id_unidad_area" 
-              item-text="descripcion" 
+              item-title="descripcion" 
               item-value="id" 
               required 
             ></v-select>
@@ -393,16 +393,27 @@ export default {
 
   
   created() {
-    const idPredio = this.$route.query.id_predio;
-    const tipoPredio = this.$route.query.tipo_predio; 
+    let idPredio = this.$route.query.id_predio;
+    let tipoPredio = this.$route.query.tipo_predio;
+    
+    // Manejar URLs mal formateadas con doble signo de interrogación
+    if (idPredio && idPredio.includes('?tipo_predio=')) {
+      const parts = idPredio.split('?tipo_predio=');
+      idPredio = parts[0];
+      tipoPredio = parts[1];
+      console.log('URL mal formateada detectada. Corrigiendo:', {
+        idPredio_original: this.$route.query.id_predio,
+        idPredio_corregido: idPredio,
+        tipoPredio_extraido: tipoPredio
+      });
+    }
+    
     if (idPredio) {
+      console.log('ID de predio recibido:', idPredio);
       this.id_predio = idPredio;
       this.updateIdPredio(idPredio);
       this.cargaPredio(idPredio);
       this.recuperaFotos(idPredio);
-      if (tipoPredio) {
-        this.form.id_tipo_predio = tipoPredio; 
-      }
     } else {
       console.log('SIN ID DEL PREDIO RECIBIDO');
       this.resetIdPredio();
@@ -412,12 +423,37 @@ export default {
       this.resetIdMejora();    
       this.resetIdFoto();  
     }
+
+    // Establecer tipo de predio desde URL si está disponible
+    if (tipoPredio) {
+      console.log('Tipo de predio recibido por URL:', tipoPredio);
+      // Convertir string a number para que coincida con el catálogo
+      const tipoPredioId = parseInt(tipoPredio);
+      this.form.id_tipo_predio = tipoPredioId;
+      
+      // También establecer en el store de Vuex
+      this.$store.commit('setTipoPredio', tipoPredioId);
+      console.log('Tipo de predio establecido en Vuex desde URL:', tipoPredioId);
+    }
   },
 
   async mounted() {
     try {
       console.log('Componente montado');
-      const tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
+      
+      // Obtener tipo de predio desde el store o determinar por defecto
+      let tipoPredioFlag;
+      if (this.form.id_tipo_predio) {
+        // Si ya se estableció desde la URL, usarlo
+        tipoPredioFlag = this.form.id_tipo_predio === 1 ? 0 : 2;
+        console.log('Usando tipo de predio desde URL:', this.form.id_tipo_predio, 'Flag:', tipoPredioFlag);
+      } else {
+        // Usar el valor del store de Vuex
+        tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
+        console.log('Usando tipo de predio desde store:', this.getTipoPredio, 'Flag:', tipoPredioFlag);
+      }
+      
+      // Cargar catálogos con el flag correcto
       this.tipoPredios = await this.cargaCatalogo(1, tipoPredioFlag);
       this.regimens = await this.cargaCatalogo(2, 0);
       this.tipoPisos = await this.cargaCatalogo(3, tipoPredioFlag);
@@ -425,9 +461,9 @@ export default {
       this.parroquias = await this.caragaParroquias();
 
       console.log('Datos del catálogo cargados:',
-        this.tipoPredios,
-        this.regimens,
-        this.tipoPisos
+        'tipoPredios:', this.tipoPredios,
+        'regimens:', this.regimens,
+        'tipoPisos:', this.tipoPisos
       );
     } catch (error) {
       console.error('Error al montar el componente:', error);
@@ -435,7 +471,7 @@ export default {
 
     // 📸 Configurar listener para actualizaciones de foto
     this.onFotoUpdated(() => {
-      console.log('🔄 FormIdentificacion: Foto actualizada detectada, recargando...');
+      console.log('FormIdentificacion: Foto actualizada detectada, recargando...');
       if (this.getIdPredio) {
         this.recuperaFotos(this.getIdPredio);
       }

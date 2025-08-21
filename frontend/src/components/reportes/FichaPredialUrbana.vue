@@ -110,6 +110,7 @@
                     </v-data-table>
                     </v-col>
                 </v-row>
+                
                 <!-- Caracteristicas -->
                 <v-card-subtitle class="block-title-sub">
                     <p class="titulo-text-sub">CARACTERISTICAS</p>
@@ -233,15 +234,16 @@
                 <v-card-text class="styled-text">
                     <p class="styled-text"> <strong>NOMBRE: </strong></p>         
                 </v-card-text>       
-                <!-- Linderos -->
+                
+                <!-- Colindantes -->
                 <v-card-subtitle class="block-title-sub">                    
-                    <p class="titulo-text-sub">LINDEROS</p>                    
+                    <p class="titulo-text-sub">COLINDANTES</p>                    
                 </v-card-subtitle>
                 <v-row>
                     <v-col cols="12">
                     <v-data-table
-                        :headers="headers_lind"
-                        :items="tenenciasFicha"                                               
+                        :headers="headers_colindantes"
+                        :items="colindantesFicha"                                               
                         disable-pagination 
                         hide-default-footer
                         class="elevation-1 styled-text"
@@ -249,16 +251,16 @@
                     >                        
                         <template v-slot:item="{ item }">
                         <tr>                         
-                            <td class="styled-text">{{ item.nombres }}</td>
-                            <td class="styled-text">{{ item.lindero_norte }}</td>
-                            <td class="styled-text">{{ item.lindero_sur }}</td>                            
-                            <td class="styled-text">{{ item.lindero_este }}</td>
-                            <td class="styled-text">{{ item.lindero_oeste }}</td>                            
+                            <td class="styled-text">{{ item.clave_lindero }}</td>
+                            <td class="styled-text">{{ item.longitud }}</td>
+                            <td class="styled-text">{{ item.nombres }}</td>                            
+                            <td class="styled-text">{{ item.cardinalidad }}</td>                            
                         </tr>
                         </template>
                     </v-data-table>
                     </v-col>
-                </v-row>            
+                </v-row> 
+                
                 <!-- Planimetria -->
                 <v-card-subtitle class="block-title-sub">
                     <p class="titulo-text-sub">PLANIMETRIA</p>                    
@@ -299,8 +301,7 @@
                             <span class="styled-text">Sin fotos</span>
                         </v-col>
                     </v-row>
-
-                </v-card-text>           
+                </v-card-text>
 
                 <!-- Pie de página -->
                 <v-footer class="footer">
@@ -335,11 +336,13 @@ export default {
             bloquesFicha: [],    
             mejorasFicha: [],
             viasFicha: [],
+            colindantesFicha: [],
             logo: logo,
             sinFoto: sinFoto,
             sinCroquis: sinCroquis,
             croquisUrl: '',
             fotosCertificadas: [],
+            fotoRecuperadaUrl: '',
             foto: null,
             form: {
                 id_predio: null, 
@@ -410,12 +413,12 @@ export default {
             },
 
             headers: [                                
-                { title: 'Nombres', value: 'nombre' },
+                { title: 'Nombres', value: 'nombres' },
                 { title: 'Número de Documento', value: 'numero_documento' },
                 { title: 'Presenta Escritura', value: 'presenta_escritura' },
                 { title: 'Forma de Propiedad', value: 'forma_propiedad' },
                 { title: 'Tipo de Persona', value: 'tipo_persona' },
-                { title: 'Porcentaje de Participación', value: 'porcentaje_participación' },
+                { title: 'Porcentaje de Participación', value: 'porcentaje_participacion' },
                 { title: 'Régimen de Propiedad', value: 'regimen_propiedad' },
             ],
 
@@ -438,13 +441,13 @@ export default {
                 { title: 'Estado', value: 'estado' },                
             ],
 
-            headers_lind: [          
-                { title: 'Nombres', value: 'nombre' },      
-                { title: 'Lindero Norte', value: 'lindero_norte' },
-                { title: 'Lindero Sur', value: 'lindero_sur' },
-                { title: 'Lindero Este', value: 'lindero_este' },
-                { title: 'Lindero Oeste', value: 'lindero_oeste' },
+            headers_colindantes: [          
+                { title: 'Clave Lindero', value: 'clave_lindero' },      
+                { title: 'Longitud', value: 'longitud' },
+                { title: 'Nombres', value: 'nombres' },
+                { title: 'Cardinalidad', value: 'cardinalidad' },
             ],
+            
             headers_vias: [                                
                 { title: 'Vía Principal', value: 'via_principal' },
                 { title: 'Vía Secundaria', value: 'via_secundaria' },
@@ -454,9 +457,8 @@ export default {
                 { title: 'Aceras y Bordillos', value: 'aceras_bordillos' },
                 { title: 'Material de Vía', value: 'material_via' },        
                 { title: 'Número de Inmueble', value: 'num_inmueble' }
-            ],     
-            fotoRecuperadaUrl: '',
-            croquis: '',            
+            ],
+                       
             currentPage: 1,
             totalPages: 1, 
         };
@@ -464,11 +466,28 @@ export default {
     
     methods: {
         
+        // Método para recuperar los datos de colindantes desde la API de geo_linderos
+        async recuperaDatosColindantes(claveCatastral) {   
+            console.log('Recuperando Colindantes...');
+            try {
+                if (!claveCatastral) {
+                    console.log('claveCatastral no está definida');
+                    return;
+                }
+                const response = await axios.get(`${API_BASE_URL}/geo_linderos_by_clave/${claveCatastral}`);
+                this.colindantesFicha = response.data;
+                console.log('Colindantes recuperados:', this.colindantesFicha);
+            } catch (error) {
+                console.warn('Datos de colindantes faltantes para la clave:', claveCatastral);
+                this.colindantesFicha = [];
+            }
+        },
+
         // Método para recuperar los datos del predio desde la API
         async recuperaDatosPredio(idPredio) {
             try {
                 const response = await axios.get(`${API_BASE_URL}/ficha_predio/${idPredio}`);
-                const predioFicha=response.data; 
+                const predioFicha = response.data; 
                 console.log('Datos del predio:', predioFicha);                
                 this.form = {
                     ...this.form,
@@ -551,9 +570,9 @@ export default {
                 console.warn('Datos de tenencia faltantes para el predio:', idPredio);
                 this.tenenciasFicha = [];
             }
-        },        
+        },
 
-        // Método para recuperar los datos de tenencia desde la APIn 
+        // Método para recuperar los datos de bloques desde la API
         async recuperaDatosBloques(idPredio) {   
             console.log('Recuperando Bloques...');
             try {
@@ -569,7 +588,7 @@ export default {
             }
         },            
 
-        // Método para recuperar los datos de tenencia desde la APIn 
+        // Método para recuperar los datos de mejoras desde la API
         async recuperaDatosMejoras(idPredio) {   
             console.log('Recuperando Mejoras...');
             try {
@@ -585,7 +604,7 @@ export default {
             }
         }, 
 
-        // Método para recuperar los datos de tenencia desde la APIn 
+        // Método para recuperar los datos de vías desde la API
         async recuperaDatosVias(idPredio) {   
             console.log('Recuperando Vias...');
             try {
@@ -601,12 +620,12 @@ export default {
             }
         },
         
-        // Método para recuperar los datos del predio desde la API
+        // Método para recuperar los datos de valoración desde la API
         async recuperaDatosValoracion(idPredio) {
             try {
                 const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano/${idPredio}`);
                 const patrimonioFicha = response.data; 
-                console.log('Datos del predio:', patrimonioFicha);                
+                console.log('Datos de valoración:', patrimonioFicha);                
                 this.form = {
                     ...this.form,                    
                     area_suelo_porcentual: patrimonioFicha.area_suelo_porcentual, 
@@ -646,18 +665,12 @@ export default {
                     this.fotoRecuperadaUrl = `data:image/png;base64,${fotosPredio.foto}`;
                 } else {
                     this.fotoRecuperadaUrl = '';
-                    this.snackbarNota = 'No se encontró una imagen asociada';
-                    this.snackbarNotaPush = true;
                 }
                 } else {
-                this.snackbarNota = 'No se encontraron fotos para este predio';
-                this.snackbarNotaPush = true;
                 this.fotoRecuperadaUrl = '';
                 }
             } catch (error) {
                 console.error('Error al recuperar la foto:', error);
-                this.snackbarError = 'Error al recuperar la foto';
-                this.snackbarErrorPush = true;
             }
         },
 
@@ -768,20 +781,20 @@ export default {
             const element = document.getElementById('certificado');
             const opt = {
                 margin: [0, 0, 0, 0],
-                filename: `certificado_${this.form.clave_catastral}.pdf`,
+                filename: `ficha_predial_${this.form.clave_catastral}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 3 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'] } // Asegura que respete los saltos de página
+                pagebreak: { mode: ['css', 'legacy'] }
             };
             html2pdf().from(element).set(opt).save();
         },        
        
         calculateTotalPages() {
             const element = document.getElementById('certificado');
-            const pageHeight = 297; // Altura de una hoja A4 en mm
-            const contentHeight = element.scrollHeight; // Altura total del contenido
-            this.totalPages = Math.ceil(contentHeight / pageHeight); // Calcula el número total de páginas            
+            const pageHeight = 297;
+            const contentHeight = element.scrollHeight;
+            this.totalPages = Math.ceil(contentHeight / pageHeight);            
         },
         
     },
@@ -797,6 +810,8 @@ export default {
             console.log('ID del predio recibido:', idPredio);
             this.recuperaDatosPredio(idPredio).then(() => {
                 this.recuperarCroquis(); 
+                // Recuperar colindantes usando la clave catastral del predio
+                this.recuperaDatosColindantes(this.form.clave_catastral);
             });
             this.recuperaDatosTenencia(idPredio);
             this.recuperaDatosBloques(idPredio);
@@ -804,12 +819,10 @@ export default {
             this.recuperaDatosVias(idPredio);
             this.recuperaDatosValoracion(idPredio);
             this.recuperaFotos(idPredio);
+            this.recuperaFotosCertificadas(idPredio);
         } else {
             console.error('No se recibió un ID de predio válido.');
         }
-
-        this.recuperaFotosCertificadas(idPredio);
-
     },
 };
 </script>

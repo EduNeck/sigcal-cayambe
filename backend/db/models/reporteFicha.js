@@ -33,7 +33,7 @@ const obtieneDatosPredio = async (params) => {
 
   if (nombres && nombres.trim() !== '') {
     queryParams.push(`%${nombres.trim()}%`);
-    query += ` AND nombres ILIKE $${queryParams.length}`;
+    query += ` AND propietario ILIKE $${queryParams.length}`;
   }
 
   if (id_regimen_propiedad && id_regimen_propiedad.trim() !== '') {
@@ -87,7 +87,7 @@ const obtieneFichaPredioPorId = async (id_predio) => {
 // Función para obtener la tenencia del predio por su ID
 const obtieneFichaTenenciaPorId = async (id_predio) => {
   const query = `
-    SELECT id_predio, id_tenencia, presenta_escritura, asentamiento_de_hecho, conflicto, forma_propiedad, fallecida, numero_documento, nombres, telefono, email, id_conyuge, conyuge, tipo_persona, personeria, tipo_docuemnto, estado_civil, porcentaje_participacion, numero_notaria, fecha_inscripcion, area_registro, unidad, provincia, canton, fecha_escritura, requiere_perfeccionamiento, anios_posesion, numero_registro, fecha_registro, digitador, id_prop_anterior, propietario_anterior, folio, repertorio, provincia_protocolizacion, canton_protocolizacion, clave, validado, obs_registro, parroquia, clave_anterior, lindero_norte, lindero_sur, lindero_este, lindero_oeste, sector, tipo_predio, tipo_predio_desc, regimen_propiedad
+    SELECT id_predio, id_tenencia, presenta_escritura, asentamiento_de_hecho, conflicto, forma_propiedad, fallecida, numero_documento, propietario, telefono, email, id_conyuge, conyuge, tipo_persona, personeria, tipo_docuemnto, estado_civil, porcentaje_participacion, numero_notaria, fecha_inscripcion, area_registro, unidad, provincia, canton, fecha_escritura, requiere_perfeccionamiento, anios_posesion, numero_registro, fecha_registro, digitador, id_prop_anterior, propietario_anterior, folio, repertorio, provincia_protocolizacion, canton_protocolizacion, clave, validado, obs_registro, parroquia, clave_anterior, lindero_norte, lindero_sur, lindero_este, lindero_oeste, sector, tipo_predio, tipo_predio_desc, regimen_propiedad
     FROM reporte_ficha.ficha_tenencia
     WHERE id_predio = $1;
   `;
