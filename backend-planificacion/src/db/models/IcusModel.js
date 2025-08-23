@@ -1,4 +1,4 @@
-const pool = require('../config');
+const { pool } = require('../config');
 
 class IcusModel {
   // Obtener todos los ICUS con paginación y búsqueda
