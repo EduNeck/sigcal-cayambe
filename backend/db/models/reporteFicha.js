@@ -32,8 +32,25 @@ const obtieneDatosPredio = async (params) => {
   }
 
   if (nombres && nombres.trim() !== '') {
-    queryParams.push(`%${nombres.trim()}%`);
-    query += ` AND propietario ILIKE $${queryParams.length}`;
+    // Dividir el texto de búsqueda en palabras individuales y eliminar palabras vacías
+    const palabras = nombres.trim().split(/\s+/).filter(palabra => palabra.length > 0);
+    
+    if (palabras.length > 0) {
+      // Iniciar un grupo de condiciones
+      query += ' AND (';
+      
+      // Crear una condición ILIKE para cada palabra
+      palabras.forEach((palabra, index) => {
+        if (index > 0) {
+          query += ' AND '; // Todas las palabras deben estar presentes (operador AND)
+        }
+        queryParams.push(`%${palabra}%`);
+        query += `propietario ILIKE $${queryParams.length}`;
+      });
+      
+      // Cerrar el grupo de condiciones
+      query += ')';
+    }
   }
 
   if (id_regimen_propiedad && id_regimen_propiedad.trim() !== '') {

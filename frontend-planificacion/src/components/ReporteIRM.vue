@@ -1,6 +1,64 @@
 <template>
   <div class="pagina-fondo">
-    <div id="reporteIRM" class="reporte-a4">
+    <!-- Pantalla de carga -->
+    <div v-if="loading" class="loading-container">
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="64"
+      ></v-progress-circular>
+      <p class="mt-4">Cargando datos del informe...</p>
+    </div>
+    
+    <!-- Mensaje de error -->
+    <div v-else-if="error" class="error-container">
+      <v-alert
+        type="error"
+        prominent
+        border-color="error"
+        elevation="2"
+        class="error-alert"
+      >
+        <v-icon large class="mr-3">mdi-alert-circle</v-icon>
+        <div>
+          <h3>Error al cargar el informe</h3>
+          <p>{{ error }}</p>
+          <v-btn
+            color="primary"
+            class="mt-3"
+            @click="volverABusqueda"
+          >
+            Volver a la búsqueda
+          </v-btn>
+        </div>
+      </v-alert>
+    </div>
+
+    <!-- Advertencia de datos incompletos -->
+    <div v-else-if="datosTitular && (!datosTitular.clave_catastral || !datosTitular.nombres)" class="datos-incompletos-container">
+      <v-alert
+        type="warning"
+        prominent
+        border-color="warning"
+        elevation="2"
+      >
+        <v-icon large class="mr-3">mdi-alert</v-icon>
+        <div>
+          <h3>Datos incompletos del predio</h3>
+          <p>El predio seleccionado no tiene todos los datos necesarios para generar un informe completo.</p>
+          <v-btn
+            color="primary"
+            class="mt-3"
+            @click="volverABusqueda"
+          >
+            Volver a la búsqueda
+          </v-btn>
+        </div>
+      </v-alert>
+    </div>
+    
+    <!-- Contenido del informe -->
+    <div v-else id="reporteIRM" class="reporte-a4">
       <!-- CABECERA -->
         <header class="reporte-header">
             <div class="header-top">
@@ -19,10 +77,10 @@
         <section class="seccion">
           <v-row>
             <v-col cols="6">
-              <p><strong>FECHA:</strong> 2025-07-08 12:54:07</p>
+              <p><strong>FECHA:</strong> {{ fechaActual }}</p>
             </v-col>
             <v-col cols="6" class="text-end">
-              <p><strong>IRM N°:</strong> 11423</p>
+              <p><strong>IRM N°:</strong> {{ numeroIRM }}</p>
             </v-col>
           </v-row>
         </section>  
@@ -30,7 +88,10 @@
         <section class="seccion">
           <v-row>
             <v-col cols="6">
-              <p><strong> INFORMACIÓN PREDIAL EN UNIPROPIEDAD</strong> URBANO</p>
+              <p>
+                <strong>INFORMACIÓN PREDIAL {{ datosTitular.derechos === 'SI' ? 'EN DERECHOS Y ACCIONES' : 'EN UNIPROPIEDAD' }}</strong> 
+                {{ datosTitular.tipo_predio || 'URBANO' }}
+              </p>
             </v-col>
             <v-col cols="6" class="text-end">
               <p><strong> *IMPLANTACIÓN GRÁFICA DEL LOTE</strong></p>
@@ -41,8 +102,9 @@
         <!-- DATOS DEL TITULAR -->
         <section class="seccion">
           <h3>DATOS DEL TITULAR DE DOMINIO</h3>
-          <p><strong>C.C./R.U.C:</strong> 1715583041</p>
-          <p><strong>Nombre o razón social:</strong> ALBAREZ GUAILLA JUANA</p>
+          <p><strong>C.C./R.U.C:</strong> {{ datosTitular.numero_documento || 'No especificado' }}</p>
+          <p><strong>Nombre o razón social:</strong> {{ datosTitular.nombres || 'No especificado' }}</p>
+          <p v-if="datosTitular.representante"><strong>Representante legal:</strong> {{ datosTitular.representante }}</p>
         </section>
 
         <!-- DATOS DEL PREDIO -->
@@ -50,20 +112,36 @@
             <v-row>
                 <v-col cols="6">
                     <h3>DATOS DEL PREDIO</h3>
-                    <p><strong>Clave catastral:</strong> 17025501500100500050000</p>
-                    <p><strong>Clave catastral anterior:</strong> 170255150105005000 / 150105005000</p>
-                    <p><strong>En derechos y acciones:</strong> NO</p>
-                    <p><strong>Área de construcción:</strong> 0.00 m²</p>
+                    <p><strong>Clave catastral:</strong> {{ datosTitular.clave_catastral || 'No especificada' }}</p>
+                    <p v-if="datosTitular.clave_catastral_anterior"><strong>Clave catastral anterior:</strong> {{ datosTitular.clave_catastral_anterior }}</p>
+                    <p><strong>En derechos y acciones:</strong> {{ datosTitular.derechos === 'SI' ? 'SÍ' : 'NO' }}</p>
+                    <p><strong>Área de construcción:</strong> {{ valorFormateado.areaConstruida }} m²</p>
                     <h3>DATOS DEL LOTE</h3>
-                    <p><strong>Área según escritura:</strong> 0.00 m²</p>
-                    <p><strong>Área gráfica:</strong> 1514.60 m²</p>
-                    <p><strong>Frente:</strong> 56.00 m</p>
-                    <p><strong>Tiene construcción:</strong> NO</p>
-                    <p><strong>Parroquia:</strong> SANTA ROSA DE CUZUBAMBA</p>
-                    <p><strong>Barrio/Sector:</strong> RUMIÑAHUI</p>
+                    <p><strong>Área según escritura:</strong> {{ valorFormateado.areaEscritura }} m²</p>
+                    <p><strong>Área gráfica:</strong> {{ valorFormateado.areaGrafica }} m²</p>
+                    <p><strong>Frente:</strong> {{ valorFormateado.frente }} m</p>
+                    <p><strong>Tiene construcción:</strong> {{ datosTitular.tiene_construccion === 'SI' ? 'SÍ' : 'NO' }}</p>
+                    <p><strong>Parroquia:</strong> {{ datosTitular.parroquia || 'No especificada' }}</p>
+                    <p><strong>Barrio/Sector:</strong> {{ datosTitular.sector || 'No especificado' }}</p>
                 </v-col>
-                <v-col cols="6">
-                    <img src="../assets/sin-croquis.png" alt="Sin Croquis" class="croquis-implantacion" />
+                <v-col cols="6" class="croquis-container">
+                    <!-- Mostrar indicador de carga mientras se genera el croquis -->
+                    <div v-if="croquisLoading" class="croquis-loading">
+                      <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
+                      <p class="mt-2">Generando croquis...</p>
+                    </div>
+                    
+                    <!-- Mostrar mensaje de error si no se pudo generar el croquis -->
+                    <div v-else-if="croquisError" class="croquis-error">
+                      <v-icon color="error" size="48">mdi-map-marker-off</v-icon>
+                      <p class="mt-2">{{ croquisError }}</p>
+                    </div>
+                    
+                    <!-- Mostrar croquis si está disponible -->
+                    <img v-else-if="croquisUrl" :src="croquisUrl" alt="Croquis del predio" class="croquis-implantacion" @error="croquisError = 'Error al cargar la imagen del croquis'" />
+                    
+                    <!-- Mostrar imagen por defecto si no hay croquis -->
+                    <img v-else src="../assets/sin-croquis.png" alt="Sin Croquis" class="croquis-implantacion" />
                 </v-col>
             </v-row>
         </section>
@@ -125,12 +203,232 @@
         <p>Dirección de Planificación y Ordenamiento Territorial</p>
       </footer>
     </div>
+    
+    <!-- Botones de acción flotantes -->
+    <div class="floating-actions no-print">
+      <v-btn
+        color="primary"
+        fab
+        @click="imprimirInforme"
+        title="Imprimir informe"
+      >
+        <v-icon>mdi-printer</v-icon>
+      </v-btn>
+      <v-btn
+        color="secondary"
+        fab
+        class="mt-2"
+        @click="volverABusqueda"
+        title="Volver a la búsqueda"
+      >
+        <v-icon>mdi-arrow-left</v-icon>
+      </v-btn>
+    </div>
+
+    <!-- Snackbar para notificaciones -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      top
+    >
+      {{ snackbar.text }}
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          text
+          v-bind="attrs"
+          @click="snackbar.show = false"
+        >
+          Cerrar
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script>
+import { ref, reactive, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import format from 'date-fns/format';
+import es from 'date-fns/locale/es';
+import datosTitularService from '@/services/datosTitularService';
+import { generarUrlCroquis, verificarPredioTieneCoordenadas } from '@/utils/croquisUtils';
+
 export default {
-  name: 'ReporteIRM'
+  name: 'ReporteIRM',
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const datosTitular = ref({});
+    const fechaActual = ref(format(new Date(), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es }));
+    const numeroIRM = ref(generateIRMNumber());
+    const loading = ref(false);
+    const error = ref(null);
+    const croquisUrl = ref('');
+    const croquisLoading = ref(false);
+    const croquisError = ref(null);
+    
+    // Estado para el snackbar
+    const snackbar = reactive({
+      show: false,
+      text: '',
+      color: 'info',
+      timeout: 3000
+    });
+    
+    // Valores formateados para los campos numéricos
+    const valorFormateado = computed(() => ({
+      areaEscritura: formatearNumero(datosTitular.value?.area_escritura || 0),
+      areaGrafica: formatearNumero(datosTitular.value?.area_grafica || 0),
+      areaConstruida: formatearNumero(datosTitular.value?.area_construida || 0),
+      frente: formatearNumero(datosTitular.value?.frente || 0),
+    }));
+
+    // Generar un número de IRM único basado en la fecha
+    function generateIRMNumber() {
+      const year = new Date().getFullYear();
+      // Último número de 5 dígitos basado en timestamp (será único)
+      const unique = Math.floor(10000 + Math.random() * 90000);
+      return `IRM-${year}-${unique}`;
+    }
+    
+    // Formatear números para mostrar con 2 decimales
+    function formatearNumero(valor) {
+      if (valor === null || valor === undefined) return '0.00';
+      return parseFloat(valor).toFixed(2);
+    }
+
+    // Método para mostrar notificaciones con snackbar
+    const mostrarSnackbar = (texto, color = 'info', timeout = 3000) => {
+      snackbar.text = texto;
+      snackbar.color = color;
+      snackbar.timeout = timeout;
+      snackbar.show = true;
+    };
+
+    // Función para cargar el croquis del predio
+    const cargarCroquisPredio = async (claveCatastral) => {
+      if (!claveCatastral) return;
+      
+      croquisLoading.value = true;
+      croquisError.value = null;
+      
+      try {
+        const url = await generarUrlCroquis(claveCatastral);
+        croquisUrl.value = url;
+        
+        if (!url) {
+          console.warn('No se pudo generar la URL del croquis para la clave catastral:', claveCatastral);
+          croquisError.value = 'No se pudo generar el croquis del predio';
+        }
+      } catch (err) {
+        console.error('Error al cargar el croquis del predio:', err);
+        croquisError.value = 'Error al cargar el croquis del predio';
+      } finally {
+        croquisLoading.value = false;
+      }
+    };
+    
+    // Función para cargar datos del titular por clave catastral
+    const cargarDatosPorClaveCatastral = async (claveCatastral) => {
+      loading.value = true;
+      error.value = null;
+      
+      try {
+        const response = await datosTitularService.busquedaAvanzada({
+          claveCatastral: claveCatastral,
+          nombres: '',
+          numeroDocumento: ''
+        });
+        
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          datosTitular.value = response.data.data[0];
+          console.log('Datos del titular cargados por clave catastral:', datosTitular.value);
+          mostrarSnackbar(`Informe generado para la clave catastral: ${claveCatastral}`, 'success');
+          
+          // Una vez cargados los datos, cargamos el croquis
+          await cargarCroquisPredio(claveCatastral);
+        } else {
+          console.warn('No se encontraron datos para la clave catastral:', claveCatastral);
+          error.value = `No se encontraron datos para la clave catastral: ${claveCatastral}`;
+          mostrarSnackbar(`No se encontraron datos para la clave catastral: ${claveCatastral}`, 'error');
+        }
+      } catch (err) {
+        console.error('Error al cargar datos del titular por clave catastral:', err);
+        error.value = 'Error al cargar los datos del titular. Por favor, intente nuevamente.';
+        mostrarSnackbar('Error al cargar los datos del titular', 'error');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    onMounted(() => {
+      // Primero verificamos si recibimos la clave catastral como parámetro
+      const claveCatastral = route.params.claveCatastral;
+      const filtro = route.query.filtro;
+      
+      if (filtro === 'claveCatastral' && claveCatastral) {
+        // Decodificamos la clave catastral y cargamos los datos
+        const decodedClaveCatastral = decodeURIComponent(claveCatastral);
+        cargarDatosPorClaveCatastral(decodedClaveCatastral);
+      } 
+      // Si no hay clave catastral o hubo un error al cargarla, intentamos usar los datos del titular de la query
+      else if (route.query.datosTitular) {
+        try {
+          datosTitular.value = JSON.parse(route.query.datosTitular);
+          console.log('Datos del titular recibidos de query:', datosTitular.value);
+        } catch (error) {
+          console.error('Error al parsear datos del titular:', error);
+          mostrarSnackbar('Error al cargar los datos del informe', 'error');
+          error.value = 'Error al procesar los datos del informe';
+        }
+      } else {
+        // Si no tenemos ninguna forma de obtener los datos, mostramos un error
+        error.value = 'No se proporcionaron parámetros para generar el informe';
+        mostrarSnackbar('No se proporcionaron datos para generar el informe', 'warning');
+      }
+    });
+
+    // Función para imprimir el informe
+    const imprimirInforme = () => {
+      if (!datosTitular.value || !datosTitular.value.clave_catastral) {
+        mostrarSnackbar('No hay datos válidos para imprimir', 'warning');
+        return;
+      }
+      
+      window.print();
+      mostrarSnackbar('Impresión iniciada', 'success');
+    };
+    
+    // Función para volver a la pantalla de búsqueda
+    const volverABusqueda = () => {
+      // Primero intentamos volver atrás en el historial
+      // Esto mantiene los filtros de búsqueda anteriores si llegamos desde la búsqueda
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Si no hay historial, navegamos directamente a la página de búsqueda
+        router.push({ name: 'BusquedaTitular' });
+      }
+    };
+    
+    return {
+      datosTitular,
+      fechaActual,
+      numeroIRM,
+      loading,
+      error,
+      snackbar,
+      valorFormateado,
+      formatearNumero,
+      imprimirInforme,
+      volverABusqueda,
+      mostrarSnackbar,
+      croquisUrl,
+      croquisLoading,
+      croquisError
+    };
+  }
 }
 </script>
 
@@ -175,9 +473,32 @@ export default {
   height: auto;
 }
 
+.croquis-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 280px;
+}
+
 .croquis-implantacion {
   width: 100%;
   height: 280px;
+  object-fit: contain;
+  border: 1px solid #ddd;
+}
+
+.croquis-loading, .croquis-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 280px;
+  background-color: #f9f9f9;
+  border: 1px dashed #ccc;
+  text-align: center;
+  color: #666;
 }
 
 .titulo-municipio {
@@ -235,6 +556,46 @@ ul li {
   margin-top: 20px;
 }
 
+/* Estilos para los botones flotantes */
+.floating-actions {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.floating-actions .v-btn {
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  text-align: center;
+  color: #276E90;
+  font-size: 1.2em;
+}
+
+/* Error Container */
+.error-container, .datos-incompletos-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 20px;
+}
+
+.error-alert {
+  max-width: 600px;
+  width: 100%;
+}
+
 /* Estilos para impresión */
 @media print {
   .pagina-fondo {
@@ -268,6 +629,10 @@ ul li {
   .reporte-body {
     margin-top: 100px;
     margin-bottom: 80px;
+  }
+  
+  .no-print {
+    display: none !important;
   }
 }
 </style>

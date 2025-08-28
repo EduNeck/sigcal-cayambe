@@ -246,6 +246,7 @@
 <script>
 import axios from 'axios'
 import QRCode from 'qrcode'
+import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'ReporteIcus',
@@ -282,7 +283,7 @@ export default {
     async cargarDatosIcus(id) {
       this.cargando = true; this.error = null
       try {
-        const { data } = await axios.get(`http://localhost:4001/api/icus/recuperarIcus/${id}`)
+        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus/${id}`)
         this.datosIcusLocal = data
         this.$nextTick(() => this.generarQR())
       } catch (error) {
@@ -297,7 +298,7 @@ export default {
     async cargarListaIcus(page = 1, limit = 10, search = '') {
       this.cargando = true; this.error = null
       try {
-        const { data } = await axios.get('http://localhost:4001/api/icus/recuperarIcus', { params: { page, limit, search } })
+        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus`, { params: { page, limit, search } })
         return data
       } catch (e) { this.error = 'Error al cargar la lista de ICUS'; throw e }
       finally { this.cargando = false }

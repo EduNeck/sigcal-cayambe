@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent="login" ref="loginForm">
+  <v-form @submit.prevent="login">
     <v-text-field
       v-model="usuario"
       label="Usuario"
@@ -45,6 +45,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import API_BASE_URL from '@/config/apiConfig';
 
 const usuario = ref('')
 const password = ref('')
@@ -57,7 +58,7 @@ const login = async () => {
   error.value = null
   try {
     const res = await axios.post(
-      'http://localhost:4001/api/auth/login',
+      `${API_BASE_URL}/auth/login`,
       { usuario: usuario.value, password: password.value }
     )
     if (res.data && res.data.token) {

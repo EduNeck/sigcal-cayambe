@@ -97,6 +97,7 @@ app.get('/api/ping', async (req, res) => {
 // Importamos las rutas desde la carpeta src
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/icus', require('./src/routes/icusRoute'));
+app.use('/api/datos-titular', require('./src/routes/datosTitularRoute'));
 
 // ========== Iniciar servidor ==========
 const PORT = process.env.PORT || 4001;

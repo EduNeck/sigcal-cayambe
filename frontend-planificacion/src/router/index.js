@@ -4,6 +4,7 @@ import SolicitarTramite from '../components/SolicitarTramite.vue'
 import GeneraReportes from '../components/GeneraReportes.vue'
 import ReporteIRM from '../components/ReporteIRM.vue'
 import ReporteIcus from '../components/ReporteIcus.vue'
+import BusquedaTitular from '../components/BusquedaTitular.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -19,14 +20,21 @@ const routes = [
     component: SolicitarTramite,    
   },
   {
-    path: '/reporte-irm',
+    path: '/reporte-irm/:claveCatastral?',
     name: 'ReporteIRM',
     component: ReporteIRM,
+    props: true
   },
   {
     path: '/reporte-icus',
     name: 'ReporteIcus',
     component: ReporteIcus,
+  },
+  {
+    path: '/busqueda-titular',
+    name: 'BusquedaTitular',
+    component: BusquedaTitular,
+    meta: { requiresAuth: true }
   },
 ]
 

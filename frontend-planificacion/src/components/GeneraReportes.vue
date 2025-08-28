@@ -113,8 +113,8 @@ function goControlUsuarios() {
 }
 
 function onRegulacionMunicipal() {
-  alert('Generar Regulación Municipal')
-  // Aquí puedes navegar a otro componente/ruta si deseas
+  // En vez de mostrar una alerta, navegar a la búsqueda de titulares
+  router.push('/busqueda-titular')
 }
 
 function onCertificadoUsos() {
