@@ -63,6 +63,20 @@ const login = async () => {
     )
     if (res.data && res.data.token) {
       localStorage.setItem('token', res.data.token)
+      
+      // También guardamos la información del usuario si está disponible
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user))
+      } else {
+        // Si no hay datos de usuario, crear uno básico basado en el nombre de usuario
+        const basicUser = {
+          id: Date.now().toString(),
+          nombre: usuario.value,
+          roles: ['user']
+        }
+        localStorage.setItem('user', JSON.stringify(basicUser))
+      }
+      
       emit('login-success')
     } else {
       error.value = 'Usuario o contraseña incorrectos'

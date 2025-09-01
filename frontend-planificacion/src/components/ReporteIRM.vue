@@ -67,6 +67,10 @@
                 <h2>INFORME DE REGULACIÓN MUNICIPAL</h2>
                 <p class="entidad">Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe</p>
                 </div>
+                <div class="qr-container" v-if="qrCode">
+                  <img :src="qrCode" alt="Código QR de verificación" class="qr-image" />
+                  <p class="qr-text">Verificación</p>
+                </div>
             </div>
         </header>
 
@@ -149,23 +153,120 @@
             <p class="text-error">{{ regulacionesError }}</p>
           </div>
           
+          <div v-else-if="regulaciones.length === 0" class="sin-regulaciones">
+            <p>No se encontraron regulaciones para este predio.</p>
+          </div>
+          
           <div v-else>
-            <p><strong>Zona:</strong> {{ regulaciones.codigo }} {{ regulaciones.zona }}</p>
-            <p><strong>Altura máxima:</strong> {{ regulaciones.alturaMaxima }} m</p>
-            <p><strong>Número de pisos:</strong> {{ regulaciones.numeroPisos }}</p>
-            <p><strong>Frontal:</strong> {{ regulaciones.retiroFrontal }} m</p>
-            <p><strong>Lateral 1:</strong> {{ regulaciones.retiroLateral1 }} m</p>
-            <p><strong>Lateral 2:</strong> {{ regulaciones.retiroLateral2 }} m</p>
-            <p><strong>Posterior:</strong> {{ regulaciones.retiroPosterior }} m</p>
-            <p><strong>Entre bloques:</strong> {{ regulaciones.distanciaEntreBloques }} m</p>
-            <p><strong>Forma de ocupación del suelo:</strong> ({{ regulaciones.formaOcupacion?.codigo }}) {{ regulaciones.formaOcupacion?.nombre }}</p>
-            <p><strong>Lote mínimo:</strong> {{ regulaciones.loteMinimo }} m²</p>
-            <p><strong>Frente mínimo:</strong> {{ regulaciones.frenteMinimo }} m</p>
-            <p><strong>COS PB:</strong> {{ regulaciones.cosPb }}%</p>
-            <p><strong>COS TOTAL:</strong> {{ regulaciones.cosTotal }}%</p>
-            <p><strong>Clasificación de suelo:</strong> ({{ regulaciones.clasificacionSuelo?.codigo }}) {{ regulaciones.clasificacionSuelo?.nombre }}</p>
-            <p><strong>Uso de suelo:</strong> ({{ regulaciones.usoSuelo?.codigo }}) {{ regulaciones.usoSuelo?.nombre }}</p>
-            <p v-if="regulaciones.observaciones"><strong>Observaciones:</strong> {{ regulaciones.observaciones }}</p>
+            <!-- Para cada set de regulaciones mostramos una tarjeta -->
+            <div v-for="(reg, index) in regulaciones" :key="index" class="regulacion-card">
+              <h4>Regulación {{ index + 1 }}</h4>
+              
+              <div class="regulaciones-layout">
+                <v-row>
+                  <!-- PRIMERA COLUMNA: ZONA -->
+                  <v-col cols="12" md="5" class="regulaciones-columna">
+                    <h5>ZONA</h5>
+                    <v-table density="compact" class="regulaciones-table">
+                      <tbody>
+                        <tr>
+                          <td class="text-left font-weight-bold" width="40%">Zona:</td>
+                          <td class="text-left">{{ reg.codigo }} {{ reg.zona }}</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Lote mínimo:</td>
+                          <td class="text-left">{{ reg.loteMinimo }} m²</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Frente mínimo:</td>
+                          <td class="text-left">{{ reg.frenteMinimo }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">COS PB:</td>
+                          <td class="text-left">{{ reg.cosPb }}%</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">COS TOTAL:</td>
+                          <td class="text-left">{{ reg.cosTotal }}%</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Forma de ocupación:</td>
+                          <td class="text-left">({{ reg.formaOcupacion?.codigo }}) {{ reg.formaOcupacion?.nombre }}</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Clasificación de suelo:</td>
+                          <td class="text-left">({{ reg.clasificacionSuelo?.codigo }}) {{ reg.clasificacionSuelo?.nombre }}</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Uso de suelo:</td>
+                          <td class="text-left">({{ reg.usoSuelo?.codigo }}) {{ reg.usoSuelo?.nombre }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-col>
+                  
+                  <!-- SEGUNDA COLUMNA: PISOS -->
+                  <v-col cols="12" md="3" class="regulaciones-columna">
+                    <h5>PISOS</h5>
+                    <v-table density="compact" class="regulaciones-table">
+                      <tbody>
+                        <tr>
+                          <td class="text-left font-weight-bold">Altura máxima:</td>
+                          <td class="text-left">{{ reg.alturaMaxima }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Número de pisos:</td>
+                          <td class="text-left">{{ reg.numeroPisos }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-col>
+                  
+                  <!-- TERCERA COLUMNA: RETIROS -->
+                  <v-col cols="12" md="4" class="regulaciones-columna">
+                    <h5>RETIROS</h5>
+                    <v-table density="compact" class="regulaciones-table">
+                      <tbody>
+                        <tr>
+                          <td class="text-left font-weight-bold">Frontal:</td>
+                          <td class="text-left">{{ reg.retiroFrontal }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Lateral 1:</td>
+                          <td class="text-left">{{ reg.retiroLateral1 }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Lateral 2:</td>
+                          <td class="text-left">{{ reg.retiroLateral2 }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Posterior:</td>
+                          <td class="text-left">{{ reg.retiroPosterior }} m</td>
+                        </tr>
+                        <tr>
+                          <td class="text-left font-weight-bold">Entre bloques:</td>
+                          <td class="text-left">{{ reg.distanciaEntreBloques }} m</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-col>
+                </v-row>
+                
+                <!-- Observaciones -->
+                <v-row v-if="reg.observaciones" class="mt-2">
+                  <v-col cols="12">
+                    <v-table density="compact" class="regulaciones-table">
+                      <tbody>
+                        <tr>
+                          <td class="text-left font-weight-bold" width="20%">Observaciones:</td>
+                          <td class="text-left">{{ reg.observaciones }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-col>
+                </v-row>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -181,16 +282,18 @@
         <!-- NOTAS FINALES -->
         <section class="seccion texto-legal">
           <h3>NOTAS</h3>
-          <ul>
-            <li>Los datos están referidos al Plan de Uso y Ocupación del Suelo vigente.</li>
-            <li>La información consta en los archivos catastrales del GAD.</li>
-            <li>Este informe no representa título legal alguno.</li>
-            <li>No autoriza trabajos de construcción ni fraccionamientos.</li>
-            <li>Validez de 2 años a partir de su emisión.</li>
-            <li>Volado a calle máximo 60 cm.</li>
-            <li>Radio de curvatura en esquinas: 3,00 m.</li>
-            <li>Predios colindantes a Panamericana E35-E28: acera de 2.50 m desde cuneta.</li>
-          </ul>
+          <div class="nota-informativa">
+            <ul>
+              <li>Los datos están referidos al Plan de Uso y Ocupación del Suelo vigente.</li>
+              <li>La información consta en los archivos catastrales del GAD.</li>
+              <li>Este informe no representa título legal alguno.</li>
+              <li>No autoriza trabajos de construcción ni fraccionamientos.</li>
+              <li>Validez de 2 años a partir de su emisión.</li>
+              <li>Volado a calle máximo 60 cm.</li>
+              <li>Radio de curvatura en esquinas: 3,00 m.</li>
+              <li>Predios colindantes a Panamericana E35-E28: acera de 2.50 m desde cuneta.</li>
+            </ul>
+          </div>
         </section>
       </main>
 
@@ -198,6 +301,7 @@
       <footer class="reporte-footer">
         <p>Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe</p>
         <p>Dirección de Planificación y Ordenamiento Territorial</p>
+        <div class="pagina-info">Página <span class="pagina-num"></span></div>
       </footer>
     </div>
     
@@ -249,21 +353,29 @@ import { useRoute, useRouter } from 'vue-router';
 import format from 'date-fns/format';
 import es from 'date-fns/locale/es';
 import datosTitularService from '@/services/datosTitularService';
+import irmService from '@/services/irmService';
+import qrService from '@/services/qrService';
 import axios from 'axios';
+import { useAuth } from '@/composables/useAuth';
 
 export default {
   name: 'ReporteIRM',
   setup() {
     const route = useRoute();
     const router = useRouter();
+    const { user } = useAuth();
     const datosTitular = ref({});
     const fechaActual = ref(format(new Date(), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es }));
+    const fechaActualCorta = ref(format(new Date(), "yyyy-MM-dd", { locale: es }));
     const numeroIRM = ref(generateIRMNumber());
     const loading = ref(false);
     const error = ref(null);
-    const regulaciones = ref({});
+    const regulaciones = ref([]);
     const regulacionesLoading = ref(false);
     const regulacionesError = ref(null);
+    const qrCode = ref(null);
+    const certificadoGuardado = ref(false);
+    const idCertificado = ref(null);
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -319,11 +431,8 @@ export default {
         if (response.data && response.data.success && response.data.data.length > 0) {
           console.log('Datos PUGS recibidos:', response.data.data);
           
-          // Obtenemos el primer registro (asumiendo que solo hay uno por clave catastral)
-          const datosPugs = response.data.data[0];
-          
-          // Mapear los datos a las propiedades que usaremos en el componente
-          regulaciones.value = {
+          // Ahora guardamos todos los registros recibidos
+          regulaciones.value = response.data.data.map(datosPugs => ({
             codigo: datosPugs.red || 'No especificado',
             zona: datosPugs.zon || 'No especificado',
             loteMinimo: datosPugs.lmi || 0,
@@ -351,7 +460,7 @@ export default {
               nombre: datosPugs.usn || 'No especificado'
             },
             fcode: datosPugs.fcode || 'No especificado'
-          };
+          }));
           
           console.log('Regulaciones mapeadas:', regulaciones.value);
         } else {
@@ -399,7 +508,7 @@ export default {
       }
     };
 
-    onMounted(() => {
+    onMounted(async () => {
       // Primero verificamos si recibimos la clave catastral como parámetro
       const claveCatastral = route.params.claveCatastral;
       const filtro = route.query.filtro;
@@ -407,13 +516,32 @@ export default {
       if (filtro === 'claveCatastral' && claveCatastral) {
         // Decodificamos la clave catastral y cargamos los datos
         const decodedClaveCatastral = decodeURIComponent(claveCatastral);
-        cargarDatosPorClaveCatastral(decodedClaveCatastral);
+        await cargarDatosPorClaveCatastral(decodedClaveCatastral);
+        
+        // Generar QR después de cargar los datos
+        if (datosTitular.value && datosTitular.value.clave_catastral) {
+          await generarQR();
+          
+          // Guardar automáticamente el IRM en la base de datos
+          await guardarIRM();
+        }
       } 
       // Si no hay clave catastral o hubo un error al cargarla, intentamos usar los datos del titular de la query
       else if (route.query.datosTitular) {
         try {
           datosTitular.value = JSON.parse(route.query.datosTitular);
           console.log('Datos del titular recibidos de query:', datosTitular.value);
+          
+          // Obtener regulaciones para este titular
+          if (datosTitular.value.clave_catastral) {
+            await cargarDatosRegulaciones(datosTitular.value.clave_catastral);
+            
+            // Generar QR después de cargar los datos
+            await generarQR();
+            
+            // Guardar automáticamente el IRM en la base de datos
+            await guardarIRM();
+          }
         } catch (error) {
           console.error('Error al parsear datos del titular:', error);
           mostrarSnackbar('Error al cargar los datos del informe', 'error');
@@ -426,15 +554,185 @@ export default {
       }
     });
 
+    // Función para generar el código QR
+    const generarQR = async () => {
+      try {
+        // Si ya tenemos un QR generado, no lo generamos de nuevo
+        if (qrCode.value) return;
+        
+        // Formato de fecha para el QR: YYYY-MM-DD HH:mm:ss
+        const fechaHoraQR = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+        
+        // Datos para el QR
+        const datosQR = {
+          numeroInforme: numeroIRM.value,
+          fechaHora: fechaHoraQR,
+          idPredio: datosTitular.value?.id_predio || '',
+          claveCatastral: datosTitular.value?.clave_catastral || '',
+          idPropietario: datosTitular.value?.id_ciudadano || '',
+          nombrePropietario: datosTitular.value?.nombres || '',
+          usuarioId: user?.id || '',
+          nombreUsuario: user?.nombre || ''
+        };
+        
+        // Generar el QR
+        const qrDataUrl = await qrService.generarQRIRM(datosQR);
+        qrCode.value = qrDataUrl;
+        console.log('Código QR generado exitosamente');
+      } catch (err) {
+        console.error('Error al generar el código QR:', err);
+        mostrarSnackbar('Error al generar el código QR', 'error');
+      }
+    };
+    
+    // Función para guardar el IRM en la base de datos
+    const guardarIRM = async () => {
+      // Si ya está guardado, no lo guardamos de nuevo
+      if (certificadoGuardado.value) return idCertificado.value;
+      
+      try {
+        loading.value = true;
+        
+        // Verificar si hay token
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No hay token de autenticación disponible');
+          mostrarSnackbar('Error de autenticación: No hay sesión activa', 'error');
+          return null;
+        }
+        
+        console.log('Token disponible para guardar IRM:', token.substring(0, 15) + '...');
+        
+        // Preparar los datos del IRM principal
+        const datosIRM = {
+          fecha: fechaActualCorta.value,
+          tipo: 'IRM',
+          tipo_predio: datosTitular.value?.tipo_predio || 'URBANO',
+          id_ciudadano: datosTitular.value?.id_ciudadano || null,
+          clave_catastral: datosTitular.value?.clave_catastral || '',
+          clave_anterior: datosTitular.value?.clave_catastral_anterior || '',
+          derechos_acciones: datosTitular.value?.derechos || 'NO',
+          area_construccion: datosTitular.value?.area_construida || 0,
+          area_escritura: datosTitular.value?.area_escritura || 0,
+          area_grafica: datosTitular.value?.area_grafica || 0,
+          frente: datosTitular.value?.frente || 0,
+          tiene_construccion: datosTitular.value?.tiene_construccion || 'NO',
+          parroquia: datosTitular.value?.parroquia || '',
+          barrio_sector: datosTitular.value?.sector || '',
+          notas_irm: 'PREDIO SIN ACCESO CATASTRADO',
+          agua: 'No tiene',
+          energia_electrica: 'No tiene',
+          alcantarillado: 'No tiene',
+          otros: 'Transporte público',
+          pro_tipo: numeroIRM.value,
+          pro_nombre: user?.nombre || 'Usuario del sistema',
+          pro_observaciones: '',
+          
+          // Incluir las regulaciones
+          regulaciones: regulaciones.value.map(reg => ({
+            zona: `${reg.codigo} ${reg.zona}`,
+            lote_minimo: reg.loteMinimo || 0,
+            frente_minimo: reg.frenteMinimo || 0,
+            cos_pb: reg.cosPb || 0,
+            cos_total: reg.cosTotal || 0,
+            forma_ocupacion: `(${reg.formaOcupacion?.codigo}) ${reg.formaOcupacion?.nombre}`,
+            clasificacion_suelo: `(${reg.clasificacionSuelo?.codigo}) ${reg.clasificacionSuelo?.nombre}`,
+            uso_suelo: `(${reg.usoSuelo?.codigo}) ${reg.usoSuelo?.nombre}`,
+            altura_maxima: reg.alturaMaxima || 0,
+            numero_pisos: reg.numeroPisos || 0,
+            frontal: reg.retiroFrontal || 0,
+            lateral_1: reg.retiroLateral1 || 0,
+            lateral_2: reg.retiroLateral2 || 0,
+            posterior: reg.retiroPosterior || 0,
+            entre_bloques: reg.distanciaEntreBloques || 0
+          }))
+        };
+        
+        console.log('Enviando datos para guardar IRM:', JSON.stringify(datosIRM).substring(0, 200) + '...');
+        
+        // Enviar los datos al backend
+        const response = await irmService.crearIRM(datosIRM);
+        
+        if (response.data && response.data.success) {
+          idCertificado.value = response.data.data.id_certificado;
+          certificadoGuardado.value = true;
+          mostrarSnackbar('Informe guardado exitosamente', 'success');
+          console.log('IRM guardado con ID:', idCertificado.value);
+          return idCertificado.value;
+        } else {
+          throw new Error(response.data?.message || 'Error al guardar el informe');
+        }
+      } catch (err) {
+        console.error('Error al guardar el IRM:', err);
+        
+        let mensajeError = 'Error al guardar el informe';
+        
+        // Manejar errores específicos
+        if (err.response) {
+          console.log('Error de respuesta:', err.response.status, err.response.data);
+          
+          if (err.response.status === 401) {
+            mensajeError = 'Su sesión ha expirado. Por favor inicie sesión nuevamente.';
+          } else if (err.response.status === 403) {
+            mensajeError = 'No tiene permisos para realizar esta acción.';
+          } else if (err.response.data && err.response.data.message) {
+            mensajeError = err.response.data.message;
+          }
+        }
+        
+        mostrarSnackbar(mensajeError, 'error');
+        return null;
+      } finally {
+        loading.value = false;
+      }
+    };
+    
     // Función para imprimir el informe
-    const imprimirInforme = () => {
+    const imprimirInforme = async () => {
       if (!datosTitular.value || !datosTitular.value.clave_catastral) {
         mostrarSnackbar('No hay datos válidos para imprimir', 'warning');
         return;
       }
       
-      window.print();
-      mostrarSnackbar('Impresión iniciada', 'success');
+      try {
+        // Primero generamos el QR si no existe
+        if (!qrCode.value) {
+          await generarQR();
+        }
+        
+        // Luego guardamos el IRM en la base de datos si no está guardado
+        if (!certificadoGuardado.value) {
+          await guardarIRM();
+        }
+        
+        // Agregar estilo para numeración de páginas justo antes de imprimir
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @page {
+            size: A4;
+            margin: 20mm;
+            counter-increment: page;
+          }
+          @media print {
+            body {
+              counter-reset: page;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        window.print();
+        
+        // Eliminar el estilo después de imprimir
+        setTimeout(() => {
+          document.head.removeChild(style);
+        }, 1000);
+        
+        mostrarSnackbar('Impresión iniciada', 'success');
+      } catch (err) {
+        console.error('Error al preparar la impresión:', err);
+        mostrarSnackbar('Error al preparar la impresión', 'error');
+      }
     };
     
     // Función para volver a la pantalla de búsqueda
@@ -463,7 +761,12 @@ export default {
       mostrarSnackbar,
       regulaciones,
       regulacionesLoading,
-      regulacionesError
+      regulacionesError,
+      qrCode,
+      generarQR,
+      guardarIRM,
+      certificadoGuardado,
+      idCertificado
     };
   }
 }
@@ -508,6 +811,24 @@ export default {
 .logo-municipio {
   width: 60px;
   height: auto;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.qr-image {
+  width: 80px;
+  height: 80px;
+}
+
+.qr-text {
+  font-size: 10px;
+  margin-top: 2px;
+  text-align: center;
 }
 
 .info-adicional {
@@ -574,6 +895,14 @@ ul li {
   border-top: 1px solid #ccc;
   padding-top: 10px;
   margin-top: 20px;
+  position: relative;
+}
+
+.pagina-info {
+  font-size: 10px;
+  color: #666;
+  margin-top: 5px;
+  display: none;
 }
 
 /* Estilos para los botones flotantes */
@@ -640,19 +969,149 @@ ul li {
 
   .reporte-header {
     top: 0;
+    height: 100px;
+    padding-bottom: 30px;
   }
 
   .reporte-footer {
     bottom: 0;
+    height: 80px;
   }
 
   .reporte-body {
-    margin-top: 100px;
-    margin-bottom: 80px;
+    margin-top: 130px;
+    margin-bottom: 100px;
+    position: relative;
   }
   
   .no-print {
     display: none !important;
+  }
+}
+
+/* Estilos para las tarjetas de regulaciones */
+.regulacion-card {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.regulacion-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  color: #276E90;
+}
+
+.regulacion-card h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #e8f4f8;
+  padding: 5px;
+  border-radius: 4px 4px 0 0;
+  color: #276E90;
+}
+
+.regulaciones-layout {
+  width: 100%;
+}
+
+.regulaciones-columna {
+  padding: 0 5px;
+}
+
+.regulaciones-table {
+  margin-bottom: 10px;
+  background-color: white !important;
+  border: 1px solid #e0e0e0;
+  font-size: 12px;
+}
+
+.sin-regulaciones {
+  padding: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+@media print {
+  .regulacion-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+  }
+  
+  .regulaciones-layout {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .regulaciones-columna {
+    flex: 1;
+    min-width: 30%;
+    margin-bottom: 10px;
+  }
+  
+  .regulaciones-table {
+    font-size: 10px;
+  }
+  
+  .regulacion-card h5 {
+    font-size: 11px;
+  }
+}
+
+/* Estilo para las notas informativas */
+.nota-informativa {
+  font-size: 11px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  color: #555;
+}
+
+.nota-informativa ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.nota-informativa li {
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+@media print {
+  .nota-informativa {
+    font-size: 9px;
+    background-color: transparent;
+    border: 1px solid #eee;
+  }
+  
+  .pagina-info {
+    display: block;
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+  }
+  
+  /* CSS para numeración de páginas */
+  .pagina-num:after {
+    content: counter(page);
+  }
+  
+  /* Esto agrega un salto de página antes de cada regulacion-card excepto la primera */
+  .regulacion-card:not(:first-child) {
+    break-before: page;
   }
 }
 </style>

@@ -99,6 +99,7 @@ app.use('/api/icus', require('./routes/icusRoute'));
 app.use('/api/datos-titular', require('./routes/datosTitularRoute'));
 app.use('/api/geo-consulta', require('./routes/geoConsultaRoutes'));
 app.use('/api/datos-pugs', require('./routes/datosPugsRoutes'));
+app.use('/api/irm', require('./routes/IrmRoutes')); // Actualizada la ruta al archivo
 app.use('/api', require('./routes/croquisRoutes'));
 
 // ========== Iniciar servidor ==========

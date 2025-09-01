@@ -193,7 +193,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="generarInforme(titularSeleccionado)">
-            Generar Informe
+            Visualizar Informe
           </v-btn>
           <v-btn color="grey darken-1" text @click="detalleDialog = false">
             Cerrar
