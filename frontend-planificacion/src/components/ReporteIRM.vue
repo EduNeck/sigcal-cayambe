@@ -357,6 +357,7 @@ import irmService from '@/services/irmService';
 import qrService from '@/services/qrService';
 import axios from 'axios';
 import { useAuth } from '@/composables/useAuth';
+import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   name: 'ReporteIRM',
@@ -425,8 +426,7 @@ export default {
       try {
         console.log('Consultando datos de regulaciones PUGS para:', claveCatastral);
         
-        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
-        const response = await axios.get(`${API_URL}/datos-pugs/${claveCatastral}`);
+        const response = await axios.get(`${API_BASE_URL}/datos-pugs/${claveCatastral}`);
         
         if (response.data && response.data.success && response.data.data.length > 0) {
           console.log('Datos PUGS recibidos:', response.data.data);
@@ -509,48 +509,68 @@ export default {
     };
 
     onMounted(async () => {
-      // Primero verificamos si recibimos la clave catastral como parámetro
-      const claveCatastral = route.params.claveCatastral;
-      const filtro = route.query.filtro;
-      
-      if (filtro === 'claveCatastral' && claveCatastral) {
-        // Decodificamos la clave catastral y cargamos los datos
-        const decodedClaveCatastral = decodeURIComponent(claveCatastral);
-        await cargarDatosPorClaveCatastral(decodedClaveCatastral);
+      // Variable para controlar si ya iniciamos el proceso de guardado
+      let procesoGuardadoIniciado = false;
+
+      try {
+        // Primero verificamos si recibimos la clave catastral como parámetro
+        const claveCatastral = route.params.claveCatastral;
+        const filtro = route.query.filtro;
         
-        // Generar QR después de cargar los datos
-        if (datosTitular.value && datosTitular.value.clave_catastral) {
-          await generarQR();
+        if (filtro === 'claveCatastral' && claveCatastral) {
+          // Decodificamos la clave catastral y cargamos los datos
+          const decodedClaveCatastral = decodeURIComponent(claveCatastral);
+          await cargarDatosPorClaveCatastral(decodedClaveCatastral);
           
-          // Guardar automáticamente el IRM en la base de datos
-          await guardarIRM();
-        }
-      } 
-      // Si no hay clave catastral o hubo un error al cargarla, intentamos usar los datos del titular de la query
-      else if (route.query.datosTitular) {
-        try {
-          datosTitular.value = JSON.parse(route.query.datosTitular);
-          console.log('Datos del titular recibidos de query:', datosTitular.value);
-          
-          // Obtener regulaciones para este titular
-          if (datosTitular.value.clave_catastral) {
-            await cargarDatosRegulaciones(datosTitular.value.clave_catastral);
-            
+          // Verificamos si tenemos los datos necesarios
+          if (datosTitular.value && datosTitular.value.clave_catastral) {
             // Generar QR después de cargar los datos
             await generarQR();
             
-            // Guardar automáticamente el IRM en la base de datos
-            await guardarIRM();
+            // Solo guardar si no hemos iniciado el proceso de guardado
+            if (!procesoGuardadoIniciado && !certificadoGuardado.value) {
+              console.log('Iniciando proceso de guardado desde clave catastral');
+              procesoGuardadoIniciado = true;
+              await guardarIRM();
+            }
           }
-        } catch (error) {
-          console.error('Error al parsear datos del titular:', error);
-          mostrarSnackbar('Error al cargar los datos del informe', 'error');
-          error.value = 'Error al procesar los datos del informe';
+        } 
+        // Si no hay clave catastral o hubo un error al cargarla, intentamos usar los datos del titular de la query
+        else if (route.query.datosTitular && !procesoGuardadoIniciado) {
+          try {
+            datosTitular.value = JSON.parse(route.query.datosTitular);
+            console.log('Datos del titular recibidos de query:', datosTitular.value);
+            
+            // Obtener regulaciones para este titular si tenemos clave catastral
+            if (datosTitular.value.clave_catastral) {
+              await cargarDatosRegulaciones(datosTitular.value.clave_catastral);
+              
+              // Generar QR después de cargar los datos
+              await generarQR();
+              
+              // Solo guardar si no hemos iniciado el proceso de guardado
+              if (!procesoGuardadoIniciado && !certificadoGuardado.value) {
+                console.log('Iniciando proceso de guardado desde datos en query');
+                procesoGuardadoIniciado = true;
+                await guardarIRM();
+              }
+            }
+          } catch (error) {
+            console.error('Error al parsear datos del titular:', error);
+            mostrarSnackbar('Error al cargar los datos del informe', 'error');
+            error.value = 'Error al procesar los datos del informe';
+          }
+        } else {
+          // Si no tenemos ninguna forma de obtener los datos, mostramos un error
+          if (!procesoGuardadoIniciado && !certificadoGuardado.value) {
+            error.value = 'No se proporcionaron parámetros para generar el informe';
+            mostrarSnackbar('No se proporcionaron datos para generar el informe', 'warning');
+          }
         }
-      } else {
-        // Si no tenemos ninguna forma de obtener los datos, mostramos un error
-        error.value = 'No se proporcionaron parámetros para generar el informe';
-        mostrarSnackbar('No se proporcionaron datos para generar el informe', 'warning');
+      } catch (err) {
+        console.error('Error en onMounted:', err);
+        error.value = 'Error al inicializar el informe';
+        mostrarSnackbar('Error al inicializar el informe', 'error');
       }
     });
 
@@ -558,7 +578,12 @@ export default {
     const generarQR = async () => {
       try {
         // Si ya tenemos un QR generado, no lo generamos de nuevo
-        if (qrCode.value) return;
+        if (qrCode.value) {
+          console.log('QR ya generado anteriormente, reutilizando');
+          return;
+        }
+        
+        console.log('Generando nuevo código QR');
         
         // Formato de fecha para el QR: YYYY-MM-DD HH:mm:ss
         const fechaHoraQR = format(new Date(), "yyyy-MM-dd HH:mm:ss");
@@ -585,12 +610,34 @@ export default {
       }
     };
     
+    // Variable para controlar si hay una operación de guardado en curso
+    const guardadoEnProgreso = ref(false);
+    
     // Función para guardar el IRM en la base de datos
     const guardarIRM = async () => {
       // Si ya está guardado, no lo guardamos de nuevo
       if (certificadoGuardado.value) return idCertificado.value;
       
+      // Si hay una operación de guardado en curso, esperamos y devolvemos el resultado
+      if (guardadoEnProgreso.value) {
+        console.log('Guardado ya en progreso, esperando...');
+        // Esperar a que termine el guardado actual
+        let intentos = 0;
+        while (guardadoEnProgreso.value && intentos < 20) {
+          await new Promise(resolve => setTimeout(resolve, 500)); // Esperar 500ms
+          intentos++;
+        }
+        
+        // Si se completó correctamente, devolver el ID
+        if (certificadoGuardado.value) {
+          console.log('Guardado completado por otra operación, ID:', idCertificado.value);
+          return idCertificado.value;
+        }
+      }
+      
       try {
+        // Marcar que estamos iniciando el proceso de guardado
+        guardadoEnProgreso.value = true;
         loading.value = true;
         
         // Verificar si hay token
@@ -609,6 +656,7 @@ export default {
           tipo: 'IRM',
           tipo_predio: datosTitular.value?.tipo_predio || 'URBANO',
           id_ciudadano: datosTitular.value?.id_ciudadano || null,
+          numero_documento: datosTitular.value?.numero_documento || '',
           clave_catastral: datosTitular.value?.clave_catastral || '',
           clave_anterior: datosTitular.value?.clave_catastral_anterior || '',
           derechos_acciones: datosTitular.value?.derechos || 'NO',
@@ -654,7 +702,7 @@ export default {
         const response = await irmService.crearIRM(datosIRM);
         
         if (response.data && response.data.success) {
-          idCertificado.value = response.data.data.id_certificado;
+          idCertificado.value = response.data.data.id_irm;
           certificadoGuardado.value = true;
           mostrarSnackbar('Informe guardado exitosamente', 'success');
           console.log('IRM guardado con ID:', idCertificado.value);
@@ -684,6 +732,7 @@ export default {
         return null;
       } finally {
         loading.value = false;
+        guardadoEnProgreso.value = false;
       }
     };
     
@@ -701,8 +750,12 @@ export default {
         }
         
         // Luego guardamos el IRM en la base de datos si no está guardado
+        // Solo intentamos guardar una vez y esperamos que termine el proceso completo
         if (!certificadoGuardado.value) {
+          console.log('Guardando IRM antes de imprimir');
           await guardarIRM();
+        } else {
+          console.log('IRM ya está guardado, ID:', idCertificado.value);
         }
         
         // Agregar estilo para numeración de páginas justo antes de imprimir
@@ -766,7 +819,8 @@ export default {
       generarQR,
       guardarIRM,
       certificadoGuardado,
-      idCertificado
+      idCertificado,
+      guardadoEnProgreso
     };
   }
 }

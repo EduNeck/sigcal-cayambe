@@ -16,6 +16,7 @@ router.post('/', authenticateToken, async (req, res) => {
       tipo,
       tipo_predio,
       id_ciudadano,
+      numero_documento,
       clave_catastral,
       clave_anterior,
       derechos_acciones,
@@ -44,6 +45,7 @@ router.post('/', authenticateToken, async (req, res) => {
       tipo,
       tipo_predio,
       id_ciudadano,
+      numero_documento,
       clave_catastral,
       clave_anterior,
       derechos_acciones,
@@ -65,15 +67,14 @@ router.post('/', authenticateToken, async (req, res) => {
       geometria
     };
 
-    const result = await IrmModel.crearIRM(irmData);
-    const id_certificado = result.id_certificado;
+    const result = await IrmModel.insertaIrm(irmData);
+    const id_irm = result.id_irm;
 
     // Insertar las regulaciones si existen usando el modelo de detalleIrm
     if (regulaciones && regulaciones.length > 0) {
       const detallesFormateados = regulaciones.map(reg => ({
-        id_certificado_regulacion: id_certificado,
-        nombre_zona: reg.zona || '',
-        implantacion: reg.forma_ocupacion || '',
+        id_irm: id_irm,
+        zona: reg.zona || '',
         retiro_frontal: reg.frontal || 0,
         retiro_lateral_izq: reg.lateral_1 || 0,
         retiro_lateral_der: reg.lateral_2 || 0,
@@ -87,13 +88,13 @@ router.post('/', authenticateToken, async (req, res) => {
         observaciones: reg.observaciones || ''
       }));
       
-      await DetalleIrmModel.crearMultiplesDetallesIRM(detallesFormateados, id_certificado);
+      await DetalleIrmModel.insertaMultiplesDetallesIrm(detallesFormateados, id_irm);
     }
     
     res.json({
       success: true,
       message: 'IRM creado exitosamente',
-      data: { id_certificado }
+      data: { id_irm }
     });
   } catch (error) {
     console.error('Error al crear IRM:', error);
@@ -115,7 +116,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     
     // Obtener el IRM principal usando el modelo
-    const irm = await IrmModel.obtenerIRMPorId(id);
+    const irm = await IrmModel.recuperaIrmById(id);
     
     if (!irm) {
       return res.status(404).json({
@@ -125,7 +126,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
     
     // Obtener las regulaciones asociadas usando el modelo
-    const regulaciones = await DetalleIrmModel.obtenerDetallesPorIdIRM(id);
+    const regulaciones = await DetalleIrmModel.recuperaDetallesByIrmId(id);
     
     // Combinar los resultados
     const resultado = {
@@ -171,7 +172,7 @@ router.get('/', authenticateToken, async (req, res) => {
       fecha_hasta 
     };
     
-    const result = await IrmModel.buscarIRMs(filters, page, limit);
+    const result = await IrmModel.buscaIrms(filters, page, limit);
     
     res.json({
       success: true,
@@ -212,6 +213,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       tipo,
       tipo_predio,
       id_ciudadano,
+      numero_documento,
       clave_catastral,
       clave_anterior,
       derechos_acciones,
@@ -240,6 +242,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       tipo,
       tipo_predio,
       id_ciudadano,
+      numero_documento,
       clave_catastral,
       clave_anterior,
       derechos_acciones,
@@ -268,18 +271,17 @@ router.put('/:id', authenticateToken, async (req, res) => {
       }
     });
 
-    const updatedIRM = await IrmModel.actualizarIRM(id, irmData);
+    const updatedIRM = await IrmModel.actualizaIrm(id, irmData);
 
     // Actualizar regulaciones si se proporcionaron
     if (regulaciones && regulaciones.length > 0) {
       // Eliminar las regulaciones existentes
-      await DetalleIrmModel.eliminarDetallesPorIdIRM(id);
+      await DetalleIrmModel.eliminaDetallesByIrmId(id);
       
       // Crear nuevas regulaciones
       const detallesFormateados = regulaciones.map(reg => ({
-        id_certificado_regulacion: id,
-        nombre_zona: reg.zona || '',
-        implantacion: reg.forma_ocupacion || '',
+        id_irm: id,
+        zona: reg.zona || '',
         retiro_frontal: reg.frontal || 0,
         retiro_lateral_izq: reg.lateral_1 || 0,
         retiro_lateral_der: reg.lateral_2 || 0,
@@ -293,7 +295,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         observaciones: reg.observaciones || ''
       }));
       
-      await DetalleIrmModel.crearMultiplesDetallesIRM(detallesFormateados, id);
+      await DetalleIrmModel.insertaMultiplesDetallesIrm(detallesFormateados, id);
     }
     
     res.json({
@@ -331,10 +333,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
     
     // Eliminar primero los detalles asociados
-    await DetalleIrmModel.eliminarDetallesPorIdIRM(id);
+    await DetalleIrmModel.eliminaDetallesByIrmId(id);
     
     // Luego eliminar el IRM principal
-    await IrmModel.eliminarIRM(id);
+    await IrmModel.eliminaIrm(id);
     
     res.json({
       success: true,

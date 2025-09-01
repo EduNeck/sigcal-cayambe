@@ -479,8 +479,7 @@ export default {
       try {
         console.log('Consultando datos de compatibilidad PUGS para:', claveCatastral);
         
-        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
-        const response = await axios.get(`${API_URL}/datos-pugs/${claveCatastral}`);
+        const response = await axios.get(`${API_BASE_URL}/datos-pugs/${claveCatastral}`);
         
         if (response.data && response.data.success && response.data.data.length > 0) {
           console.log('Datos PUGS recibidos:', response.data.data);

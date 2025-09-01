@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+import API_BASE_URL from '@/config/apiConfig';
 
 // Función para obtener el token actualizado desde localStorage
 const getAuthToken = () => {
@@ -34,7 +33,7 @@ const irmService = {
       
       console.log('Enviando solicitud para crear IRM con token:', token.substring(0, 15) + '...');
       
-      return await axios.post(`${API_URL}/irm`, datosIRM, {
+      return await axios.post(`${API_BASE_URL}/irm`, datosIRM, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -49,7 +48,7 @@ const irmService = {
   obtenerIRMPorId: async (id) => {
     try {
       const token = getAuthToken();
-      return await axios.get(`${API_URL}/irm/${id}`, {
+      return await axios.get(`${API_BASE_URL}/irm/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -63,7 +62,7 @@ const irmService = {
   listarIRMs: async (params = {}) => {
     try {
       const token = getAuthToken();
-      return await axios.get(`${API_URL}/irm`, {
+      return await axios.get(`${API_BASE_URL}/irm`, {
         params,
         headers: {
           'Authorization': `Bearer ${token}`

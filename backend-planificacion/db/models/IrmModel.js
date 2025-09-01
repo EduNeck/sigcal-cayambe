@@ -16,6 +16,7 @@ async function insertaIrm(irmData) {
       tipo,
       tipo_predio,
       id_ciudadano,
+      numero_documento,
       clave_catastral,
       clave_anterior,
       derechos_acciones,
@@ -40,17 +41,17 @@ async function insertaIrm(irmData) {
     // Insertar el IRM principal
     const query = `
       INSERT INTO planificacion.irm (
-        fecha, tipo, tipo_predio, id_ciudadano, clave_catastral, clave_anterior,
+        fecha, tipo, tipo_predio, id_ciudadano, numero_documento, clave_catastral, clave_anterior,
         derechos_acciones, area_construccion, area_escritura, area_grafica, frente,
         tiene_construccion, parroquia, barrio_sector, notas_irm, agua,
         energia_electrica, alcantarillado, otros, pro_tipo, pro_nombre, pro_observaciones,
         geometria
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
-      RETURNING id_certificado
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+      RETURNING id_irm
     `;
     
     const values = [
-      fecha, tipo, tipo_predio, id_ciudadano, clave_catastral, clave_anterior,
+      fecha, tipo, tipo_predio, id_ciudadano, numero_documento, clave_catastral, clave_anterior,
       derechos_acciones, area_construccion, area_escritura, area_grafica, frente,
       tiene_construccion, parroquia, barrio_sector, notas_irm, agua,
       energia_electrica, alcantarillado, otros, pro_tipo, pro_nombre, pro_observaciones,
@@ -77,7 +78,7 @@ async function insertaIrm(irmData) {
  */
 async function recuperaIrmById(id) {
   try {
-    const query = 'SELECT * FROM planificacion.irm WHERE id_certificado = $1';
+    const query = 'SELECT * FROM planificacion.irm WHERE id_irm = $1';
     const result = await db.query(query, [id]);
     return result.rows[0];
   } catch (error) {
@@ -191,7 +192,7 @@ async function buscaIrms(filters = {}, page = 1, limit = 10) {
 async function actualizaIrm(id, irmData) {
   try {
     const allowedFields = [
-      'fecha', 'tipo', 'tipo_predio', 'id_ciudadano', 'clave_catastral', 
+      'fecha', 'tipo', 'tipo_predio', 'id_ciudadano', 'numero_documento', 'clave_catastral', 
       'clave_anterior', 'derechos_acciones', 'area_construccion', 'area_escritura',
       'area_grafica', 'frente', 'tiene_construccion', 'parroquia', 'barrio_sector',
       'notas_irm', 'agua', 'energia_electrica', 'alcantarillado', 'otros',
@@ -220,7 +221,7 @@ async function actualizaIrm(id, irmData) {
     const query = `
       UPDATE planificacion.irm 
       SET ${updates.join(', ')} 
-      WHERE id_certificado = $${paramCount} 
+      WHERE id_irm = $${paramCount} 
       RETURNING *
     `;
     
@@ -250,13 +251,13 @@ async function eliminaIrm(id) {
     
     // Primero eliminamos los detalles relacionados
     await client.query(
-      'DELETE FROM planificacion.detalle_irm WHERE id_certificado_regulacion = $1',
+      'DELETE FROM planificacion.detalle_irm WHERE id_irm_regulacion = $1',
       [id]
     );
     
     // Luego eliminamos el IRM principal
     const result = await client.query(
-      'DELETE FROM planificacion.irm WHERE id_certificado = $1',
+      'DELETE FROM planificacion.irm WHERE id_irm = $1',
       [id]
     );
     

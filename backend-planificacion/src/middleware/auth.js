@@ -1,8 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-// SECRET para firmar JWT (debe coincidir con el de auth.js)
-const JWT_SECRET = process.env.JWT_SECRET || 'secreto-planificacion';
-
 // Middleware para verificar el token JWT
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -16,7 +13,7 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'sigcal_secret_cayambe');
     req.user = decoded;
     next();
   } catch (err) {

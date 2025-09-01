@@ -18,7 +18,7 @@ async function insertaDetalleIrm(detalleData) {
     };
 
     const {
-      id_certificado_regulacion,
+      id_irm,
       nombre_zona,
       implantacion,
       retiro_frontal,
@@ -36,7 +36,7 @@ async function insertaDetalleIrm(detalleData) {
 
     const query = `
       INSERT INTO planificacion.detalle_irm (
-        id_certificado_regulacion,
+        id_irm,
         nombre_zona,
         implantacion,
         retiro_frontal,
@@ -55,7 +55,7 @@ async function insertaDetalleIrm(detalleData) {
     `;
     
     const values = [
-      normalizar(id_certificado_regulacion, 'numero'),
+      normalizar(id_irm, 'numero'),
       normalizar(nombre_zona),
       normalizar(implantacion),
       normalizar(retiro_frontal, 'numero'),
@@ -117,8 +117,8 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
     await client.query('BEGIN');
     
     for (const detalle of detalles) {
-      // Asegurarse que cada detalle tenga el id_certificado_regulacion correcto
-      detalle.id_certificado_regulacion = idCertificado;
+      // Asegurarse que cada detalle tenga el id_irm correcto
+      detalle.id_irm = idCertificado;
       
       const normalizar = (valor, tipo = 'texto') => {
         if (valor === undefined || valor === null || valor === '') {
@@ -131,7 +131,7 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
 
       const query = `
         INSERT INTO planificacion.detalle_irm (
-          id_certificado_regulacion,
+          id_irm,
           nombre_zona,
           implantacion,
           retiro_frontal,
@@ -150,7 +150,7 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
       `;
       
       const values = [
-        normalizar(detalle.id_certificado_regulacion, 'numero'),
+        normalizar(detalle.id_irm, 'numero'),
         normalizar(detalle.nombre_zona),
         normalizar(detalle.implantacion),
         normalizar(detalle.retiro_frontal, 'numero'),
@@ -188,7 +188,7 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
  */
 async function recuperaDetallesByIrmId(idCertificado) {
   try {
-    const query = 'SELECT * FROM planificacion.detalle_irm WHERE id_certificado_regulacion = $1 ORDER BY id_detalle_certificado';
+    const query = 'SELECT * FROM planificacion.detalle_irm WHERE id_irm = $1 ORDER BY id_detalle_certificado';
     const result = await db.query(query, [idCertificado]);
     return result.rows;
   } catch (error) {
@@ -311,7 +311,7 @@ async function eliminaDetalleIrm(id) {
  */
 async function eliminaDetallesByIrmId(idCertificado) {
   try {
-    const query = 'DELETE FROM planificacion.detalle_irm WHERE id_certificado_regulacion = $1';
+    const query = 'DELETE FROM planificacion.detalle_irm WHERE id_irm = $1';
     const result = await db.query(query, [idCertificado]);
     return result.rowCount;
   } catch (error) {

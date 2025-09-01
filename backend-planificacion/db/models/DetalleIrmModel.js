@@ -18,9 +18,8 @@ async function insertaDetalleIrm(detalleData) {
     };
 
     const {
-      id_certificado_regulacion,
-      nombre_zona,
-      implantacion,
+      id_irm,
+      zona,
       retiro_frontal,
       retiro_lateral_izq,
       retiro_lateral_der,
@@ -36,9 +35,8 @@ async function insertaDetalleIrm(detalleData) {
 
     const query = `
       INSERT INTO planificacion.detalle_irm (
-        id_certificado_regulacion,
-        nombre_zona,
-        implantacion,
+        id_irm,
+        zona,
         retiro_frontal,
         retiro_lateral_izq,
         retiro_lateral_der,
@@ -50,14 +48,13 @@ async function insertaDetalleIrm(detalleData) {
         lote_minimo,
         frente_minimo,
         observaciones
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
     
     const values = [
-      normalizar(id_certificado_regulacion, 'numero'),
-      normalizar(nombre_zona),
-      normalizar(implantacion),
+      normalizar(id_irm, 'numero'),
+      normalizar(zona),
       normalizar(retiro_frontal, 'numero'),
       normalizar(retiro_lateral_izq, 'numero'),
       normalizar(retiro_lateral_der, 'numero'),
@@ -117,8 +114,8 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
     await client.query('BEGIN');
     
     for (const detalle of detalles) {
-      // Asegurarse que cada detalle tenga el id_certificado_regulacion correcto
-      detalle.id_certificado_regulacion = idCertificado;
+      // Asegurarse que cada detalle tenga el id_irm correcto
+      detalle.id_irm = idCertificado;
       
       const normalizar = (valor, tipo = 'texto') => {
         if (valor === undefined || valor === null || valor === '') {
@@ -131,9 +128,8 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
 
       const query = `
         INSERT INTO planificacion.detalle_irm (
-          id_certificado_regulacion,
-          nombre_zona,
-          implantacion,
+          id_irm,
+          zona,
           retiro_frontal,
           retiro_lateral_izq,
           retiro_lateral_der,
@@ -145,14 +141,13 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
           lote_minimo,
           frente_minimo,
           observaciones
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *
       `;
       
       const values = [
-        normalizar(detalle.id_certificado_regulacion, 'numero'),
-        normalizar(detalle.nombre_zona),
-        normalizar(detalle.implantacion),
+        normalizar(detalle.id_irm, 'numero'),
+        normalizar(detalle.zona),
         normalizar(detalle.retiro_frontal, 'numero'),
         normalizar(detalle.retiro_lateral_izq, 'numero'),
         normalizar(detalle.retiro_lateral_der, 'numero'),
@@ -188,7 +183,7 @@ async function insertaMultiplesDetallesIrm(detalles, idCertificado) {
  */
 async function recuperaDetallesByIrmId(idCertificado) {
   try {
-    const query = 'SELECT * FROM planificacion.detalle_irm WHERE id_certificado_regulacion = $1 ORDER BY id_detalle_certificado';
+    const query = 'SELECT * FROM planificacion.detalle_irm WHERE id_irm = $1 ORDER BY id_detalle_certificado';
     const result = await db.query(query, [idCertificado]);
     return result.rows;
   } catch (error) {
@@ -231,8 +226,7 @@ async function actualizaDetalleIrm(id, detalleData) {
     };
 
     const allowedFields = [
-      'nombre_zona',
-      'implantacion',
+      'zona',
       'retiro_frontal',
       'retiro_lateral_izq',
       'retiro_lateral_der',
@@ -311,7 +305,7 @@ async function eliminaDetalleIrm(id) {
  */
 async function eliminaDetallesByIrmId(idCertificado) {
   try {
-    const query = 'DELETE FROM planificacion.detalle_irm WHERE id_certificado_regulacion = $1';
+    const query = 'DELETE FROM planificacion.detalle_irm WHERE id_irm = $1';
     const result = await db.query(query, [idCertificado]);
     return result.rowCount;
   } catch (error) {

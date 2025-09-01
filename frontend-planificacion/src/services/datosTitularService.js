@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+import API_BASE_URL from '@/config/apiConfig';
 
 export default {
   /**
@@ -13,7 +12,7 @@ export default {
    */
   busquedaAvanzada(params) {
     return axios.post(
-      `${API_URL}/datos-titular/busquedaAvanzada`, 
+      `${API_BASE_URL}/datos-titular/busquedaAvanzada`, 
       params,
       {
         headers: {
@@ -30,7 +29,7 @@ export default {
    */
   obtenerPorId(id) {
     return axios.get(
-      `${API_URL}/datos-titular/recuperarDatosTitular/${id}`, 
+      `${API_BASE_URL}/datos-titular/recuperarDatosTitular/${id}`, 
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
