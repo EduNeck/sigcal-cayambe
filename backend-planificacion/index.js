@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./src/db/config');  // Importamos la configuración de la BD
+const pool = require('./db/config');  // Importamos la configuración de la BD
 require('dotenv').config();
 
 const app = express();
@@ -94,10 +94,12 @@ app.get('/api/ping', async (req, res) => {
 });
 
 // ========== Rutas del sistema ==========
-// Importamos las rutas desde la carpeta src
-app.use('/api/auth', require('./src/routes/auth'));
-app.use('/api/icus', require('./src/routes/icusRoute'));
-app.use('/api/datos-titular', require('./src/routes/datosTitularRoute'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/icus', require('./routes/icusRoute'));
+app.use('/api/datos-titular', require('./routes/datosTitularRoute'));
+app.use('/api/geo-consulta', require('./routes/geoConsultaRoutes'));
+app.use('/api/datos-pugs', require('./routes/datosPugsRoutes'));
+app.use('/api', require('./routes/croquisRoutes'));
 
 // ========== Iniciar servidor ==========
 const PORT = process.env.PORT || 4001;

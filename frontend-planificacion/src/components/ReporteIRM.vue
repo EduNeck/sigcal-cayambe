@@ -87,14 +87,11 @@
         <!-- INFORMACION CERTIFICADO -->
         <section class="seccion">
           <v-row>
-            <v-col cols="6">
+            <v-col cols="12">
               <p>
                 <strong>INFORMACIÓN PREDIAL {{ datosTitular.derechos === 'SI' ? 'EN DERECHOS Y ACCIONES' : 'EN UNIPROPIEDAD' }}</strong> 
                 {{ datosTitular.tipo_predio || 'URBANO' }}
               </p>
-            </v-col>
-            <v-col cols="6" class="text-end">
-              <p><strong> *IMPLANTACIÓN GRÁFICA DEL LOTE</strong></p>
             </v-col>
           </v-row>
         </section>            
@@ -124,24 +121,12 @@
                     <p><strong>Parroquia:</strong> {{ datosTitular.parroquia || 'No especificada' }}</p>
                     <p><strong>Barrio/Sector:</strong> {{ datosTitular.sector || 'No especificado' }}</p>
                 </v-col>
-                <v-col cols="6" class="croquis-container">
-                    <!-- Mostrar indicador de carga mientras se genera el croquis -->
-                    <div v-if="croquisLoading" class="croquis-loading">
-                      <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
-                      <p class="mt-2">Generando croquis...</p>
+                <v-col cols="6">
+                    <!-- Columna de información adicional o espacio en blanco -->
+                    <div class="info-adicional">
+                      <p><strong>NOTA:</strong> Este documento es únicamente informativo.</p>
+                      <p>Los datos mostrados corresponden a la información registrada en el sistema catastral.</p>
                     </div>
-                    
-                    <!-- Mostrar mensaje de error si no se pudo generar el croquis -->
-                    <div v-else-if="croquisError" class="croquis-error">
-                      <v-icon color="error" size="48">mdi-map-marker-off</v-icon>
-                      <p class="mt-2">{{ croquisError }}</p>
-                    </div>
-                    
-                    <!-- Mostrar croquis si está disponible -->
-                    <img v-else-if="croquisUrl" :src="croquisUrl" alt="Croquis del predio" class="croquis-implantacion" @error="croquisError = 'Error al cargar la imagen del croquis'" />
-                    
-                    <!-- Mostrar imagen por defecto si no hay croquis -->
-                    <img v-else src="../assets/sin-croquis.png" alt="Sin Croquis" class="croquis-implantacion" />
                 </v-col>
             </v-row>
         </section>
@@ -155,21 +140,33 @@
         <!-- REGULACIONES -->
         <section class="seccion">
           <h3>REGULACIONES Y ZONIFICACIÓN</h3>
-          <p><strong>Zona:</strong> (C3) C2003-80</p>
-          <p><strong>Altura máxima:</strong> 9 m</p>
-          <p><strong>Número de pisos:</strong> 3</p>
-          <p><strong>Frontal:</strong> 3 m</p>
-          <p><strong>Lateral 1:</strong> 0 m</p>
-          <p><strong>Lateral 2:</strong> 0 m</p>
-          <p><strong>Posterior:</strong> 3 m</p>
-          <p><strong>Entre bloques:</strong> 6 m</p>
-          <p><strong>Forma de ocupación del suelo:</strong> (C) CONTINUA</p>
-          <p><strong>Lote mínimo:</strong> 200 m²</p>
-          <p><strong>Frente mínimo:</strong> 10 m</p>
-          <p><strong>COS PB:</strong> 80.00%</p>
-          <p><strong>COS TOTAL:</strong> 240.00%</p>
-          <p><strong>Clasificación de suelo:</strong> (SU) SUELO URBANO NO CONSOLIDADO</p>
-          <p><strong>Uso de suelo:</strong> (R2A) RESIDENCIAL 2A</p>
+          
+          <div v-if="regulacionesLoading" class="loading-info">
+            <p>Cargando información de regulaciones...</p>
+          </div>
+          
+          <div v-else-if="regulacionesError" class="error-info">
+            <p class="text-error">{{ regulacionesError }}</p>
+          </div>
+          
+          <div v-else>
+            <p><strong>Zona:</strong> {{ regulaciones.codigo }} {{ regulaciones.zona }}</p>
+            <p><strong>Altura máxima:</strong> {{ regulaciones.alturaMaxima }} m</p>
+            <p><strong>Número de pisos:</strong> {{ regulaciones.numeroPisos }}</p>
+            <p><strong>Frontal:</strong> {{ regulaciones.retiroFrontal }} m</p>
+            <p><strong>Lateral 1:</strong> {{ regulaciones.retiroLateral1 }} m</p>
+            <p><strong>Lateral 2:</strong> {{ regulaciones.retiroLateral2 }} m</p>
+            <p><strong>Posterior:</strong> {{ regulaciones.retiroPosterior }} m</p>
+            <p><strong>Entre bloques:</strong> {{ regulaciones.distanciaEntreBloques }} m</p>
+            <p><strong>Forma de ocupación del suelo:</strong> ({{ regulaciones.formaOcupacion?.codigo }}) {{ regulaciones.formaOcupacion?.nombre }}</p>
+            <p><strong>Lote mínimo:</strong> {{ regulaciones.loteMinimo }} m²</p>
+            <p><strong>Frente mínimo:</strong> {{ regulaciones.frenteMinimo }} m</p>
+            <p><strong>COS PB:</strong> {{ regulaciones.cosPb }}%</p>
+            <p><strong>COS TOTAL:</strong> {{ regulaciones.cosTotal }}%</p>
+            <p><strong>Clasificación de suelo:</strong> ({{ regulaciones.clasificacionSuelo?.codigo }}) {{ regulaciones.clasificacionSuelo?.nombre }}</p>
+            <p><strong>Uso de suelo:</strong> ({{ regulaciones.usoSuelo?.codigo }}) {{ regulaciones.usoSuelo?.nombre }}</p>
+            <p v-if="regulaciones.observaciones"><strong>Observaciones:</strong> {{ regulaciones.observaciones }}</p>
+          </div>
         </section>
 
         <!-- SERVICIOS BÁSICOS -->
@@ -252,7 +249,7 @@ import { useRoute, useRouter } from 'vue-router';
 import format from 'date-fns/format';
 import es from 'date-fns/locale/es';
 import datosTitularService from '@/services/datosTitularService';
-import { generarUrlCroquis, verificarPredioTieneCoordenadas } from '@/utils/croquisUtils';
+import axios from 'axios';
 
 export default {
   name: 'ReporteIRM',
@@ -264,9 +261,9 @@ export default {
     const numeroIRM = ref(generateIRMNumber());
     const loading = ref(false);
     const error = ref(null);
-    const croquisUrl = ref('');
-    const croquisLoading = ref(false);
-    const croquisError = ref(null);
+    const regulaciones = ref({});
+    const regulacionesLoading = ref(false);
+    const regulacionesError = ref(null);
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -306,26 +303,66 @@ export default {
       snackbar.show = true;
     };
 
-    // Función para cargar el croquis del predio
-    const cargarCroquisPredio = async (claveCatastral) => {
+    // Función para cargar datos de regulaciones PUGS
+    const cargarDatosRegulaciones = async (claveCatastral) => {
       if (!claveCatastral) return;
       
-      croquisLoading.value = true;
-      croquisError.value = null;
+      regulacionesLoading.value = true;
+      regulacionesError.value = null;
       
       try {
-        const url = await generarUrlCroquis(claveCatastral);
-        croquisUrl.value = url;
+        console.log('Consultando datos de regulaciones PUGS para:', claveCatastral);
         
-        if (!url) {
-          console.warn('No se pudo generar la URL del croquis para la clave catastral:', claveCatastral);
-          croquisError.value = 'No se pudo generar el croquis del predio';
+        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+        const response = await axios.get(`${API_URL}/datos-pugs/${claveCatastral}`);
+        
+        if (response.data && response.data.success && response.data.data.length > 0) {
+          console.log('Datos PUGS recibidos:', response.data.data);
+          
+          // Obtenemos el primer registro (asumiendo que solo hay uno por clave catastral)
+          const datosPugs = response.data.data[0];
+          
+          // Mapear los datos a las propiedades que usaremos en el componente
+          regulaciones.value = {
+            codigo: datosPugs.red || 'No especificado',
+            zona: datosPugs.zon || 'No especificado',
+            loteMinimo: datosPugs.lmi || 0,
+            frenteMinimo: datosPugs.fmi || 0,
+            cosPb: datosPugs.cop || 0,
+            cosTotal: datosPugs.cot || 0,
+            alturaMaxima: datosPugs.atp || 0,
+            numeroPisos: datosPugs.npi || 0,
+            retiroFrontal: datosPugs.rfe || 0,
+            retiroLateral1: datosPugs.rle1 || 0,
+            retiroLateral2: datosPugs.rle2 || 0,
+            retiroPosterior: datosPugs.rpe || 0,
+            distanciaEntreBloques: datosPugs.reb || 0,
+            observaciones: datosPugs.txt || '',
+            clasificacionSuelo: {
+              codigo: datosPugs.csc || 'No especificado',
+              nombre: datosPugs.csn || 'No especificado'
+            },
+            formaOcupacion: {
+              codigo: datosPugs.foc || 'No especificado',
+              nombre: datosPugs.fon || 'No especificado'
+            },
+            usoSuelo: {
+              codigo: datosPugs.usc || 'No especificado',
+              nombre: datosPugs.usn || 'No especificado'
+            },
+            fcode: datosPugs.fcode || 'No especificado'
+          };
+          
+          console.log('Regulaciones mapeadas:', regulaciones.value);
+        } else {
+          console.warn('No se encontraron datos PUGS para la clave catastral:', claveCatastral);
+          regulacionesError.value = 'No se encontraron datos de regulaciones para este predio';
         }
       } catch (err) {
-        console.error('Error al cargar el croquis del predio:', err);
-        croquisError.value = 'Error al cargar el croquis del predio';
+        console.error('Error al cargar datos PUGS:', err);
+        regulacionesError.value = 'Error al cargar datos de regulaciones';
       } finally {
-        croquisLoading.value = false;
+        regulacionesLoading.value = false;
       }
     };
     
@@ -346,8 +383,8 @@ export default {
           console.log('Datos del titular cargados por clave catastral:', datosTitular.value);
           mostrarSnackbar(`Informe generado para la clave catastral: ${claveCatastral}`, 'success');
           
-          // Una vez cargados los datos, cargamos el croquis
-          await cargarCroquisPredio(claveCatastral);
+          // Una vez cargados los datos del titular, cargamos los datos de regulaciones
+          await cargarDatosRegulaciones(claveCatastral);
         } else {
           console.warn('No se encontraron datos para la clave catastral:', claveCatastral);
           error.value = `No se encontraron datos para la clave catastral: ${claveCatastral}`;
@@ -424,9 +461,9 @@ export default {
       imprimirInforme,
       volverABusqueda,
       mostrarSnackbar,
-      croquisUrl,
-      croquisLoading,
-      croquisError
+      regulaciones,
+      regulacionesLoading,
+      regulacionesError
     };
   }
 }
@@ -473,32 +510,15 @@ export default {
   height: auto;
 }
 
-.croquis-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.info-adicional {
   min-height: 280px;
-}
-
-.croquis-implantacion {
-  width: 100%;
-  height: 280px;
-  object-fit: contain;
+  background-color: #f9f9f9;
   border: 1px solid #ddd;
-}
-
-.croquis-loading, .croquis-error {
+  border-radius: 8px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 280px;
-  background-color: #f9f9f9;
-  border: 1px dashed #ccc;
-  text-align: center;
-  color: #666;
 }
 
 .titulo-municipio {

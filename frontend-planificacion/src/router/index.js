@@ -5,6 +5,7 @@ import GeneraReportes from '../components/GeneraReportes.vue'
 import ReporteIRM from '../components/ReporteIRM.vue'
 import ReporteIcus from '../components/ReporteIcus.vue'
 import BusquedaTitular from '../components/BusquedaTitular.vue'
+import BusquedaIcus from '../components/BusquedaIcus.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -26,14 +27,21 @@ const routes = [
     props: true
   },
   {
-    path: '/reporte-icus',
+    path: '/reporte-icus/:id?',
     name: 'ReporteIcus',
     component: ReporteIcus,
+    props: true
   },
   {
     path: '/busqueda-titular',
     name: 'BusquedaTitular',
     component: BusquedaTitular,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/busqueda-icus',
+    name: 'BusquedaIcus',
+    component: BusquedaIcus,
     meta: { requiresAuth: true }
   },
 ]

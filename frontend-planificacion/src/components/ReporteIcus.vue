@@ -1,20 +1,18 @@
 <template>
   <div class="reporte-icus compacto">
-    <!-- Indicador de carga -->
+    <!-- Indicador de carga principal -->
     <div v-if="cargando" class="loading-indicator">
       <p>Cargando datos del ICUS...</p>
     </div>
-
-    <!-- Mensaje de error -->
+    
+    <!-- Mensaje de error principal -->
     <div v-if="error" class="error-container">
       <div class="error-icon"></div>
       <p>{{ error }}</p>
       <button @click="cargarDatosIcus" class="retry-button">
         Reintentar
       </button>
-    </div>
-
-    <!-- Reporte principal -->
+    </div>    <!-- Reporte principal -->
     <div v-if="!cargando && !error">
       <!-- Header del reporte -->
       <div class="reporte-header">
@@ -64,33 +62,47 @@
               <!-- DATOS DEL TITULAR DE DOMINIO -->
               <div class="subseccion">
                 <h4>DATOS DEL TITULAR DE DOMINIO</h4>
-                <div class="campo-grupo" v-if="datosFinales.numero_documento">
-                  <label>C.C./RUC:</label>
-                  <span>{{ datosFinales.numero_documento }}</span>
+                
+                <!-- Estado de carga para datos del titular -->
+                <div v-if="titularLoading" class="loading-info">
+                  <p>Cargando información del titular...</p>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.propietario">
-                  <label>Nombre / Razón Social:</label>
-                  <span>{{ datosFinales.propietario }}</span>
+                <!-- Estado de error para datos del titular -->
+                <div v-else-if="titularError" class="error-info">
+                  <p class="text-error">{{ titularError }}</p>
                 </div>
+                
+                <!-- Datos del titular cuando están disponibles -->
+                <template v-else>
+                  <div class="campo-grupo" v-if="datosFinales.numero_documento || datosFinales.ci">
+                    <label>C.C./RUC:</label>
+                    <span>{{ datosFinales.numero_documento || datosFinales.ci }}</span>
+                  </div>
+                  
+                  <div class="campo-grupo" v-if="datosFinales.propietario || datosFinales.nombres">
+                    <label>Nombre / Razón Social:</label>
+                    <span>{{ datosFinales.propietario || datosFinales.nombres }}</span>
+                  </div>
+                </template>
               </div>
 
               <!-- DATOS DEL PREDIO -->
               <div class="subseccion">
                 <h4>DATOS DEL PREDIO</h4>
-                <div class="campo-grupo" v-if="datosFinales.clave_catastral">
+                <div class="campo-grupo" v-if="datosFinales.clave_catastral || datosFinales.clave_catastral_actual">
                   <label>Clave Catastral:</label>
-                  <span>{{ datosFinales.clave_catastral }}</span>
+                  <span>{{ datosFinales.clave_catastral || datosFinales.clave_catastral_actual }}</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.clave_anterior">
+                <div class="campo-grupo" v-if="datosFinales.clave_anterior || datosFinales.clave_catastral_anterior">
                   <label>Clave Catastral Anterior:</label>
-                  <span>{{ datosFinales.clave_anterior }}</span>
+                  <span>{{ datosFinales.clave_anterior || datosFinales.clave_catastral_anterior }}</span>
                 </div>
 
                 <div class="campo-grupo" v-if="datosFinales.derechos_acciones">
                   <label>En Derechos y Acciones:</label>
-                  <span>{{ datosFinales.derechos_acciones }}%</span>
+                  <span>{{ formatearArea(datosFinales.derechos_acciones) }}%</span>
                 </div>
                 
                 <div class="campo-grupo" v-if="datosFinales.area_construccion">
@@ -102,14 +114,14 @@
               <!-- DATOS DEL LOTE -->
               <div class="subseccion">
                 <h4>DATOS DEL LOTE</h4>
-                <div class="campo-grupo" v-if="datosFinales.area_escritura">
+                <div class="campo-grupo" v-if="datosFinales.area_escritura || datosFinales.area_terreno_escritura">
                   <label>Área según Escritura:</label>
-                  <span>{{ formatearArea(datosFinales.area_escritura) }} m²</span>
+                  <span>{{ formatearArea(datosFinales.area_escritura || datosFinales.area_terreno_escritura) }} m²</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.area_gis">
+                <div class="campo-grupo" v-if="datosFinales.area_gis || datosFinales.area_terreno_gis">
                   <label>Área Gráfica:</label>
-                  <span>{{ formatearArea(datosFinales.area_gis) }} m²</span>
+                  <span>{{ formatearArea(datosFinales.area_gis || datosFinales.area_terreno_gis) }} m²</span>
                 </div>
                 
                 <div class="campo-grupo" v-if="datosFinales.frente">
@@ -117,14 +129,14 @@
                   <span>{{ formatearArea(datosFinales.frente) }} m</span>
                 </div>
 
-                <div class="campo-grupo" v-if="datosFinales.nombre_parroquia">
+                <div class="campo-grupo" v-if="datosFinales.nombre_parroquia || datosFinales.parroquia">
                   <label>Parroquia:</label>
-                  <span>{{ datosFinales.nombre_parroquia }}</span>
+                  <span>{{ datosFinales.nombre_parroquia || datosFinales.parroquia }}</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.sector">
+                <div class="campo-grupo" v-if="datosFinales.sector || datosFinales.barrio">
                   <label>Barrio/Sector:</label>
-                  <span>{{ datosFinales.sector }}</span>
+                  <span>{{ datosFinales.sector || datosFinales.barrio }}</span>
                 </div>
               </div>
             </div>
@@ -155,48 +167,75 @@
           <div class="seccion compatibilidad-uso-suelo">
             <h3>COMPATIBILIDAD DE USO DE SUELO</h3>
             
-            <!-- INFORME DE COMPATIBILIDAD -->
-            <div class="subseccion informe-compatibilidad">
-              <h4>INFORME DE COMPATIBILIDAD</h4>
-              <div class="campo-grupo resultado-principal" v-if="datosFinales.resultado_informe">
-                <label>Resultado del Informe:</label>
-                <span class="resultado-texto">
-                  {{ datosFinales.resultado_informe }}
-                </span>
-              </div>
+            <!-- Estado de carga para datos de compatibilidad -->
+            <div v-if="compatibilidadLoading" class="loading-info">
+              <p>Cargando información de compatibilidad...</p>
             </div>
+            
+            <!-- Estado de error para datos de compatibilidad -->
+            <div v-else-if="compatibilidadError" class="error-info">
+              <p class="text-error">{{ compatibilidadError }}</p>
+            </div>
+            
+            <!-- Contenido cuando hay datos -->
+            <div v-else>
+              <!-- INFORME DE COMPATIBILIDAD -->
+              <div class="subseccion informe-compatibilidad">
+                <h4>INFORME DE COMPATIBILIDAD</h4>
+                <div class="campo-grupo resultado-principal">
+                  <label>Resultado del Informe:</label>
+                  <span class="resultado-texto" v-if="datosFinales.resultado_informe">
+                    {{ datosFinales.resultado_informe }}
+                  </span>
+                  <span class="resultado-texto" v-else>
+                    {{ datosFinales.compatibilidad || 'Pendiente de evaluación' }}
+                  </span>
+                </div>
+              </div>
 
-            <!-- DETALLES DE USO -->
-            <div class="subseccion detalles-uso">
-              <div class="campo-grupo" v-if="datosFinales.id_actividad || datosFinales.actividad">
-                <label>Actividad:</label>
-                <span>
-                  <span v-if="datosFinales.id_actividad" class="codigo-campo">[{{ datosFinales.id_actividad }}]</span>
-                  {{ datosFinales.actividad }}
-                </span>
-              </div>
-              
-              <div class="campo-grupo" v-if="datosFinales.id_suelo || datosFinales.uso_suelo">
-                <label>Uso de Suelo:</label>
-                <span>
-                  <span v-if="datosFinales.id_suelo" class="codigo-campo">[{{ datosFinales.id_suelo }}]</span>
-                  {{ datosFinales.uso_suelo }}
-                </span>
-              </div>
-              
-              <div class="campo-grupo" v-if="datosFinales.id_tipologia || datosFinales.tipologia">
-                <label>Tipología:</label>
-                <span>
-                  <span v-if="datosFinales.id_tipologia" class="codigo-campo">[{{ datosFinales.id_tipologia }}]</span>
-                  {{ datosFinales.tipologia }}
-                </span>
-              </div>
-              
-              <div class="campo-grupo" v-if="datosFinales.compatibilidad">
-                <label>Compatibilidad:</label>
-                <span :class="getCompatibilidadClass(datosFinales.compatibilidad)">
-                  {{ datosFinales.compatibilidad }}
-                </span>
+              <!-- DETALLES DE USO -->
+              <div class="subseccion detalles-uso">
+                <div class="campo-grupo" v-if="datosFinales.id_actividad || datosFinales.actividad">
+                  <label>Actividad:</label>
+                  <span>
+                    <span v-if="datosFinales.id_actividad" class="codigo-campo">[{{ datosFinales.id_actividad }}]</span>
+                    {{ datosFinales.actividad }}
+                  </span>
+                </div>
+                
+                <div class="campo-grupo" v-if="datosFinales.id_suelo || datosFinales.uso_suelo">
+                  <label>Uso de Suelo:</label>
+                  <span>
+                    <span v-if="datosFinales.id_suelo" class="codigo-campo">[{{ datosFinales.id_suelo }}]</span>
+                    {{ datosFinales.uso_suelo }}
+                  </span>
+                </div>
+                
+                <div class="campo-grupo" v-if="datosFinales.id_tipologia || datosFinales.tipologia">
+                  <label>Tipología:</label>
+                  <span>
+                    <span v-if="datosFinales.id_tipologia" class="codigo-campo">[{{ datosFinales.id_tipologia }}]</span>
+                    {{ datosFinales.tipologia }}
+                  </span>
+                </div>
+                
+                <div class="campo-grupo" v-if="datosFinales.compatibilidad">
+                  <label>Compatibilidad:</label>
+                  <span :class="getCompatibilidadClass(datosFinales.compatibilidad)">
+                    {{ datosFinales.compatibilidad }}
+                  </span>
+                </div>
+                
+                <!-- Información adicional de la zonificación -->
+                <div class="campo-grupo" v-if="datosCompatibilidad.codigo">
+                  <label>Código Zonificación:</label>
+                  <span>{{ datosCompatibilidad.codigo }}</span>
+                </div>
+                
+                <div class="campo-grupo" v-if="datosCompatibilidad.zona">
+                  <label>Zona:</label>
+                  <span>{{ datosCompatibilidad.zona }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -247,61 +286,262 @@
 import axios from 'axios'
 import QRCode from 'qrcode'
 import API_BASE_URL from '@/config/apiConfig';
+import datosTitularService from '@/services/datosTitularService';
 
 export default {
   name: 'ReporteIcus',
   props: {
     datosIcus: { type: Object, default: () => ({}) },
-    icusId: { type: [String, Number], default: 15 }
+    icusId: { type: [String, Number], default: null },
+    claveCatastral: { type: String, default: '' },
+    id: { type: [String, Number], default: null }
   },
   data() {
-    return { datosIcusLocal: {}, cargando: false, error: null, qrCodeDataUrl: null }
+    return { 
+      datosIcusLocal: {}, 
+      datosTitular: {}, 
+      datosCompatibilidad: {},
+      cargando: false, 
+      error: null, 
+      titularLoading: false,
+      titularError: null,
+      compatibilidadLoading: false,
+      compatibilidadError: null,
+      qrCodeDataUrl: null 
+    }
   },
   computed: {
     fechaReporte() {
       if (this.datosFinales.fecha) return this.formatearFecha(this.datosFinales.fecha)
-      return this.formatearFecha('2024-08-13')
+      return this.formatearFecha(new Date())
     },
     datosFinales() {
-      return Object.keys(this.datosIcus).length > 0 ? this.datosIcus : this.datosIcusLocal
+      // Combinar todos los datos, con prioridad para datosIcus (props), luego datosTitular, y finalmente datosIcusLocal
+      const datos = {
+        ...this.datosIcusLocal,
+        ...this.datosTitular,
+        ...this.datosCompatibilidad,
+        ...this.datosIcus
+      };
+      
+      // Si tenemos datos de compatibilidad, añadir los campos específicos
+      if (this.datosCompatibilidad && this.datosCompatibilidad.actividad) {
+        datos.id_actividad = this.datosCompatibilidad.actividad.codigo;
+        datos.actividad = this.datosCompatibilidad.actividad.nombre;
+        datos.id_tipologia = this.datosCompatibilidad.tipologia.codigo;
+        datos.tipologia = this.datosCompatibilidad.tipologia.nombre;
+        
+        // Mapear el tipo de compatibilidad a un texto descriptivo
+        if (this.datosCompatibilidad.compatibilidad === 1) {
+          datos.compatibilidad = 'Compatible';
+        } else if (this.datosCompatibilidad.compatibilidad === 2) {
+          datos.compatibilidad = 'Condicionado';
+        } else if (this.datosCompatibilidad.compatibilidad === 0) {
+          datos.compatibilidad = 'No Compatible';
+        }
+        
+        // Si tenemos datos de uso de suelo desde las regulaciones
+        if (this.datosCompatibilidad.usoSuelo) {
+          datos.id_suelo = this.datosCompatibilidad.usoSuelo.codigo;
+          datos.uso_suelo = this.datosCompatibilidad.usoSuelo.nombre;
+        }
+      }
+      
+      return datos;
     },
     textoQR() {
-      const datos = this.datosFinales
-      const fecha = this.fechaReporte.replace(/\s+/g, '-')
-      return ['ICUS', fecha, datos.id || 'S/N', datos.clave_catastral || 'Sin-clave', (datos.propietario || 'Sin-propietario').substring(0, 50)].join('|')
+      const datos = this.datosFinales;
+      const fecha = this.fechaReporte.replace(/\s+/g, '-');
+      return ['ICUS', fecha, datos.id || 'S/N', datos.clave_catastral || 'Sin-clave', (datos.propietario || 'Sin-propietario').substring(0, 50)].join('|');
     }
   },
   mounted() {
-    if (this.icusId && !Object.keys(this.datosIcus).length) this.cargarDatosIcus(this.icusId)
-    this.$nextTick(() => { this.generarQR() })
+    // Intentar obtener el ID de ICUS de distintas fuentes
+    const id = this.id || this.icusId || this.getIcusIdFromRoute();
+    
+    // Si tenemos un ID y no tenemos datos precargados, cargar los datos
+    if (id && !Object.keys(this.datosIcus).length) {
+      this.cargarDatosIcus(id);
+    }
+    
+    // Si tenemos una clave catastral, cargar datos adicionales
+    if (this.claveCatastral) {
+      this.cargarDatosPorClaveCatastral(this.claveCatastral);
+    } else if (this.datosIcus && this.datosIcus.clave_catastral) {
+      // Si no tenemos clave catastral como prop pero está en los datos, usarla
+      this.cargarDatosPorClaveCatastral(this.datosIcus.clave_catastral);
+    }
+    
+    this.$nextTick(() => { 
+      this.generarQR();
+    });
   },
   watch: {
-    icusId(newId) { if (newId && !Object.keys(this.datosIcus).length) this.cargarDatosIcus(newId) },
-    textoQR() { this.generarQR() }
+    icusId(newId) { 
+      if (newId && !Object.keys(this.datosIcus).length) {
+        this.cargarDatosIcus(newId);
+      }
+    },
+    id(newId) {
+      if (newId && !Object.keys(this.datosIcus).length) {
+        this.cargarDatosIcus(newId);
+      }
+    },
+    claveCatastral(newClave) {
+      if (newClave) {
+        this.cargarDatosPorClaveCatastral(newClave);
+      }
+    },
+    textoQR() { 
+      this.generarQR();
+    },
+    '$route'() {
+      const id = this.id || this.icusId || this.getIcusIdFromRoute();
+      if (id && !Object.keys(this.datosIcus).length) {
+        this.cargarDatosIcus(id);
+      }
+    }
   },
   methods: {
+    // Función para cargar datos del ICUS por ID
     async cargarDatosIcus(id) {
-      this.cargando = true; this.error = null
+      this.cargando = true; 
+      this.error = null;
+      
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus/${id}`)
-        this.datosIcusLocal = data
-        this.$nextTick(() => this.generarQR())
+        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus/${id}`);
+        this.datosIcusLocal = data;
+        
+        // Si tenemos clave catastral en la respuesta, cargar datos adicionales
+        if (data && data.clave_catastral) {
+          await this.cargarDatosPorClaveCatastral(data.clave_catastral);
+        }
+        
+        this.$nextTick(() => this.generarQR());
       } catch (error) {
-        this.error = 'Error al cargar los datos del ICUS'
+        this.error = 'Error al cargar los datos del ICUS';
         if (error.response) {
-          if (error.response.status === 404) this.error = 'ICUS no encontrado'
-          else if (error.response.status === 500) this.error = 'Error interno del servidor'
-        } else if (error.request) this.error = 'No se pudo conectar con el servidor'
-      } finally { this.cargando = false }
+          if (error.response.status === 404) this.error = 'ICUS no encontrado';
+          else if (error.response.status === 500) this.error = 'Error interno del servidor';
+        } else if (error.request) this.error = 'No se pudo conectar con el servidor';
+      } finally { 
+        this.cargando = false;
+      }
+    },
+    
+    // Función para cargar datos de titular y regulaciones por clave catastral
+    async cargarDatosPorClaveCatastral(claveCatastral) {
+      if (!claveCatastral) return;
+      
+      try {
+        // Cargar datos del titular
+        await this.cargarDatosTitular(claveCatastral);
+        
+        // Cargar datos de compatibilidad de uso de suelo
+        await this.cargarDatosCompatibilidad(claveCatastral);
+      } catch (error) {
+        console.error('Error al cargar datos por clave catastral:', error);
+      }
+    },
+    
+    // Función para cargar datos del titular
+    async cargarDatosTitular(claveCatastral) {
+      this.titularLoading = true;
+      this.titularError = null;
+      
+      try {
+        const response = await datosTitularService.busquedaAvanzada({
+          claveCatastral: claveCatastral,
+          nombres: '',
+          numeroDocumento: ''
+        });
+        
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          this.datosTitular = response.data.data[0];
+          console.log('Datos del titular cargados por clave catastral:', this.datosTitular);
+        } else {
+          console.warn('No se encontraron datos para la clave catastral:', claveCatastral);
+          this.titularError = `No se encontraron datos para la clave catastral: ${claveCatastral}`;
+        }
+      } catch (err) {
+        console.error('Error al cargar datos del titular:', err);
+        this.titularError = err.message || 'Error al conectar con el servidor';
+      } finally {
+        this.titularLoading = false;
+      }
+    },
+    
+    // Función para cargar datos de compatibilidad de uso de suelo
+    async cargarDatosCompatibilidad(claveCatastral) {
+      this.compatibilidadLoading = true;
+      this.compatibilidadError = null;
+      
+      try {
+        console.log('Consultando datos de compatibilidad PUGS para:', claveCatastral);
+        
+        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
+        const response = await axios.get(`${API_URL}/datos-pugs/${claveCatastral}`);
+        
+        if (response.data && response.data.success && response.data.data.length > 0) {
+          console.log('Datos PUGS recibidos:', response.data.data);
+          
+          // Obtenemos el primer registro
+          const datosPugs = response.data.data[0];
+          
+          // Mapear los datos a las propiedades de compatibilidad
+          this.datosCompatibilidad = {
+            // Información de uso de suelo
+            usoSuelo: {
+              codigo: datosPugs.usc || 'No especificado',
+              nombre: datosPugs.usn || 'No especificado'
+            },
+            // Información de actividad desde tabla reg_actividad
+            actividad: {
+              codigo: datosPugs.act_id || 'No especificado',
+              nombre: datosPugs.act_nombre || 'No especificado'
+            },
+            // Información de tipología desde tabla reg_tipologia
+            tipologia: {
+              codigo: datosPugs.tip_id || 'No especificado',
+              nombre: datosPugs.tip_nombre || 'No especificado'
+            },
+            // Tipo de compatibilidad desde tabla reg_compatibilidad
+            compatibilidad: datosPugs.tipo || 0,
+            
+            // Otros datos relevantes de PUGS que puedan ser útiles
+            codigo: datosPugs.red || 'No especificado',
+            zona: datosPugs.zon || 'No especificado'
+          };
+          
+          console.log('Datos de compatibilidad mapeados:', this.datosCompatibilidad);
+        } else {
+          console.warn('No se encontraron datos PUGS para la clave catastral:', claveCatastral);
+          this.compatibilidadError = 'No se encontraron datos de compatibilidad para este predio';
+        }
+      } catch (err) {
+        console.error('Error al cargar datos PUGS:', err);
+        this.compatibilidadError = 'Error al cargar datos de compatibilidad';
+      } finally {
+        this.compatibilidadLoading = false;
+      }
     },
 
+    // Función para cargar lista de ICUS
     async cargarListaIcus(page = 1, limit = 10, search = '') {
-      this.cargando = true; this.error = null
+      this.cargando = true; 
+      this.error = null;
+      
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus`, { params: { page, limit, search } })
-        return data
-      } catch (e) { this.error = 'Error al cargar la lista de ICUS'; throw e }
-      finally { this.cargando = false }
+        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus`, { 
+          params: { page, limit, search } 
+        });
+        return data;
+      } catch (e) { 
+        this.error = 'Error al cargar la lista de ICUS'; 
+        throw e;
+      } finally { 
+        this.cargando = false;
+      }
     },
 
     formatearArea(v){ if(!v) return '-'; return Number(v).toFixed(2) },
@@ -322,6 +562,33 @@ export default {
           this.qrCodeDataUrl = await QRCode.toDataURL(this.textoQR,{ width:96, margin:0 })
         }
       }catch(e){ this.qrCodeDataUrl=null }
+    },
+    
+    // Método para obtener el ID de ICUS desde la ruta
+    getIcusIdFromRoute() {
+      // Verificar si hay ID en los parámetros de ruta
+      if (this.$route && this.$route.params && this.$route.params.id) {
+        return this.$route.params.id;
+      }
+      
+      // Verificar si hay un ID en el query de la URL
+      if (this.$route && this.$route.query && this.$route.query.id) {
+        return this.$route.query.id;
+      }
+      
+      // Verificar si hay datos preserializados en el query
+      if (this.$route && this.$route.query && this.$route.query.datosIcus) {
+        try {
+          const datosIcus = JSON.parse(this.$route.query.datosIcus);
+          if (datosIcus && datosIcus.id) {
+            return datosIcus.id;
+          }
+        } catch (error) {
+          console.error('Error al parsear los datos de ICUS:', error);
+        }
+      }
+      
+      return null;
     }
   }
 }
@@ -861,5 +1128,32 @@ h3 {
 }
 .error-container .retry-button:hover { 
     background: #2980b9; 
+}
+
+/* Estados de carga y error para secciones */
+.loading-info {
+  padding: 10px;
+  text-align: center;
+  color: #1e40af;
+  background-color: #f0f7ff;
+  border-radius: 4px;
+  border: 1px solid #e0e7ff;
+  margin-bottom: 8px;
+}
+
+.error-info {
+  padding: 10px;
+  text-align: center;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-radius: 4px;
+  border: 1px solid #fee2e2;
+  margin-bottom: 8px;
+}
+
+.text-error {
+  color: #dc2626;
+  font-size: 0.9em;
+  font-style: italic;
 }
 </style>

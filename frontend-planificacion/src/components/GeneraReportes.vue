@@ -118,7 +118,7 @@ function onRegulacionMunicipal() {
 }
 
 function onCertificadoUsos() {
-  alert('Generar Certificado de Usos')
-  // Aquí puedes navegar a otro componente/ruta si deseas
+  // Navegar a la búsqueda de ICUS
+  router.push('/busqueda-icus')
 }
 </script>
