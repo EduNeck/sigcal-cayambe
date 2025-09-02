@@ -11,7 +11,7 @@ const ActividadModel = {
   async obtenerActividades() {
     try {
       const query = `
-        SELECT id_actividad, tipo, descripcion
+        SELECT id_actividad, id_tipologia, descripcion
         FROM planificacion.actividad
         ORDER BY id_actividad
       `;
@@ -32,7 +32,7 @@ const ActividadModel = {
   async obtenerActividadPorId(id) {
     try {
       const query = `
-        SELECT id_actividad, tipo, descripcion
+        SELECT id_actividad, id_tipologia, descripcion
         FROM planificacion.actividad
         WHERE id_actividad = $1
       `;
@@ -56,12 +56,12 @@ const ActividadModel = {
     try {
       await client.query('BEGIN');
       
-      const { tipo, descripcion } = actividadData;
+      const { id_tipologia, descripcion } = actividadData;
       
       const query = `
-        INSERT INTO planificacion.actividad (tipo, descripcion)
+        INSERT INTO planificacion.actividad (id_tipologia, descripcion)
         VALUES ($1, $2)
-        RETURNING id_actividad, tipo, descripcion
+        RETURNING id_actividad, id_tipologia, descripcion
       `;
       
       const result = await client.query(query, [tipo, descripcion]);
@@ -90,13 +90,13 @@ const ActividadModel = {
     try {
       await client.query('BEGIN');
       
-      const { tipo, descripcion } = actividadData;
+      const { id_tipologia, descripcion } = actividadData;
       
       const query = `
         UPDATE planificacion.actividad
-        SET tipo = $1, descripcion = $2
+        SET id_tipologia = $1, descripcion = $2
         WHERE id_actividad = $3
-        RETURNING id_actividad, tipo, descripcion
+        RETURNING id_actividad, id_tipologia, descripcion
       `;
       
       const result = await client.query(query, [tipo, descripcion, id]);

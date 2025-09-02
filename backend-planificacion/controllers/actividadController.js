@@ -73,18 +73,18 @@ const actividadController = {
    */
   async crearActividad(req, res) {
     try {
-      const { tipo, descripcion } = req.body;
+      const { id_tipologia, descripcion } = req.body;
       
       // Validar campos requeridos
-      if (!tipo) {
+      if (!id_tipologia) {
         return res.status(400).json({
           success: false,
-          message: 'El tipo es requerido'
+          message: 'El id_tipologia es requerido'
         });
       }
 
       const nuevaActividad = await ActividadModel.crearActividad({
-        tipo,
+        id_tipologia,
         descripcion: descripcion || null
       });
 
@@ -111,7 +111,7 @@ const actividadController = {
   async actualizarActividad(req, res) {
     try {
       const { id } = req.params;
-      const { tipo, descripcion } = req.body;
+      const { id_tipologia, descripcion } = req.body;
       
       if (!id || isNaN(parseInt(id))) {
         return res.status(400).json({
@@ -121,10 +121,10 @@ const actividadController = {
       }
       
       // Validar campos requeridos
-      if (!tipo) {
+      if (!id_tipologia) {
         return res.status(400).json({
           success: false,
-          message: 'El tipo es requerido'
+          message: 'El id_tipologia es requerido'
         });
       }
       
@@ -142,7 +142,7 @@ const actividadController = {
       
       // Actualizar la actividad
       const actividadActualizada = await ActividadModel.actualizarActividad(idActividad, {
-        tipo,
+        id_tipologia,
         descripcion: descripcion || null
       });
 

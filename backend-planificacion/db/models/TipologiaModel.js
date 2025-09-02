@@ -11,9 +11,9 @@ const TipologiaModel = {
   async obtenerTipologias() {
     try {
       const query = `
-        SELECT id, tipo, nombre, descriptacion, nivel
+        SELECT id_tipologia, tipo, nombre, descriptacion, nivel
         FROM planificacion.tipologia
-        ORDER BY id
+        ORDER BY id_tipologia
       `;
       
       const result = await db.query(query);
@@ -29,12 +29,12 @@ const TipologiaModel = {
    * @param {Number} id - ID de la tipología
    * @returns {Promise<Object>} Datos de la tipología
    */
-  async obtenerTipologiaPorId(id) {
+  async obtenerTipologiaPorId(id_tipologia) {
     try {
       const query = `
-        SELECT id, tipo, nombre, descriptacion, nivel
+        SELECT id_tipologia, tipo, nombre, descriptacion, nivel
         FROM planificacion.tipologia
-        WHERE id = $1
+        WHERE id_tipologia = $1
       `;
       
       const result = await db.query(query, [id]);
@@ -61,7 +61,7 @@ const TipologiaModel = {
       const query = `
         INSERT INTO planificacion.tipologia (tipo, nombre, descriptacion, nivel)
         VALUES ($1, $2, $3, $4)
-        RETURNING id, tipo, nombre, descriptacion, nivel
+        RETURNING id_tipologia, tipo, nombre, descriptacion, nivel
       `;
       
       const result = await client.query(query, [tipo, nombre, descriptacion, nivel]);
@@ -84,7 +84,7 @@ const TipologiaModel = {
    * @param {Object} tipologiaData - Nuevos datos de la tipología
    * @returns {Promise<Object>} Tipología actualizada
    */
-  async actualizarTipologia(id, tipologiaData) {
+  async actualizarTipologia(id_tipologia, tipologiaData) {
     const client = await db.pool.connect();
     
     try {
@@ -95,14 +95,14 @@ const TipologiaModel = {
       const query = `
         UPDATE planificacion.tipologia
         SET tipo = $1, nombre = $2, descriptacion = $3, nivel = $4
-        WHERE id = $5
-        RETURNING id, tipo, nombre, descriptacion, nivel
+        WHERE id_tipologia = $5
+        RETURNING id_tipologia, tipo, nombre, descriptacion, nivel
       `;
       
-      const result = await client.query(query, [tipo, nombre, descriptacion, nivel, id]);
+      const result = await client.query(query, [tipo, nombre, descriptacion, nivel, id_tipologia]);
       
       if (result.rowCount === 0) {
-        throw new Error(`No se encontró la tipología con ID ${id}`);
+        throw new Error(`No se encontró la tipología con ID ${id_tipologia}`);
       }
       
       await client.query('COMMIT');
@@ -122,7 +122,7 @@ const TipologiaModel = {
    * @param {Number} id - ID de la tipología a eliminar
    * @returns {Promise<Boolean>} true si se eliminó correctamente
    */
-  async eliminarTipologia(id) {
+  async eliminarTipologia(id_tipologia) {
     const client = await db.pool.connect();
     
     try {
@@ -130,13 +130,13 @@ const TipologiaModel = {
       
       const query = `
         DELETE FROM planificacion.tipologia
-        WHERE id = $1
+        WHERE id_tipologia = $1
       `;
       
-      const result = await client.query(query, [id]);
+      const result = await client.query(query, [id_tipologia]);
       
       if (result.rowCount === 0) {
-        throw new Error(`No se encontró la tipología con ID ${id}`);
+        throw new Error(`No se encontró la tipología con ID ${id_tipologia}`);
       }
       
       await client.query('COMMIT');
