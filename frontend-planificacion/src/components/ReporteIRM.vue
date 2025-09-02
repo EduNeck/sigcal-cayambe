@@ -215,7 +215,7 @@
                           <td class="text-left">{{ reg.alturaMaxima }} m</td>
                         </tr>
                         <tr>
-                          <td class="text-left font-weight-bold">Número de pisos:</td>
+                          <td class="text-left font-weight-bold">Número pisos:</td>
                           <td class="text-left">{{ reg.numeroPisos }}</td>
                         </tr>
                       </tbody>
