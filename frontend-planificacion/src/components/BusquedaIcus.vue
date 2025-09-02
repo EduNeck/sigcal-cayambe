@@ -80,7 +80,7 @@
                       outlined
                       dense
                       clearable
-                      @change="buscarTipologia"
+                      @update:model-value="buscarTipologia"
                       :loading="loadingActividades"
                       no-data-text="No hay actividades disponibles"
                       :disabled="loadingActividades"
@@ -101,26 +101,6 @@
                 <!-- Tipología debajo de Actividad -->
                 <v-row v-if="filtros.id_actividad">
                   <v-col cols="12">
-                    <!-- Panel de depuración -->
-                    <v-card outlined class="pa-3 mb-2 debug-card" style="background-color: #fffde7; border: 1px dashed #ffca28;">
-                      <v-card-title class="text-subtitle-1 pa-0 pb-2 d-flex align-center">
-                        <v-icon color="amber darken-2" class="mr-1">mdi-bug-outline</v-icon>
-                        INFORMACIÓN DE DEPURACIÓN
-                      </v-card-title>
-                      <p class="mb-1 text-caption">
-                        <strong>Estado de selección:</strong><br>
-                        - Actividad seleccionada: {{ filtros.id_actividad ? '✅ SÍ' : '❌ NO' }}<br>
-                        - ID de actividad: {{ filtros.id_actividad ? filtros.id_actividad.id_actividad : 'ninguno' }}<br>
-                        - ID de tipología en actividad: {{ filtros.id_actividad && filtros.id_actividad.id_tipologia ? filtros.id_actividad.id_tipologia : 'ninguno' }}<br>
-                        - Descripción: {{ filtros.id_actividad ? filtros.id_actividad.descripcion : 'ninguna' }}<br>
-                        <br>
-                        <strong>Estado de tipología:</strong><br>
-                        - Cargando tipología: {{ loadingTipologia ? '⏳ SÍ' : '✅ NO' }}<br>
-                        - Tipología seleccionada: {{ tipologiaSeleccionada ? '✅ SÍ' : '❌ NO' }}<br>
-                        - Datos de tipología: {{ tipologiaSeleccionada ? JSON.stringify(tipologiaSeleccionada) : 'ninguno' }}
-                      </p>
-                    </v-card>
-
                     <v-card outlined class="pa-3 mt-2" v-if="tipologiaSeleccionada">
                       <v-card-title class="text-subtitle-1 pa-0 pb-2">
                         <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
@@ -281,7 +261,6 @@
           <v-tabs v-model="activeTab" grow>
             <v-tab value="general">Información General</v-tab>
             <v-tab value="tecnicos">Datos Técnicos</v-tab>
-            <v-tab value="servicios">Servicios</v-tab>
           </v-tabs>
           
           <v-window v-model="activeTab">
@@ -320,45 +299,6 @@
                     <v-col cols="6">
                       <p><strong>Tiene Construcción:</strong> {{ icusSeleccionado.tiene_construccion ? 'Sí' : 'No' }}</p>
                       <p><strong>Área de Construcción:</strong> {{ icusSeleccionado.area_construccion ? Number(icusSeleccionado.area_construccion).toFixed(2) + ' m²' : 'No registrada' }}</p>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
-            </v-window-item>
-            
-            <!-- Tab 3: Servicios -->
-            <v-window-item value="servicios">
-              <v-card flat>
-                <v-card-text>
-                  <v-row>
-                    <v-col cols="6">
-                      <v-list-item>
-                        <template v-slot:prepend>
-                          <v-icon :color="icusSeleccionado.agua ? 'success' : 'error'">
-                            {{ icusSeleccionado.agua ? 'mdi-check-circle' : 'mdi-close-circle' }}
-                          </v-icon>
-                        </template>
-                        <v-list-item-title>Agua Potable</v-list-item-title>
-                      </v-list-item>
-                      
-                      <v-list-item>
-                        <template v-slot:prepend>
-                          <v-icon :color="icusSeleccionado.energia_electrica ? 'success' : 'error'">
-                            {{ icusSeleccionado.energia_electrica ? 'mdi-check-circle' : 'mdi-close-circle' }}
-                          </v-icon>
-                        </template>
-                        <v-list-item-title>Energía Eléctrica</v-list-item-title>
-                      </v-list-item>
-                    </v-col>
-                    <v-col cols="6">
-                      <v-list-item>
-                        <template v-slot:prepend>
-                          <v-icon :color="icusSeleccionado.alcantarillado ? 'success' : 'error'">
-                            {{ icusSeleccionado.alcantarillado ? 'mdi-check-circle' : 'mdi-close-circle' }}
-                          </v-icon>
-                        </template>
-                        <v-list-item-title>Alcantarillado</v-list-item-title>
-                      </v-list-item>
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -538,42 +478,6 @@ export default {
       }
     };
     
-    // Función para buscar ICUS por criterios
-    const buscarICUSPorCriterios = async (criteriosAdicionales) => {
-      try {
-        // Extraer el ID de actividad del objeto si está presente
-        const params = {
-          ...criteriosAdicionales,
-          id_actividad: filtros.id_actividad ? filtros.id_actividad.id_actividad : undefined
-        };
-        
-        console.log("Buscando ICUS con parámetros:", params);
-        console.log("ID actividad seleccionada:", filtros.id_actividad ? filtros.id_actividad.id_actividad : 'ninguno');
-        console.log("URL de API:", API_BASE_URL);
-        
-        const response = await axios.get(`${API_BASE_URL}/icus/buscar`, { params });
-        
-        console.log("Respuesta API:", response);
-        
-        if (response.data && response.data.success !== false) {
-          resultados.value = response.data.data || [];
-          
-          if (resultados.value.length === 0) {
-            showSnackbar('No se encontraron ICUS con los criterios especificados', 'info');
-          } else {
-            showSnackbar(`Se encontraron ${resultados.value.length} registros`, 'success');
-          }
-        } else {
-          resultados.value = [];
-          showSnackbar('No se encontraron ICUS con los criterios especificados', 'info');
-        }
-      } catch (error) {
-        console.error('Error al buscar ICUS:', error);
-        showSnackbar(`Error al buscar información de ICUS: ${error.response?.status === 404 ? 'Endpoint no encontrado' : error.message}`, 'error', 5000);
-        resultados.value = [];
-      }
-    };
-    
     // Método para limpiar filtros
     const limpiarFiltros = () => {
       filtros.claveCatastral = '';
@@ -687,10 +591,7 @@ export default {
     
     // Buscar tipología cuando cambia la actividad seleccionada
     const buscarTipologia = async () => {
-      console.log('⭐ buscarTipologia llamado con:', filtros.id_actividad);
-      
       if (!filtros.id_actividad) {
-        console.log('❌ No hay actividad seleccionada, limpiando valores');
         actividadSeleccionada.value = null;
         tipologiaSeleccionada.value = null;
         return;
@@ -700,45 +601,25 @@ export default {
       
       // Como ahora estamos usando return-object, la actividad seleccionada es el objeto completo
       actividadSeleccionada.value = filtros.id_actividad;
-      console.log('👉 Actividad seleccionada:', actividadSeleccionada.value);
-      console.log('👉 Datos completos de actividad:', JSON.stringify(actividadSeleccionada.value));
       
       try {
         if (actividadSeleccionada.value && actividadSeleccionada.value.id_tipologia) {
-          console.log('✅ ID Tipología encontrado:', actividadSeleccionada.value.id_tipologia);
-          
-          // Usar el servicio para obtener la tipología asociada a esta actividad
-          console.log('🔍 Buscando tipología con ID:', actividadSeleccionada.value.id_tipologia);
-          console.log('🔎 VALOR EXACTO DEL ID_TIPOLOGIA:', JSON.stringify(actividadSeleccionada.value.id_tipologia));
-          console.log('🔎 TIPO DE DATO:', typeof actividadSeleccionada.value.id_tipologia);
-          
           // Asegurarse de que el ID sea un string limpio
           const idTipologia = String(actividadSeleccionada.value.id_tipologia).trim();
-          console.log('🔍 ID tipología limpio:', idTipologia);
           
-          // Probar con un bloque try/catch específico para mejor manejo de errores
           try {
-            console.log(`🔄 Llamando al servicio con ID tipología: '${idTipologia}'`);
             const response = await tipologiaService.obtenerTipologiaPorId(idTipologia);
-            console.log('📥 Respuesta completa del servicio:', response);
             
             if (response.data && response.data.success) {
-              console.log('✅ Tipología encontrada:', response.data.data);
               tipologiaSeleccionada.value = response.data.data;
               showSnackbar(`Tipología '${response.data.data.nombre}' encontrada`, 'success');
             } else {
-              console.log('⚠️ La respuesta no contiene datos de tipología:', response.data);
               tipologiaSeleccionada.value = null;
               showSnackbar('No se encontró la tipología correspondiente', 'warning');
             }
           } catch (serviceError) {
-            console.error('❌ Error específico del servicio de tipología:', serviceError);
-            console.log('❌ Status del error:', serviceError.response?.status);
-            console.log('❌ Mensaje del error:', serviceError.response?.data || serviceError.message);
-            
             // Si es un error 404, podemos intentar una consulta alternativa
             if (serviceError.response?.status === 404) {
-              console.log('🔍 Intentando consulta alternativa para tipología');
               showSnackbar('Tipología no encontrada, realizando búsqueda alternativa', 'info');
               // Aquí podríamos implementar una lógica alternativa si es necesario
             } else {
@@ -748,19 +629,14 @@ export default {
             tipologiaSeleccionada.value = null;
           }
         } else {
-          console.log('❌ No se encontró id_tipologia en el objeto de actividad');
           tipologiaSeleccionada.value = null;
           showSnackbar('La actividad no tiene tipología asociada', 'info');
         }
       } catch (error) {
-        console.error('❌ Error general al cargar tipología:', error);
-        console.log('❌ Detalles del error:', error.response || error.message || error);
         showSnackbar('Error al procesar la actividad seleccionada', 'error');
         tipologiaSeleccionada.value = null;
       } finally {
         loadingTipologia.value = false;
-        console.log('🏁 Estado final - Actividad:', actividadSeleccionada.value ? actividadSeleccionada.value.id_actividad : 'ninguna');
-        console.log('🏁 Estado final - Tipología:', tipologiaSeleccionada.value ? tipologiaSeleccionada.value.id_tipologia : 'ninguna');
       }
     };
     
