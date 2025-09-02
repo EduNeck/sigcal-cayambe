@@ -11,6 +11,7 @@ const irmController = {
         tipo,
         tipo_predio,
         id_ciudadano,
+        numero_documento,
         clave_catastral,
         clave_anterior,
         derechos_acciones,
@@ -26,10 +27,8 @@ const irmController = {
         energia_electrica,
         alcantarillado,
         otros,
-        pro_tipo,
-        pro_nombre,
-        pro_observaciones,
-        geometria,
+        usuario,
+        fecha_reporte,
         regulaciones  // Array de objetos de regulaciones
       } = req.body;
 
@@ -39,6 +38,7 @@ const irmController = {
         tipo,
         tipo_predio,
         id_ciudadano,
+        numero_documento,
         clave_catastral,
         clave_anterior,
         derechos_acciones,
@@ -54,14 +54,12 @@ const irmController = {
         energia_electrica,
         alcantarillado,
         otros,
-        pro_tipo,
-        pro_nombre,
-        pro_observaciones,
-        geometria
+        usuario,
+        fecha_reporte
       };
 
-      const result = await IrmModel.crearIRM(irmData);
-      const id_certificado = result.id_certificado;
+      const result = await IrmModel.insertaIrm(irmData);
+      const id_certificado = result.id_irm;
 
       // Insertar las regulaciones si existen usando el modelo de detalleIrm
       if (regulaciones && regulaciones.length > 0) {
@@ -106,7 +104,7 @@ const irmController = {
       const { id } = req.params;
       
       // Obtener el IRM principal usando el modelo
-      const irm = await IrmModel.obtenerIRMPorId(id);
+      const irm = await IrmModel.recuperaIrmById(id);
       
       if (!irm) {
         return res.status(404).json({
@@ -158,7 +156,7 @@ const irmController = {
         fecha_hasta 
       };
       
-      const result = await IrmModel.buscarIRMs(filters, page, limit);
+      const result = await IrmModel.buscaIrms(filters, page, limit);
       
       res.json({
         success: true,
@@ -210,10 +208,6 @@ const irmController = {
         energia_electrica,
         alcantarillado,
         otros,
-        pro_tipo,
-        pro_nombre,
-        pro_observaciones,
-        geometria,
         regulaciones
       } = req.body;
 
@@ -251,7 +245,7 @@ const irmController = {
         }
       });
 
-      const updatedIRM = await IrmModel.actualizarIRM(id, irmData);
+      const updatedIRM = await IrmModel.actualizaIrm(id, irmData);
 
       // Actualizar regulaciones si se proporcionaron
       if (regulaciones && regulaciones.length > 0) {
@@ -313,7 +307,7 @@ const irmController = {
       await DetalleIrmModel.eliminarDetallesPorIdIRM(id);
       
       // Luego eliminar el IRM principal
-      await IrmModel.eliminarIRM(id);
+      await IrmModel.eliminaIrm(id);
       
       res.json({
         success: true,

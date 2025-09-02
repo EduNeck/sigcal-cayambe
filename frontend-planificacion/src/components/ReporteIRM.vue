@@ -615,8 +615,11 @@ export default {
     
     // Función para guardar el IRM en la base de datos
     const guardarIRM = async () => {
-      // Si ya está guardado, no lo guardamos de nuevo
-      if (certificadoGuardado.value) return idCertificado.value;
+      // Si ya está guardado (en esta sesión), no lo guardamos de nuevo
+      if (certificadoGuardado.value) {
+        console.log('IRM ya guardado en esta sesión, reutilizando ID:', idCertificado.value);
+        return idCertificado.value;
+      }
       
       // Si hay una operación de guardado en curso, esperamos y devolvemos el resultado
       if (guardadoEnProgreso.value) {
@@ -633,6 +636,13 @@ export default {
           console.log('Guardado completado por otra operación, ID:', idCertificado.value);
           return idCertificado.value;
         }
+      }
+      
+      // Verificamos si la clave catastral existe y si es una clave válida
+      if (!datosTitular.value?.clave_catastral || datosTitular.value?.clave_catastral.trim() === '') {
+        console.warn('No se puede guardar un IRM sin clave catastral válida');
+        mostrarSnackbar('No se puede guardar: la clave catastral no es válida', 'warning');
+        return null;
       }
       
       try {
