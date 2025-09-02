@@ -34,10 +34,9 @@ class DatosTitularModel {
       
       const query = `
         SELECT 
-          id, numero_documento, nombres, clave_catastral, clave_catastral_anterior, 
-          id_regimen_propiedad, regimen, derechos, area_construida, area_escritura, 
-          area_grafica, frente, tiene_construccion, parroquia, sector, 
-          representante, id_tipo_predio, tipo_predio
+          id, numero_documento, nombres, id_ciudadano, clave_catastral, clave_catastral_anterior, 
+          id_regimen_propiedad, regimen, derechos, area_construida, area_escritura, area_grafica, frente, 
+          tiene_construccion, parroquia, sector, representante, id_tipo_predio, tipo_predio, agua, energia_electrica, alcantarillado, poligono
         FROM planificacion.view_datos_titular 
         ${whereClause}
         ORDER BY id DESC`;

@@ -273,9 +273,9 @@
         <!-- SERVICIOS BÁSICOS -->
         <section class="seccion">
           <h3>COBERTURA DE SERVICIOS BÁSICOS</h3>
-          <p><strong>Abastecimiento de agua:</strong> No tiene</p>
-          <p><strong>Alcantarillado:</strong> No tiene</p>
-          <p><strong>Energía eléctrica:</strong> No tiene</p>
+          <p><strong>Abastecimiento de agua:</strong> {{ datosTitular.agua || 'No tiene' }}</p>
+          <p><strong>Alcantarillado:</strong> {{ datosTitular.alcantarillado || 'No tiene' }}</p>
+          <p><strong>Energía eléctrica:</strong> {{ datosTitular.energia_electrica || 'No tiene' }}</p>
           <p><strong>Otros:</strong> Transporte público</p>
         </section>
 
@@ -668,13 +668,12 @@ export default {
           parroquia: datosTitular.value?.parroquia || '',
           barrio_sector: datosTitular.value?.sector || '',
           notas_irm: 'PREDIO SIN ACCESO CATASTRADO',
-          agua: 'No tiene',
-          energia_electrica: 'No tiene',
-          alcantarillado: 'No tiene',
+          agua: datosTitular.value?.agua || 'S/D',
+          energia_electrica: datosTitular.value?.energia_electrica || 'S/D',
+          alcantarillado: datosTitular.value?.alcantarillado || 'S/D',
           otros: 'Transporte público',
-          pro_tipo: numeroIRM.value,
-          pro_nombre: user?.nombre || 'Usuario del sistema',
-          pro_observaciones: '',
+          usuario: user?.nombre || 'Usuario del sistema',
+          fecha_reporte: format(new Date(), "yyyy-MM-dd HH:mm:ss", { locale: es }),
           
           // Incluir las regulaciones
           regulaciones: regulaciones.value.map(reg => ({

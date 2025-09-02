@@ -32,11 +32,33 @@ async function insertaIrm(irmData) {
       energia_electrica,
       alcantarillado,
       otros,
-      pro_tipo,
-      pro_nombre,
-      pro_observaciones,
-      geometria
+      geometria,
+      usuario,
+      fecha_reporte
     } = irmData;
+    
+    // Verificar si ya existe un registro para esta clave catastral en la misma fecha
+    // para evitar duplicados por múltiples envíos
+    const checkDuplicateQuery = `
+      SELECT id_irm FROM planificacion.irm 
+      WHERE clave_catastral = $1 
+      AND DATE(fecha) = DATE($2)
+      AND tipo = $3
+      LIMIT 1
+    `;
+    
+    const checkResult = await client.query(checkDuplicateQuery, [
+      clave_catastral, 
+      fecha,
+      tipo
+    ]);
+    
+    // Si ya existe un registro, devolvemos ese ID en lugar de crear uno nuevo
+    if (checkResult.rows.length > 0) {
+      console.log(`IRM ya existe para clave catastral ${clave_catastral} en fecha ${fecha}. Devolviendo ID existente:`, checkResult.rows[0].id_irm);
+      await client.query('COMMIT');
+      return checkResult.rows[0];
+    }
 
     // Insertar el IRM principal
     const query = `
@@ -44,9 +66,8 @@ async function insertaIrm(irmData) {
         fecha, tipo, tipo_predio, id_ciudadano, numero_documento, clave_catastral, clave_anterior,
         derechos_acciones, area_construccion, area_escritura, area_grafica, frente,
         tiene_construccion, parroquia, barrio_sector, notas_irm, agua,
-        energia_electrica, alcantarillado, otros, pro_tipo, pro_nombre, pro_observaciones,
-        geometria
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+        energia_electrica, alcantarillado, otros, geometria, usuario, fecha_reporte
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
       RETURNING id_irm
     `;
     
@@ -54,8 +75,7 @@ async function insertaIrm(irmData) {
       fecha, tipo, tipo_predio, id_ciudadano, numero_documento, clave_catastral, clave_anterior,
       derechos_acciones, area_construccion, area_escritura, area_grafica, frente,
       tiene_construccion, parroquia, barrio_sector, notas_irm, agua,
-      energia_electrica, alcantarillado, otros, pro_tipo, pro_nombre, pro_observaciones,
-      geometria
+      energia_electrica, alcantarillado, otros, geometria, usuario, fecha_reporte || new Date()
     ];
 
     const result = await client.query(query, values);
@@ -196,7 +216,7 @@ async function actualizaIrm(id, irmData) {
       'clave_anterior', 'derechos_acciones', 'area_construccion', 'area_escritura',
       'area_grafica', 'frente', 'tiene_construccion', 'parroquia', 'barrio_sector',
       'notas_irm', 'agua', 'energia_electrica', 'alcantarillado', 'otros',
-      'pro_tipo', 'pro_nombre', 'pro_observaciones', 'geometria'
+      'geometria', 'usuario', 'fecha_reporte'
     ];
     
     // Construir la consulta dinámicamente

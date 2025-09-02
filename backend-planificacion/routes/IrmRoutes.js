@@ -32,10 +32,9 @@ router.post('/', authenticateToken, async (req, res) => {
       energia_electrica,
       alcantarillado,
       otros,
-      pro_tipo,
-      pro_nombre,
-      pro_observaciones,
       geometria,
+      usuario,
+      fecha_reporte,
       regulaciones  // Array de objetos de regulaciones
     } = req.body;
 
@@ -61,10 +60,9 @@ router.post('/', authenticateToken, async (req, res) => {
       energia_electrica,
       alcantarillado,
       otros,
-      pro_tipo,
-      pro_nombre,
-      pro_observaciones,
-      geometria
+      geometria,
+      usuario,
+      fecha_reporte: fecha_reporte || new Date()
     };
 
     const result = await IrmModel.insertaIrm(irmData);
@@ -229,10 +227,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       energia_electrica,
       alcantarillado,
       otros,
-      pro_tipo,
-      pro_nombre,
-      pro_observaciones,
       geometria,
+      usuario,
+      fecha_reporte,
       regulaciones
     } = req.body;
 
@@ -258,10 +255,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       energia_electrica,
       alcantarillado,
       otros,
-      pro_tipo,
-      pro_nombre,
-      pro_observaciones,
-      geometria
+      geometria,
+      usuario,
+      fecha_reporte
     };
 
     // Filtrar propiedades indefinidas
