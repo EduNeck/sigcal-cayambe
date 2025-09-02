@@ -90,9 +90,12 @@ router.get('/buscar', async (req, res) => {
   try {
     const { 
       clavesCatastrales, 
+      id_actividad,
       page, 
       limit 
     } = req.query;
+    
+    console.log('Parámetros recibidos en /icus/buscar:', req.query);
     
     // Parsear el array de claves catastrales si viene como string
     let clavesCatastralesArray = clavesCatastrales;
@@ -106,6 +109,7 @@ router.get('/buscar', async (req, res) => {
     
     const criterios = {
       clavesCatastrales: clavesCatastralesArray,
+      id_actividad,
       page,
       limit
     };

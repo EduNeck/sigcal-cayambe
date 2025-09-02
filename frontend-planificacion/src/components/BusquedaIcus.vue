@@ -61,6 +61,96 @@
             </v-col>
           </v-row>
 
+          <!-- Bloque de Actividad y Tipología -->
+          <v-row>
+            <v-col cols="12">
+              <v-card outlined class="pa-3 mb-3">
+                <v-card-title class="text-subtitle-1 pa-0 pb-2">
+                  <v-icon size="small" class="mr-1">mdi-tag-multiple</v-icon>
+                  ACTIVIDAD
+                </v-card-title>
+                <v-row>
+                  <v-col cols="12">
+                    <v-autocomplete
+                      v-model="filtros.id_actividad"
+                      :items="actividades"
+                      item-title="descripcion"
+                      item-value="id_actividad"
+                      label="Seleccione una actividad"
+                      outlined
+                      dense
+                      clearable
+                      @change="buscarTipologia"
+                      :loading="loadingActividades"
+                      no-data-text="No hay actividades disponibles"
+                      :disabled="loadingActividades"
+                      return-object
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" :title="item.raw.descripcion" :subtitle="item.raw.id_tipologia ? `Tipología: ${item.raw.id_tipologia}` : 'Sin tipología'"></v-list-item>
+                      </template>
+                    </v-autocomplete>
+                    <p v-if="actividadSeleccionada" class="text-caption mt-1">
+                      <strong>Descripción:</strong> {{ actividadSeleccionada.descripcion }}
+                      <br v-if="actividadSeleccionada.id_tipologia">
+                      <span v-if="actividadSeleccionada.id_tipologia"><strong>ID Tipología:</strong> {{ actividadSeleccionada.id_tipologia }}</span>
+                    </p>
+                  </v-col>
+                </v-row>
+
+                <!-- Tipología debajo de Actividad -->
+                <v-row v-if="filtros.id_actividad">
+                  <v-col cols="12">
+                    <!-- Panel de depuración -->
+                    <v-card outlined class="pa-3 mb-2 debug-card" style="background-color: #fffde7; border: 1px dashed #ffca28;">
+                      <v-card-title class="text-subtitle-1 pa-0 pb-2 d-flex align-center">
+                        <v-icon color="amber darken-2" class="mr-1">mdi-bug-outline</v-icon>
+                        INFORMACIÓN DE DEPURACIÓN
+                      </v-card-title>
+                      <p class="mb-1 text-caption">
+                        <strong>Estado de selección:</strong><br>
+                        - Actividad seleccionada: {{ filtros.id_actividad ? '✅ SÍ' : '❌ NO' }}<br>
+                        - ID de actividad: {{ filtros.id_actividad ? filtros.id_actividad.id_actividad : 'ninguno' }}<br>
+                        - ID de tipología en actividad: {{ filtros.id_actividad && filtros.id_actividad.id_tipologia ? filtros.id_actividad.id_tipologia : 'ninguno' }}<br>
+                        - Descripción: {{ filtros.id_actividad ? filtros.id_actividad.descripcion : 'ninguna' }}<br>
+                        <br>
+                        <strong>Estado de tipología:</strong><br>
+                        - Cargando tipología: {{ loadingTipologia ? '⏳ SÍ' : '✅ NO' }}<br>
+                        - Tipología seleccionada: {{ tipologiaSeleccionada ? '✅ SÍ' : '❌ NO' }}<br>
+                        - Datos de tipología: {{ tipologiaSeleccionada ? JSON.stringify(tipologiaSeleccionada) : 'ninguno' }}
+                      </p>
+                    </v-card>
+
+                    <v-card outlined class="pa-3 mt-2" v-if="tipologiaSeleccionada">
+                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
+                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+                        TIPOLOGÍA
+                      </v-card-title>
+                      <p class="mb-0"><strong>{{ tipologiaSeleccionada.nombre }}</strong></p>
+                      <p class="text-caption mb-0" v-if="tipologiaSeleccionada.descriptacion">
+                        {{ tipologiaSeleccionada.descriptacion }}
+                      </p>
+                    </v-card>
+                    <v-card outlined class="pa-3 mt-2" v-else-if="loadingTipologia">
+                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
+                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+                        TIPOLOGÍA
+                      </v-card-title>
+                      <v-skeleton-loader type="text" class="mb-2"></v-skeleton-loader>
+                    </v-card>
+                    <v-card outlined class="pa-3 mt-2" v-else>
+                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
+                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+                        TIPOLOGÍA
+                      </v-card-title>
+                      <p class="text-caption mb-1">No se encontró información de tipología para esta actividad.</p>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card>
+            </v-col>
+          </v-row>
+
           <v-row class="mt-3">
             <v-col class="d-flex justify-end">
               <v-btn
@@ -117,40 +207,49 @@
         :items-per-page="10"
         :footer-props="{ 'items-per-page-options': [5, 10, 20, 50] }"
         class="elevation-1"
+        dense
       >
-        <template v-slot:item.compatibilidad="{ item }">
-          <v-chip
-            :color="getCompatibilidadColor(item.compatibilidad)"
-            text-color="white"
-            small
-          >
-            {{ item.compatibilidad }}
-          </v-chip>
+        <template v-slot:item.clave_catastral="{ item }">
+          <span class="font-weight-bold">{{ item.clave_catastral }}</span>
         </template>
         
-        <template v-slot:item.fecha="{ item }">
-          {{ formatearFecha(item.fecha) }}
+        <template v-slot:item.area_grafica="{ item }">
+          {{ item.area_grafica ? Number(item.area_grafica).toFixed(2) : 'N/A' }} m²
         </template>
         
         <template v-slot:item.actions="{ item }">
-          <v-btn
-            icon
-            small
-            color="primary"
-            @click="verDetalle(item)"
-            title="Ver detalle"
-          >
-            <v-icon>mdi-eye</v-icon>
-          </v-btn>
-          <v-btn
-            icon
-            small
-            color="success"
-            @click="generarInforme(item)"
-            title="Generar informe"
-          >
-            <v-icon>mdi-file-document</v-icon>
-          </v-btn>
+          <div class="d-flex justify-space-around">
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  icon
+                  x-small
+                  color="primary"
+                  v-bind="props"
+                  @click="verDetalle(item)"
+                  class="mr-1"
+                >
+                  <v-icon>mdi-eye</v-icon>
+                </v-btn>
+              </template>
+              <span>Ver detalle</span>
+            </v-tooltip>
+            
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  icon
+                  x-small
+                  color="success"
+                  v-bind="props"
+                  @click="seleccionarTitular(item)"
+                >
+                  <v-icon>mdi-certificate</v-icon>
+                </v-btn>
+              </template>
+              <span>Crear ICUS</span>
+            </v-tooltip>
+          </div>
         </template>
       </v-data-table>
     </v-card>
@@ -166,46 +265,112 @@
       No se encontraron resultados para esta búsqueda
     </v-alert>
 
-    <!-- Diálogo de detalles -->
-    <v-dialog v-model="detalleDialog" max-width="700px">
+    <!-- Diálogo de detalles del titular -->
+    <v-dialog v-model="detalleDialog" max-width="800px">
       <v-card class="dialog-card">
         <div class="dialog-accent-line"></div>
         <v-card-title class="dialog-card-title">
-          <v-icon left class="mr-2">mdi-file-certificate-outline</v-icon>
-          Detalles del ICUS
+          <v-icon left class="mr-2">mdi-account-details-outline</v-icon>
+          Detalles del Predio
           <v-spacer></v-spacer>
           <v-btn icon @click="detalleDialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
         <v-card-text v-if="icusSeleccionado">
-          <v-row>
-            <v-col cols="6">
-              <p><strong>Clave Catastral:</strong> {{ icusSeleccionado.clave_catastral }}</p>
-              <p><strong>Propietario:</strong> {{ icusSeleccionado.propietario }}</p>
-              <p><strong>Actividad:</strong> {{ icusSeleccionado.actividad }}</p>
-              <p><strong>Tipología:</strong> {{ icusSeleccionado.tipologia }}</p>
-            </v-col>
-            <v-col cols="6">
-              <p><strong>Compatibilidad:</strong> {{ icusSeleccionado.compatibilidad }}</p>
-              <p><strong>Uso de Suelo:</strong> {{ icusSeleccionado.uso_suelo }}</p>
-              <p><strong>Fecha:</strong> {{ formatearFecha(icusSeleccionado.fecha) }}</p>
-              <p><strong>ID ICUS:</strong> {{ icusSeleccionado.id }}</p>
-            </v-col>
-          </v-row>
-          <v-row v-if="icusSeleccionado.resultado_informe">
-            <v-col cols="12">
-              <v-card outlined class="pa-3">
-                <p class="mb-0"><strong>Resultado del Informe:</strong></p>
-                <p class="mt-2 mb-0">{{ icusSeleccionado.resultado_informe }}</p>
+          <v-tabs v-model="activeTab" grow>
+            <v-tab value="general">Información General</v-tab>
+            <v-tab value="tecnicos">Datos Técnicos</v-tab>
+            <v-tab value="servicios">Servicios</v-tab>
+          </v-tabs>
+          
+          <v-window v-model="activeTab">
+            <!-- Tab 1: Información General -->
+            <v-window-item value="general">
+              <v-card flat>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="6">
+                      <p><strong>Clave Catastral:</strong> {{ icusSeleccionado.clave_catastral }}</p>
+                      <p><strong>Propietario:</strong> {{ icusSeleccionado.propietario }}</p>
+                      <p><strong>Documento de Identidad:</strong> {{ icusSeleccionado.numero_documento }}</p>
+                      <p><strong>Tipo de Predio:</strong> {{ icusSeleccionado.tipo_predio || 'No especificado' }}</p>
+                    </v-col>
+                    <v-col cols="6">
+                      <p><strong>Parroquia:</strong> {{ icusSeleccionado.parroquia || 'No especificada' }}</p>
+                      <p><strong>Sector:</strong> {{ icusSeleccionado.sector || 'No especificado' }}</p>
+                      <p><strong>Régimen:</strong> {{ icusSeleccionado.derechos_acciones === 'SI' ? 'Derechos y Acciones' : 'Unipropiedad' }}</p>
+                      <p><strong>ID Interno:</strong> {{ icusSeleccionado.id }}</p>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
               </v-card>
-            </v-col>
-          </v-row>
+            </v-window-item>
+            
+            <!-- Tab 2: Datos Técnicos -->
+            <v-window-item value="tecnicos">
+              <v-card flat>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="6">
+                      <p><strong>Área de Escritura:</strong> {{ icusSeleccionado.area_escritura ? Number(icusSeleccionado.area_escritura).toFixed(2) + ' m²' : 'No registrada' }}</p>
+                      <p><strong>Área Gráfica:</strong> {{ icusSeleccionado.area_grafica ? Number(icusSeleccionado.area_grafica).toFixed(2) + ' m²' : 'No registrada' }}</p>
+                      <p><strong>Frente:</strong> {{ icusSeleccionado.frente ? Number(icusSeleccionado.frente).toFixed(2) + ' m' : 'No registrado' }}</p>
+                    </v-col>
+                    <v-col cols="6">
+                      <p><strong>Tiene Construcción:</strong> {{ icusSeleccionado.tiene_construccion ? 'Sí' : 'No' }}</p>
+                      <p><strong>Área de Construcción:</strong> {{ icusSeleccionado.area_construccion ? Number(icusSeleccionado.area_construccion).toFixed(2) + ' m²' : 'No registrada' }}</p>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-window-item>
+            
+            <!-- Tab 3: Servicios -->
+            <v-window-item value="servicios">
+              <v-card flat>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item>
+                        <template v-slot:prepend>
+                          <v-icon :color="icusSeleccionado.agua ? 'success' : 'error'">
+                            {{ icusSeleccionado.agua ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                          </v-icon>
+                        </template>
+                        <v-list-item-title>Agua Potable</v-list-item-title>
+                      </v-list-item>
+                      
+                      <v-list-item>
+                        <template v-slot:prepend>
+                          <v-icon :color="icusSeleccionado.energia_electrica ? 'success' : 'error'">
+                            {{ icusSeleccionado.energia_electrica ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                          </v-icon>
+                        </template>
+                        <v-list-item-title>Energía Eléctrica</v-list-item-title>
+                      </v-list-item>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-list-item>
+                        <template v-slot:prepend>
+                          <v-icon :color="icusSeleccionado.alcantarillado ? 'success' : 'error'">
+                            {{ icusSeleccionado.alcantarillado ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                          </v-icon>
+                        </template>
+                        <v-list-item-title>Alcantarillado</v-list-item-title>
+                      </v-list-item>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-window-item>
+          </v-window>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="generarInforme(icusSeleccionado)">
-            Visualizar Informe
+          <v-btn color="success" @click="seleccionarTitular(icusSeleccionado)">
+            <v-icon left>mdi-certificate</v-icon>
+            Crear ICUS
           </v-btn>
           <v-btn color="grey darken-1" text @click="detalleDialog = false">
             Cerrar
@@ -236,11 +401,13 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
+import actividadService from '@/services/actividadService';
+import tipologiaService from '@/services/tipologiaService';
 
 export default {
   name: 'BusquedaIcus',
@@ -254,6 +421,7 @@ export default {
     const busquedaRealizada = ref(false);
     const detalleDialog = ref(false);
     const icusSeleccionado = ref(null);
+    const activeTab = ref('general'); // Para controlar las pestañas en el diálogo de detalles
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -267,65 +435,104 @@ export default {
     const filtros = reactive({
       claveCatastral: '',
       nombres: '',
-      numeroDocumento: ''
+      numeroDocumento: '',
+      id_actividad: null
     });
+    
+    // Variables para actividades y tipologías
+    const actividades = ref([]);
+    const loadingActividades = ref(false);
+    const actividadSeleccionada = ref(null);
+    
+    const tipologiaSeleccionada = ref(null);
+    const loadingTipologia = ref(false);
     
     // No longer needed - removed compatibility dropdown
     
     // Encabezados para la tabla
     const headers = [
       { title: 'ID', value: 'id', sortable: true },
-      { title: 'Clave Catastral', value: 'clave_catastral', sortable: true },
+      { title: 'Clave Catastral', value: 'clave_catastral', sortable: true, width: '150px' },
       { title: 'Propietario', value: 'propietario', sortable: true },
-      { title: 'Actividad', value: 'actividad', sortable: true },
-      { title: 'Compatibilidad', value: 'compatibilidad', sortable: true },
-      { title: 'Fecha', value: 'fecha', sortable: true },
-      { title: 'Acciones', value: 'actions', sortable: false, align: 'center' }
+      { title: 'Doc. Identidad', value: 'numero_documento', sortable: true },
+      { title: 'Parroquia', value: 'parroquia', sortable: true },
+      { title: 'Sector', value: 'sector', sortable: true },
+      { title: 'Área m²', value: 'area_grafica', sortable: true },
+      { title: 'Acciones', value: 'actions', sortable: false, align: 'center', width: '120px' }
     ];
     
     // Método para realizar la búsqueda
     const buscar = async () => {
-      if (
-        !filtros.claveCatastral && 
-        !filtros.nombres && 
-        !filtros.numeroDocumento
-      ) {
-        showSnackbar('Debe ingresar al menos un criterio de búsqueda', 'warning');
+      // Validar que se haya ingresado al menos un criterio de búsqueda para datos del titular
+      if (!filtros.claveCatastral && !filtros.nombres && !filtros.numeroDocumento) {
+        showSnackbar('Debe ingresar al menos un criterio de búsqueda (clave catastral, nombre o documento)', 'warning');
         return;
       }
       
       loading.value = true;
       busquedaRealizada.value = true;
+      resultados.value = []; // Limpiar resultados anteriores
       
       try {
-        // Primero buscar por datos del titular si se proporcionaron
-        if (filtros.claveCatastral || filtros.nombres || filtros.numeroDocumento) {
-          const titularesResponse = await datosTitularService.busquedaAvanzada({
-            claveCatastral: filtros.claveCatastral,
-            nombres: filtros.nombres,
-            numeroDocumento: filtros.numeroDocumento
-          });
+        console.log('🔍 Iniciando búsqueda de titulares con filtros:', {
+          claveCatastral: filtros.claveCatastral,
+          nombres: filtros.nombres,
+          numeroDocumento: filtros.numeroDocumento
+        });
+        
+        // Preparar los parámetros de búsqueda
+        const parametrosBusqueda = {
+          claveCatastral: filtros.claveCatastral?.trim() || '',
+          nombres: filtros.nombres?.trim() || '',
+          numeroDocumento: filtros.numeroDocumento?.trim() || ''
+        };
+        
+        // Buscar los datos de titulares en la vista datos_titular
+        const titularesResponse = await datosTitularService.busquedaAvanzada(parametrosBusqueda);
+        
+        console.log('✅ Respuesta de búsqueda de titulares:', titularesResponse);
+        
+        if (titularesResponse.data && titularesResponse.data.data && titularesResponse.data.data.length > 0) {
+          // Mostrar los datos de titulares directamente en el grid de resultados
+          resultados.value = titularesResponse.data.data.map(titular => ({
+            // Mapear los campos de la vista datos_titular al formato para mostrar en el grid
+            id: titular.id,
+            clave_catastral: titular.clave_catastral,
+            propietario: titular.nombres,
+            numero_documento: titular.numero_documento,
+            tipo_predio: titular.tipo_predio,
+            parroquia: titular.parroquia,
+            sector: titular.sector,
+            area_escritura: titular.area_escritura,
+            area_grafica: titular.area_grafica,
+            frente: titular.frente,
+            agua: titular.agua ? 'Sí' : 'No',
+            energia_electrica: titular.energia_electrica ? 'Sí' : 'No',
+            alcantarillado: titular.alcantarillado ? 'Sí' : 'No',
+            // Campos adicionales que podrían ser útiles para ICUS
+            actividad: '',  // Se llenará después si se selecciona actividad
+            tipologia: '',  // Se llenará después si se selecciona tipología
+            compatibilidad: '', // Se determinará después
+            fecha: new Date().toISOString().split('T')[0] // Fecha actual por defecto
+          }));
           
-          if (titularesResponse.data && titularesResponse.data.data && titularesResponse.data.data.length > 0) {
-            // Crear un array de claves catastrales para buscar ICUS relacionados
-            const clavesCatastrales = titularesResponse.data.data.map(titular => titular.clave_catastral);
-            
-            console.log('Claves catastrales encontradas:', clavesCatastrales);
-            
-            // Buscar ICUS para estas claves catastrales (enviar como string para evitar problemas con el querystring)
-            await buscarICUSPorCriterios({ clavesCatastrales: JSON.stringify(clavesCatastrales) });
-          } else {
-            // No se encontraron titulares
-            resultados.value = [];
-            showSnackbar('No se encontraron titulares con los criterios especificados', 'info');
-          }
+          showSnackbar(`Se encontraron ${resultados.value.length} predios`, 'success');
         } else {
-          // Buscar directamente por criterios de ICUS
-          await buscarICUSPorCriterios({});
+          // No se encontraron titulares
+          resultados.value = [];
+          showSnackbar('No se encontraron titulares con los criterios especificados', 'info');
         }
       } catch (error) {
-        console.error('Error al realizar la búsqueda:', error);
-        showSnackbar('Ocurrió un error al realizar la búsqueda', 'error', 5000);
+        console.error('❌ Error al realizar la búsqueda de titulares:', error);
+        
+        // Intentar mostrar detalles más específicos del error
+        if (error.response) {
+          console.error('❌ Status:', error.response.status);
+          console.error('❌ Datos:', error.response.data);
+        }
+        
+        showSnackbar('Ocurrió un error al realizar la búsqueda de titulares', 'error', 5000);
+        resultados.value = [];
       } finally {
         loading.value = false;
       }
@@ -334,19 +541,17 @@ export default {
     // Función para buscar ICUS por criterios
     const buscarICUSPorCriterios = async (criteriosAdicionales) => {
       try {
+        // Extraer el ID de actividad del objeto si está presente
         const params = {
-          ...criteriosAdicionales
+          ...criteriosAdicionales,
+          id_actividad: filtros.id_actividad ? filtros.id_actividad.id_actividad : undefined
         };
         
         console.log("Buscando ICUS con parámetros:", params);
+        console.log("ID actividad seleccionada:", filtros.id_actividad ? filtros.id_actividad.id_actividad : 'ninguno');
         console.log("URL de API:", API_BASE_URL);
         
-        const response = await axios.get(`${API_BASE_URL}/icus/buscar`, { 
-          params,
-          headers: {
-            Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : undefined
-          }
-        });
+        const response = await axios.get(`${API_BASE_URL}/icus/buscar`, { params });
         
         console.log("Respuesta API:", response);
         
@@ -374,24 +579,43 @@ export default {
       filtros.claveCatastral = '';
       filtros.nombres = '';
       filtros.numeroDocumento = '';
+      filtros.id_actividad = null;
+      actividadSeleccionada.value = null;
+      tipologiaSeleccionada.value = null;
       resultados.value = [];
       busquedaRealizada.value = false;
     };
     
-    // Método para ver detalles de un ICUS
+    // Método para ver detalles de un titular
     const verDetalle = (item) => {
       icusSeleccionado.value = item;
       detalleDialog.value = true;
     };
     
-    // Método para generar informe
+    // Método para seleccionar un titular y preparar su ICUS
+    const seleccionarTitular = (item) => {
+      icusSeleccionado.value = item;
+      
+      // Mostrar diálogo para completar información de ICUS
+      router.push({
+        name: 'CrearIcus',
+        query: { 
+          datosTitular: JSON.stringify(item),
+          claveCatastral: item.clave_catastral
+        }
+      });
+      
+      showSnackbar(`Preparando certificado ICUS para: ${item.propietario || 'predio'}`, 'success');
+    };
+    
+    // Método para generar informe basado en los datos existentes
     const generarInforme = (item) => {
-      // Navegar al componente de informe y pasar el ID del ICUS
+      // Navegar al componente de informe y pasar el ID del titular
       router.push({
         name: 'ReporteIcus',
         params: { id: item.id },
         query: { 
-          datosIcus: JSON.stringify(item),
+          datosTitular: JSON.stringify(item),
           claveCatastral: item.clave_catastral
         }
       });
@@ -437,6 +661,114 @@ export default {
       return 'grey';
     };
     
+    // Cargar actividades
+    const cargarActividades = async () => {
+      loadingActividades.value = true;
+      console.log('📋 Cargando lista de actividades...');
+      try {
+        const response = await actividadService.obtenerActividades();
+        console.log('📥 Respuesta del servicio de actividades:', response);
+        
+        if (response.data && response.data.success) {
+          actividades.value = response.data.data || [];
+          console.log('✅ Actividades cargadas:', actividades.value.length);
+          console.log('✅ Muestra de datos:', actividades.value.slice(0, 3));
+        } else {
+          console.log('❌ Error en la respuesta:', response.data);
+          showSnackbar('Error al cargar actividades', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar actividades:', error);
+        showSnackbar('Error al cargar actividades', 'error');
+      } finally {
+        loadingActividades.value = false;
+      }
+    };
+    
+    // Buscar tipología cuando cambia la actividad seleccionada
+    const buscarTipologia = async () => {
+      console.log('⭐ buscarTipologia llamado con:', filtros.id_actividad);
+      
+      if (!filtros.id_actividad) {
+        console.log('❌ No hay actividad seleccionada, limpiando valores');
+        actividadSeleccionada.value = null;
+        tipologiaSeleccionada.value = null;
+        return;
+      }
+      
+      loadingTipologia.value = true;
+      
+      // Como ahora estamos usando return-object, la actividad seleccionada es el objeto completo
+      actividadSeleccionada.value = filtros.id_actividad;
+      console.log('👉 Actividad seleccionada:', actividadSeleccionada.value);
+      console.log('👉 Datos completos de actividad:', JSON.stringify(actividadSeleccionada.value));
+      
+      try {
+        if (actividadSeleccionada.value && actividadSeleccionada.value.id_tipologia) {
+          console.log('✅ ID Tipología encontrado:', actividadSeleccionada.value.id_tipologia);
+          
+          // Usar el servicio para obtener la tipología asociada a esta actividad
+          console.log('🔍 Buscando tipología con ID:', actividadSeleccionada.value.id_tipologia);
+          console.log('🔎 VALOR EXACTO DEL ID_TIPOLOGIA:', JSON.stringify(actividadSeleccionada.value.id_tipologia));
+          console.log('🔎 TIPO DE DATO:', typeof actividadSeleccionada.value.id_tipologia);
+          
+          // Asegurarse de que el ID sea un string limpio
+          const idTipologia = String(actividadSeleccionada.value.id_tipologia).trim();
+          console.log('🔍 ID tipología limpio:', idTipologia);
+          
+          // Probar con un bloque try/catch específico para mejor manejo de errores
+          try {
+            console.log(`🔄 Llamando al servicio con ID tipología: '${idTipologia}'`);
+            const response = await tipologiaService.obtenerTipologiaPorId(idTipologia);
+            console.log('📥 Respuesta completa del servicio:', response);
+            
+            if (response.data && response.data.success) {
+              console.log('✅ Tipología encontrada:', response.data.data);
+              tipologiaSeleccionada.value = response.data.data;
+              showSnackbar(`Tipología '${response.data.data.nombre}' encontrada`, 'success');
+            } else {
+              console.log('⚠️ La respuesta no contiene datos de tipología:', response.data);
+              tipologiaSeleccionada.value = null;
+              showSnackbar('No se encontró la tipología correspondiente', 'warning');
+            }
+          } catch (serviceError) {
+            console.error('❌ Error específico del servicio de tipología:', serviceError);
+            console.log('❌ Status del error:', serviceError.response?.status);
+            console.log('❌ Mensaje del error:', serviceError.response?.data || serviceError.message);
+            
+            // Si es un error 404, podemos intentar una consulta alternativa
+            if (serviceError.response?.status === 404) {
+              console.log('🔍 Intentando consulta alternativa para tipología');
+              showSnackbar('Tipología no encontrada, realizando búsqueda alternativa', 'info');
+              // Aquí podríamos implementar una lógica alternativa si es necesario
+            } else {
+              showSnackbar(`Error al cargar tipología: ${serviceError.response?.data?.message || serviceError.message}`, 'error');
+            }
+            
+            tipologiaSeleccionada.value = null;
+          }
+        } else {
+          console.log('❌ No se encontró id_tipologia en el objeto de actividad');
+          tipologiaSeleccionada.value = null;
+          showSnackbar('La actividad no tiene tipología asociada', 'info');
+        }
+      } catch (error) {
+        console.error('❌ Error general al cargar tipología:', error);
+        console.log('❌ Detalles del error:', error.response || error.message || error);
+        showSnackbar('Error al procesar la actividad seleccionada', 'error');
+        tipologiaSeleccionada.value = null;
+      } finally {
+        loadingTipologia.value = false;
+        console.log('🏁 Estado final - Actividad:', actividadSeleccionada.value ? actividadSeleccionada.value.id_actividad : 'ninguna');
+        console.log('🏁 Estado final - Tipología:', tipologiaSeleccionada.value ? tipologiaSeleccionada.value.id_tipologia : 'ninguna');
+      }
+    };
+    
+    // Cargar datos al inicializar el componente
+    onMounted(async () => {
+      await cargarActividades();
+    });
+
     return {
       form,
       filtros,
@@ -447,14 +779,23 @@ export default {
       busquedaRealizada,
       detalleDialog,
       icusSeleccionado,
+      activeTab,
       snackbar,
       buscar,
       limpiarFiltros,
       verDetalle,
+      seleccionarTitular,
       generarInforme,
       salir,
       formatearFecha,
-      getCompatibilidadColor
+      getCompatibilidadColor,
+      // Propiedades para actividades y tipologías
+      actividades,
+      loadingActividades,
+      actividadSeleccionada,
+      tipologiaSeleccionada,
+      loadingTipologia,
+      buscarTipologia
     };
   }
 };
@@ -601,6 +942,21 @@ export default {
 
 .v-data-table :deep(tbody tr:hover) {
   background-color: #f1f5f9 !important;
+}
+
+/* Estilos para el bloque de actividad y tipología */
+.v-autocomplete :deep(.v-field__input) {
+  padding-top: 6px;
+}
+
+.v-card-title.text-subtitle-1 {
+  font-weight: 600;
+  color: #276E90;
+}
+
+.v-card.outlined {
+  border-color: rgba(39, 110, 144, 0.2);
+  transition: all 0.3s ease;
 }
 
 /* Responsive text */

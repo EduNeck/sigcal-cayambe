@@ -11,15 +11,17 @@ export default {
    * @returns {Promise} Promise con los resultados de la búsqueda
    */
   busquedaAvanzada(params) {
-    return axios.post(
-      `${API_BASE_URL}/datos-titular/busquedaAvanzada`, 
-      params,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
+    console.log('🔍 Service datosTitular: Iniciando búsqueda avanzada con parámetros:', params);
+    return axios.post(`${API_BASE_URL}/datos-titular/busquedaAvanzada`, params)
+      .then(response => {
+        console.log('✅ Service datosTitular: Respuesta búsqueda:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('❌ Service datosTitular: Error en búsqueda:', error);
+        console.error('❌ Detalles:', error.response?.data || error.message);
+        throw error;
+      });
   },
 
   /**
@@ -28,13 +30,6 @@ export default {
    * @returns {Promise} Promise con los datos del titular
    */
   obtenerPorId(id) {
-    return axios.get(
-      `${API_BASE_URL}/datos-titular/recuperarDatosTitular/${id}`, 
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
+    return axios.get(`${API_BASE_URL}/datos-titular/recuperarDatosTitular/${id}`);
   }
 };

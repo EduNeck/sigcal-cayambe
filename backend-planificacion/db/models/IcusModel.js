@@ -231,6 +231,7 @@ class IcusModel {
     try {
       const {
         clavesCatastrales,
+        id_actividad,
         page = 1,
         limit = 50
       } = criterios;
@@ -248,6 +249,13 @@ class IcusModel {
         conditions.push(`clave_catastral IN (${placeholders})`);
         clavesCatastrales.forEach(clave => params.push(clave));
         paramIndex += clavesCatastrales.length;
+      }
+      
+      // Añadir filtro por id_actividad si se proporciona
+      if (id_actividad) {
+        conditions.push(`id_actividad = $${paramIndex}`);
+        params.push(id_actividad);
+        paramIndex++;
       }
       
       // Construir la consulta SQL completa

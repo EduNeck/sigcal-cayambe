@@ -36,22 +36,32 @@ const tipologiaController = {
     try {
       const { id } = req.params;
       
-      if (!id || isNaN(parseInt(id))) {
+      if (!id) {
         return res.status(400).json({
           success: false,
           message: 'ID inválido'
         });
       }
+      
+      console.log('Controller: ID recibido:', id, 'tipo:', typeof id);
+      console.log('Controller: Valor exacto recibido:', JSON.stringify(id));
 
-      const tipologia = await TipologiaModel.obtenerTipologiaPorId(parseInt(id));
+      // Decodificar el ID si está codificado en URL
+      const idDecodificado = decodeURIComponent(id);
+      console.log('Controller: ID decodificado:', idDecodificado);
+
+      // Buscar la tipología por ID
+      const tipologia = await TipologiaModel.obtenerTipologiaPorId(idDecodificado);
       
       if (!tipologia) {
+        console.log('Controller: Tipología no encontrada para ID:', idDecodificado);
         return res.status(404).json({
           success: false,
           message: 'Tipología no encontrada'
         });
       }
 
+      console.log('Controller: Tipología encontrada:', JSON.stringify(tipologia));
       return res.json({
         success: true,
         data: tipologia

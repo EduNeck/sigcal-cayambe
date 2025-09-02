@@ -26,18 +26,39 @@ const TipologiaModel = {
 
   /**
    * Obtener una tipología por su ID
-   * @param {Number} id - ID de la tipología
+   * @param {Number} id_tipologia - ID de la tipología
    * @returns {Promise<Object>} Datos de la tipología
    */
   async obtenerTipologiaPorId(id_tipologia) {
     try {
+      console.log(`Model: Buscando tipología con ID '${id_tipologia}', tipo: ${typeof id_tipologia}`);
+      
       const query = `
         SELECT id_tipologia, tipo, nombre, descriptacion, nivel
         FROM planificacion.tipologia
         WHERE id_tipologia = $1
       `;
       
-      const result = await db.query(query, [id]);
+      console.log(`Model: Ejecutando consulta SQL con parámetro:`, [id_tipologia]);
+      const result = await db.query(query, [id_tipologia]);
+      
+      console.log(`Model: Filas encontradas: ${result.rowCount}`);
+      if (result.rowCount > 0) {
+        console.log(`Model: Tipología encontrada:`, JSON.stringify(result.rows[0]));
+      } else {
+        console.log(`Model: No se encontró tipología con ID '${id_tipologia}'`);
+        
+        // Log adicional: buscar todas las tipologías para verificar
+        console.log(`Model: Verificando todas las tipologías disponibles...`);
+        const allResult = await db.query(`
+          SELECT id_tipologia 
+          FROM planificacion.tipologia 
+          ORDER BY id_tipologia
+          LIMIT 10
+        `);
+        console.log(`Model: Primeros 10 IDs disponibles:`, allResult.rows.map(r => r.id_tipologia));
+      }
+      
       return result.rows[0];
     } catch (error) {
       console.error('Error al obtener tipología por ID:', error);
