@@ -4,8 +4,10 @@ import SolicitarTramite from '../components/SolicitarTramite.vue'
 import GeneraReportes from '../components/GeneraReportes.vue'
 import ReporteIRM from '../components/ReporteIRM.vue'
 import ReporteIcus from '../components/ReporteIcus.vue'
-import BusquedaTitular from '../components/BusquedaTitular.vue'
-import BusquedaIcus from '../components/BusquedaIcus.vue'
+import BusquedaIRM from '../components/BusquedaIRM.vue'
+import BusquedaICUS from '../components/BusquedaICUS.vue'
+
+
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -33,15 +35,15 @@ const routes = [
     props: true
   },
   {
-    path: '/busqueda-titular',
-    name: 'BusquedaTitular',
-    component: BusquedaTitular,
+    path: '/busqueda-irm',
+    name: 'BusquedaIRM',
+    component: BusquedaIRM,
     meta: { requiresAuth: true }
   },
   {
     path: '/busqueda-icus',
-    name: 'BusquedaIcus',
-    component: BusquedaIcus,
+    name: 'BusquedaICUS',
+    component: BusquedaICUS,
     meta: { requiresAuth: true }
   },
 ]

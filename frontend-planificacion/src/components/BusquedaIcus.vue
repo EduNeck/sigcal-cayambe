@@ -232,6 +232,8 @@
           </div>
         </template>
       </v-data-table>
+      
+      <!-- Eliminamos la paginación -->
     </v-card>
 
     <v-alert
@@ -318,7 +320,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
     <!-- Snackbar para alertas -->
     <v-snackbar
       v-model="snackbar.show"
@@ -350,7 +351,7 @@ import actividadService from '@/services/actividadService';
 import tipologiaService from '@/services/tipologiaService';
 
 export default {
-  name: 'BusquedaIcus',
+  name: 'BusquedaICUS',
   
   setup() {
     const router = useRouter();
@@ -386,8 +387,6 @@ export default {
     
     const tipologiaSeleccionada = ref(null);
     const loadingTipologia = ref(false);
-    
-    // No longer needed - removed compatibility dropdown
     
     // Encabezados para la tabla
     const headers = [
@@ -818,21 +817,6 @@ export default {
 
 .v-data-table :deep(tbody tr:hover) {
   background-color: #f1f5f9 !important;
-}
-
-/* Estilos para el bloque de actividad y tipología */
-.v-autocomplete :deep(.v-field__input) {
-  padding-top: 6px;
-}
-
-.v-card-title.text-subtitle-1 {
-  font-weight: 600;
-  color: #276E90;
-}
-
-.v-card.outlined {
-  border-color: rgba(39, 110, 144, 0.2);
-  transition: all 0.3s ease;
 }
 
 /* Responsive text */

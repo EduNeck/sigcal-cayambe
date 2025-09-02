@@ -113,8 +113,8 @@ function goControlUsuarios() {
 }
 
 function onRegulacionMunicipal() {
-  // En vez de mostrar una alerta, navegar a la búsqueda de titulares
-  router.push('/busqueda-titular')
+  // En vez de mostrar una alerta, navegar a la búsqueda de irm
+  router.push('/busqueda-irm')
 }
 
 function onCertificadoUsos() {
