@@ -1,5 +1,13 @@
 <template>
   <div class="reporte-icus compacto">
+    <!-- Botón de impresión -->
+    <div class="print-button" v-if="!cargando && !error">
+      <button @click="imprimirReporte" title="Imprimir reporte">
+        <span class="print-icon">🖨️</span>
+        <span class="print-text">Imprimir</span>
+      </button>
+    </div>
+  
     <!-- Indicador de carga principal -->
     <div v-if="cargando" class="loading-indicator">
       <p>Cargando datos del ICUS...</p>
@@ -594,6 +602,46 @@ export default {
 </script>
 
 <style scoped>
+/* Botón de impresión */
+.print-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.print-button button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.print-button button:hover {
+  background: #1e3a8a;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
+}
+
+.print-icon {
+  font-size: 16px;
+}
+
+@media print {
+  .print-button {
+    display: none;
+  }
+}
+
 /* ===== Escala compacta global ===== */
 .compacto {
   --pad-xl: 10mm;   

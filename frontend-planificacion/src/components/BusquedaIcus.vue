@@ -193,6 +193,13 @@
           <span class="font-weight-bold">{{ item.clave_catastral }}</span>
         </template>
         
+        <template v-slot:item.uso_suelo="{ item }">
+          <span v-if="item.id_suelo && item.uso_suelo">
+            <strong>{{ item.id_suelo }}:</strong> {{ item.uso_suelo }}
+          </span>
+          <span v-else>{{ item.uso_suelo || 'No especificado' }}</span>
+        </template>
+        
         <template v-slot:item.area_grafica="{ item }">
           {{ item.area_grafica ? Number(item.area_grafica).toFixed(2) : 'N/A' }} m²
         </template>
@@ -263,6 +270,7 @@
           <v-tabs v-model="activeTab" grow>
             <v-tab value="general">Información General</v-tab>
             <v-tab value="tecnicos">Datos Técnicos</v-tab>
+            <v-tab value="usosuelo">Uso de Suelo</v-tab>
           </v-tabs>
           
           <v-window v-model="activeTab">
@@ -301,6 +309,66 @@
                     <v-col cols="6">
                       <p><strong>Tiene Construcción:</strong> {{ icusSeleccionado.tiene_construccion ? 'Sí' : 'No' }}</p>
                       <p><strong>Área de Construcción:</strong> {{ icusSeleccionado.area_construccion ? Number(icusSeleccionado.area_construccion).toFixed(2) + ' m²' : 'No registrada' }}</p>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-window-item>
+            
+            <!-- Tab 3: Uso de Suelo -->
+            <v-window-item value="usosuelo">
+              <v-card flat>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="12" v-if="icusSeleccionado.id_suelo || icusSeleccionado.uso_suelo">
+                      <v-card outlined class="pa-3 mb-3">
+                        <v-card-title class="text-subtitle-1 pb-2">
+                          <v-icon size="small" class="mr-1">mdi-map-marker-outline</v-icon>
+                          USO DE SUELO
+                        </v-card-title>
+                        <p><strong>Código:</strong> {{ icusSeleccionado.id_suelo || 'No especificado' }}</p>
+                        <p><strong>Nombre:</strong> {{ icusSeleccionado.uso_suelo || 'No especificado' }}</p>
+                      </v-card>
+                    </v-col>
+                    
+                    <v-col cols="12" v-if="icusSeleccionado.id_actividad || icusSeleccionado.actividad">
+                      <v-card outlined class="pa-3 mb-3">
+                        <v-card-title class="text-subtitle-1 pb-2">
+                          <v-icon size="small" class="mr-1">mdi-tag-multiple-outline</v-icon>
+                          ACTIVIDAD
+                        </v-card-title>
+                        <p><strong>Código:</strong> {{ icusSeleccionado.id_actividad || 'No especificado' }}</p>
+                        <p><strong>Nombre:</strong> {{ icusSeleccionado.actividad || 'No especificado' }}</p>
+                      </v-card>
+                    </v-col>
+                    
+                    <v-col cols="12" v-if="icusSeleccionado.id_tipologia || icusSeleccionado.tipologia">
+                      <v-card outlined class="pa-3 mb-3">
+                        <v-card-title class="text-subtitle-1 pb-2">
+                          <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+                          TIPOLOGÍA
+                        </v-card-title>
+                        <p><strong>Código:</strong> {{ icusSeleccionado.id_tipologia || 'No especificado' }}</p>
+                        <p><strong>Nombre:</strong> {{ icusSeleccionado.tipologia || 'No especificado' }}</p>
+                      </v-card>
+                    </v-col>
+                    
+                    <v-col cols="12" v-if="icusSeleccionado.compatibilidad">
+                      <v-card outlined class="pa-3" :class="`border-${getCompatibilidadColor(icusSeleccionado.compatibilidad)}`">
+                        <v-card-title class="text-subtitle-1 pb-2">
+                          <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
+                          RESULTADO DE COMPATIBILIDAD
+                        </v-card-title>
+                        <v-chip :color="getCompatibilidadColor(icusSeleccionado.compatibilidad)" text-color="white" class="mt-1">
+                          {{ icusSeleccionado.compatibilidad }}
+                        </v-chip>
+                      </v-card>
+                    </v-col>
+                    
+                    <v-col cols="12" v-if="!icusSeleccionado.id_suelo && !icusSeleccionado.uso_suelo && !icusSeleccionado.compatibilidad">
+                      <v-alert type="info" outlined>
+                        No se encontró información de uso de suelo para este predio.
+                      </v-alert>
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -349,6 +417,7 @@ import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
 import actividadService from '@/services/actividadService';
 import tipologiaService from '@/services/tipologiaService';
+import datosPugsService from '@/services/datosPugsService';
 
 export default {
   name: 'BusquedaICUS',
@@ -390,10 +459,10 @@ export default {
     
     // Encabezados para la tabla
     const headers = [
-      { title: 'ID', value: 'id', sortable: true },
       { title: 'Clave Catastral', value: 'clave_catastral', sortable: true, width: '150px' },
       { title: 'Propietario', value: 'propietario', sortable: true },
       { title: 'Doc. Identidad', value: 'numero_documento', sortable: true },
+      { title: 'Uso de Suelo', value: 'uso_suelo', sortable: true },
       { title: 'Parroquia', value: 'parroquia', sortable: true },
       { title: 'Sector', value: 'sector', sortable: true },
       { title: 'Área m²', value: 'area_grafica', sortable: true },
@@ -432,30 +501,77 @@ export default {
         console.log('✅ Respuesta de búsqueda de titulares:', titularesResponse);
         
         if (titularesResponse.data && titularesResponse.data.data && titularesResponse.data.data.length > 0) {
-          // Mostrar los datos de titulares directamente en el grid de resultados
-          resultados.value = titularesResponse.data.data.map(titular => ({
-            // Mapear los campos de la vista datos_titular al formato para mostrar en el grid
-            id: titular.id,
-            clave_catastral: titular.clave_catastral,
-            propietario: titular.nombres,
-            numero_documento: titular.numero_documento,
-            tipo_predio: titular.tipo_predio,
-            parroquia: titular.parroquia,
-            sector: titular.sector,
-            area_escritura: titular.area_escritura,
-            area_grafica: titular.area_grafica,
-            frente: titular.frente,
-            agua: titular.agua ? 'Sí' : 'No',
-            energia_electrica: titular.energia_electrica ? 'Sí' : 'No',
-            alcantarillado: titular.alcantarillado ? 'Sí' : 'No',
-            // Campos adicionales que podrían ser útiles para ICUS
-            actividad: '',  // Se llenará después si se selecciona actividad
-            tipologia: '',  // Se llenará después si se selecciona tipología
-            compatibilidad: '', // Se determinará después
-            fecha: new Date().toISOString().split('T')[0] // Fecha actual por defecto
-          }));
+          // Array temporal para almacenar los resultados
+          const resultadosTemp = [];
           
-          showSnackbar(`Se encontraron ${resultados.value.length} predios`, 'success');
+          // Procesar cada titular y buscar sus datos de uso de suelo
+          for (const titular of titularesResponse.data.data) {
+            // Crear el objeto base del resultado
+            const resultadoItem = {
+              id: titular.id,
+              clave_catastral: titular.clave_catastral,
+              propietario: titular.nombres,
+              numero_documento: titular.numero_documento,
+              tipo_predio: titular.tipo_predio,
+              parroquia: titular.parroquia,
+              sector: titular.sector,
+              area_escritura: titular.area_escritura,
+              area_grafica: titular.area_grafica,
+              frente: titular.frente,
+              agua: titular.agua ? 'Sí' : 'No',
+              energia_electrica: titular.energia_electrica ? 'Sí' : 'No',
+              alcantarillado: titular.alcantarillado ? 'Sí' : 'No',
+              // Campos adicionales que podrían ser útiles para ICUS
+              actividad: '',
+              tipologia: '',
+              compatibilidad: '',
+              id_suelo: '',
+              uso_suelo: '',
+              fecha: new Date().toISOString().split('T')[0]
+            };
+            
+            // Si tiene clave catastral, intentar obtener los datos PUGS
+            if (titular.clave_catastral) {
+              try {
+                console.log(`🌎 Consultando datos PUGS para clave catastral: ${titular.clave_catastral}`);
+                const pugsResponse = await datosPugsService.obtenerPorClaveCatastral(titular.clave_catastral);
+                
+                if (pugsResponse.data && pugsResponse.data.success && pugsResponse.data.data && pugsResponse.data.data.length > 0) {
+                  const datosPugs = pugsResponse.data.data[0];
+                  console.log(`✅ Datos PUGS encontrados para ${titular.clave_catastral}:`, datosPugs);
+                  
+                  // Agregar la información de uso de suelo al resultado
+                  resultadoItem.id_suelo = datosPugs.usc || '';
+                  resultadoItem.uso_suelo = datosPugs.usn || '';
+                  resultadoItem.id_actividad = datosPugs.act_id || '';
+                  resultadoItem.actividad = datosPugs.act_nombre || '';
+                  resultadoItem.id_tipologia = datosPugs.tip_id || '';
+                  resultadoItem.tipologia = datosPugs.tip_nombre || '';
+                  
+                  // Determinar la compatibilidad basada en el tipo
+                  if (datosPugs.tipo === 1) {
+                    resultadoItem.compatibilidad = 'Compatible';
+                  } else if (datosPugs.tipo === 2) {
+                    resultadoItem.compatibilidad = 'Condicionado';
+                  } else if (datosPugs.tipo === 0) {
+                    resultadoItem.compatibilidad = 'No Compatible';
+                  }
+                } else {
+                  console.log(`⚠️ No se encontraron datos PUGS para clave catastral: ${titular.clave_catastral}`);
+                }
+              } catch (pugsError) {
+                console.error(`❌ Error al buscar datos PUGS para ${titular.clave_catastral}:`, pugsError);
+              }
+            }
+            
+            // Añadir el resultado procesado al array temporal
+            resultadosTemp.push(resultadoItem);
+          }
+          
+          // Actualizar los resultados con todos los datos procesados
+          resultados.value = resultadosTemp;
+          
+          showSnackbar(`Se encontraron ${resultados.value.length} predios con su información de uso de suelo`, 'success');
         } else {
           // No se encontraron titulares
           resultados.value = [];
@@ -499,11 +615,23 @@ export default {
     const seleccionarTitular = (item) => {
       icusSeleccionado.value = item;
       
+      // Datos PUGS para incluir en la consulta
+      const datosPugs = {
+        id_suelo: item.id_suelo,
+        uso_suelo: item.uso_suelo,
+        id_actividad: item.id_actividad,
+        actividad: item.actividad,
+        id_tipologia: item.id_tipologia,
+        tipologia: item.tipologia,
+        compatibilidad: item.compatibilidad
+      };
+      
       // Mostrar diálogo para completar información de ICUS
       router.push({
         name: 'CrearIcus',
         query: { 
           datosTitular: JSON.stringify(item),
+          datosPugs: JSON.stringify(datosPugs),
           claveCatastral: item.clave_catastral
         }
       });
@@ -817,6 +945,23 @@ export default {
 
 .v-data-table :deep(tbody tr:hover) {
   background-color: #f1f5f9 !important;
+}
+
+/* Bordes coloreados para las tarjetas de compatibilidad */
+.border-success {
+  border-left: 4px solid #4caf50 !important;
+}
+
+.border-warning {
+  border-left: 4px solid #ff9800 !important;
+}
+
+.border-error {
+  border-left: 4px solid #f44336 !important;
+}
+
+.border-grey {
+  border-left: 4px solid #9e9e9e !important;
 }
 
 /* Responsive text */
