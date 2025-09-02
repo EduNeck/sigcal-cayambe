@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const IrmModel = require('../db/models/IrmModel');
 const DetalleIrmModel = require('../db/models/DetalleIrmModel');
-const { authenticateToken } = require('../middlewares/Auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * @route   POST /api/irm

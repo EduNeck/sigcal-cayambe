@@ -1,4 +1,4 @@
-const GeometriaModel = require('../../db/models/GeometriaModel');
+const GeometriaModel = require('../db/models/GeometriaModel');
 
 /**
  * Controlador para operaciones relacionadas con geometrías de predios

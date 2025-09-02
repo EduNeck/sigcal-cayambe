@@ -1,5 +1,5 @@
-const IrmModel = require('../../db/models/IrmModel');
-const DetalleIrmModel = require('../../db/models/DetalleIrmModel');
+const IrmModel = require('../db/models/IrmModel');
+const DetalleIrmModel = require('../db/models/DetalleIrmModel');
 
 // Controlador para gestionar los IRMs
 const irmController = {

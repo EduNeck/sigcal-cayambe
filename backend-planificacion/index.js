@@ -100,8 +100,13 @@ app.use('/api/datos-titular', require('./routes/datosTitularRoute'));
 app.use('/api/geo-consulta', require('./routes/geoConsultaRoutes'));
 app.use('/api/datos-pugs', require('./routes/datosPugsRoutes'));
 app.use('/api/irm', require('./routes/IrmRoutes')); // Actualizada la ruta al archivo
-app.use('/api/geometria-predio', require('./src/routes/geometriaPredioRoutes')); // Ruta para obtener la geometría del predio
+app.use('/api/geometria-predio', require('./routes/geometriaPredioRoutes')); // Ruta para obtener la geometría del predio
 app.use('/api', require('./routes/croquisRoutes'));
+
+// ========== Rutas del módulo ICUS ==========
+app.use('/api/actividades', require('./routes/actividadRoutes'));
+app.use('/api/tipologias', require('./routes/tipologiaRoutes'));
+app.use('/api/compatibilidades', require('./routes/compatibilidadRoutes'));
 
 // ========== Iniciar servidor ==========
 const PORT = process.env.PORT || 4001;
