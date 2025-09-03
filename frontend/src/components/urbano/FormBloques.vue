@@ -379,6 +379,17 @@ export default {
   async mounted() {
     // Recuperar id de query o Vuex
     const idBloquesQuery = this.$route.query.id_bloques; 
+    
+    // Recuperar tipo_predio de la URL
+    const tipoPredioQuery = this.$route.query.tipo_predio;
+    console.log('🔍 Parámetros de la URL:', { id_bloques: idBloquesQuery, tipo_predio: tipoPredioQuery });
+    
+    // Si viene el tipo_predio en la URL, actualizar el store
+    if (tipoPredioQuery) {
+      const tipoPredioNumerico = parseInt(tipoPredioQuery);
+      console.log('✅ Recibido TIPO PREDIO desde la URL:', tipoPredioNumerico);
+      this.$store.commit('setTipoPredio', tipoPredioNumerico);
+    }
 
     if (idBloquesQuery) {
       console.log('✅ Recibido ID BLOQUE desde la URL:', idBloquesQuery);
@@ -506,7 +517,22 @@ export default {
 
     async cargaCatalogos() {
       console.log('Cargando catálogos...');
-      const tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
+      
+      // Determinar el tipo de predio a utilizar
+      // Verificar primero si hay un tipo_predio en la URL
+      const tipoPredioQuery = this.$route.query.tipo_predio;
+      
+      let tipoPredioFlag;
+      if (tipoPredioQuery) {
+        const tipoPredioNumerico = parseInt(tipoPredioQuery);
+        tipoPredioFlag = tipoPredioNumerico === 1 ? 0 : 2;
+        console.log('🔍 Usando tipo de predio desde la URL para catálogos:', tipoPredioNumerico, '→ Flag:', tipoPredioFlag);
+      } else {
+        // Si no hay en la URL, usar el del store
+        tipoPredioFlag = this.getTipoPredio === 1 ? 0 : 2;
+        console.log('🔍 Usando tipo de predio desde store para catálogos:', this.getTipoPredio, '→ Flag:', tipoPredioFlag);
+      }
+      
       try {
         this.tipoPiso = await this.cargaCatalogo(3,0);         
         this.condicionFisica = await this.cargaCatalogo(99,tipoPredioFlag);
@@ -522,8 +548,11 @@ export default {
         this.ventanas = await this.cargaCatalogo(40,tipoPredioFlag);
         this.vidrios = await this.cargaCatalogo(42,tipoPredioFlag);
         this.puertas = await this.cargaCatalogo(41,tipoPredioFlag);
+        
+        console.log('✅ Catálogos cargados según tipo de predio:', tipoPredioFlag === 0 ? 'Urbano' : 'Rural');
       } catch (error) {
-        console.error('Error al obtener los catálogos:', error);
+        console.error('❌ Error al obtener los catálogos:', error);
+        console.error('Detalles del error:', error.message);
       }
     },
 
