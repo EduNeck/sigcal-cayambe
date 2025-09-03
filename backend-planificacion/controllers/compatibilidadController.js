@@ -5,6 +5,45 @@ const CompatibilidadModel = require('../db/models/CompatibilidadModel');
  */
 const compatibilidadController = {
   /**
+   * Obtener resultado de compatibilidad entre una tipología y un uso de suelo
+   * @param {Object} req - Objeto de solicitud Express
+   * @param {Object} res - Objeto de respuesta Express
+   */
+  async obtenerCompatibilidadPorTipologiaYUso(req, res) {
+    try {
+      const { idTipologia, idUso } = req.query;
+      
+      if (!idTipologia || !idUso) {
+        return res.status(400).json({
+          success: false,
+          message: 'Se requieren los parámetros idTipologia y idUso'
+        });
+      }
+      
+      const compatibilidad = await CompatibilidadModel.obtenerCompatibilidadPorTipologiaYUso(idTipologia, idUso);
+      
+      if (!compatibilidad) {
+        return res.status(404).json({
+          success: false,
+          message: `No se encontró compatibilidad para tipología ${idTipologia} y uso ${idUso}`
+        });
+      }
+      
+      return res.json({
+        success: true,
+        data: compatibilidad
+      });
+    } catch (error) {
+      console.error('Error al obtener compatibilidad por tipología y uso:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error al obtener la compatibilidad',
+        error: error.message
+      });
+    }
+  },
+
+  /**
    * Obtener todas las compatibilidades
    * @param {Object} req - Objeto de solicitud Express
    * @param {Object} res - Objeto de respuesta Express

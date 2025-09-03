@@ -11,9 +11,9 @@ const CompatibilidadModel = {
   async obtenerCompatibilidades() {
     try {
       const query = `
-        SELECT com_id, tip_id, tipo, uso_id, fcode
+        SELECT id_compatibilidad, id_tipologia, tipo, id_uso, fcode, resultado
         FROM planificacion.compatibilidad
-        ORDER BY com_id
+        ORDER BY id_compatibilidad
       `;
       
       const result = await db.query(query);
@@ -32,9 +32,9 @@ const CompatibilidadModel = {
   async obtenerCompatibilidadPorId(id) {
     try {
       const query = `
-        SELECT com_id, tip_id, tipo, uso_id, fcode
+        SELECT id_compatibilidad, id_tipologia, tipo, id_uso, fcode, resultado
         FROM planificacion.compatibilidad
-        WHERE com_id = $1
+        WHERE id_compatibilidad = $1
       `;
       
       const result = await db.query(query, [id]);
@@ -56,15 +56,15 @@ const CompatibilidadModel = {
     try {
       await client.query('BEGIN');
       
-      const { tip_id, tipo, uso_id, fcode } = compatibilidadData;
+      const { id_tipologia, tipo, id_uso, fcode, resultado } = compatibilidadData;
       
       const query = `
-        INSERT INTO planificacion.compatibilidad (tip_id, tipo, uso_id, fcode)
-        VALUES ($1, $2, $3, $4)
-        RETURNING com_id, tip_id, tipo, uso_id, fcode
+        INSERT INTO planificacion.compatibilidad (id_tipologia, tipo, id_uso, fcode, resultado)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id_compatibilidad, id_tipologia, tipo, id_uso, fcode, resultado
       `;
       
-      const result = await client.query(query, [tip_id, tipo, uso_id, fcode]);
+      const result = await client.query(query, [id_tipologia, tipo, id_uso, fcode, resultado]);
       
       await client.query('COMMIT');
       
@@ -90,16 +90,16 @@ const CompatibilidadModel = {
     try {
       await client.query('BEGIN');
       
-      const { tip_id, tipo, uso_id, fcode } = compatibilidadData;
+      const { id_tipologia, tipo, id_uso, fcode, resultado } = compatibilidadData;
       
       const query = `
         UPDATE planificacion.compatibilidad
-        SET tip_id = $1, tipo = $2, uso_id = $3, fcode = $4
-        WHERE com_id = $5
-        RETURNING com_id, tip_id, tipo, uso_id, fcode
+        SET id_tipologia = $1, tipo = $2, id_uso = $3, fcode = $4, resultado = $5
+        WHERE id_compatibilidad = $6
+        RETURNING id_compatibilidad, id_tipologia, tipo, id_uso, fcode, resultado
       `;
       
-      const result = await client.query(query, [tip_id, tipo, uso_id, fcode, id]);
+      const result = await client.query(query, [id_tipologia, tipo, id_uso, fcode, resultado, id]);
       
       if (result.rowCount === 0) {
         throw new Error(`No se encontró la compatibilidad con ID ${id}`);
@@ -130,7 +130,7 @@ const CompatibilidadModel = {
       
       const query = `
         DELETE FROM planificacion.compatibilidad
-        WHERE com_id = $1
+        WHERE id_compatibilidad = $1
       `;
       
       const result = await client.query(query, [id]);
@@ -148,6 +148,28 @@ const CompatibilidadModel = {
       throw error;
     } finally {
       client.release();
+    }
+  },
+
+  /**
+   * Obtener resultado de compatibilidad entre una tipología y un uso de suelo
+   * @param {String} idTipologia - ID de la tipología
+   * @param {String} idUso - ID del uso de suelo (usc)
+   * @returns {Promise<Object>} Resultado de la compatibilidad
+   */
+  async obtenerCompatibilidadPorTipologiaYUso(idTipologia, idUso) {
+    try {
+      const query = `
+        SELECT resultado, tipo, fcode
+        FROM planificacion.compatibilidad
+        WHERE id_tipologia = $1 AND id_uso = $2
+      `;
+      
+      const result = await db.query(query, [idTipologia, idUso]);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error al obtener compatibilidad por tipología y uso:', error);
+      throw error;
     }
   }
 };

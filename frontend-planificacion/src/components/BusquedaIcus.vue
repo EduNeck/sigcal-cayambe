@@ -61,76 +61,6 @@
             </v-col>
           </v-row>
 
-          <!-- Bloque de Actividad y Tipología -->
-          <v-row>
-            <v-col cols="12">
-              <v-card outlined class="pa-3 mb-3">
-                <v-card-title class="text-subtitle-1 pa-0 pb-2">
-                  <v-icon size="small" class="mr-1">mdi-tag-multiple</v-icon>
-                  ACTIVIDAD
-                </v-card-title>
-                <v-row>
-                  <v-col cols="12">
-                    <v-autocomplete
-                      v-model="filtros.id_actividad"
-                      :items="actividades"
-                      item-title="descripcion"
-                      item-value="id_actividad"
-                      label="Seleccione una actividad"
-                      outlined
-                      dense
-                      clearable
-                      @update:model-value="buscarTipologia"
-                      :loading="loadingActividades"
-                      no-data-text="No hay actividades disponibles"
-                      :disabled="loadingActividades"
-                      return-object
-                    >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" :title="item.raw.descripcion" :subtitle="item.raw.id_tipologia ? `Tipología: ${item.raw.id_tipologia}` : 'Sin tipología'"></v-list-item>
-                      </template>
-                    </v-autocomplete>
-                    <p v-if="actividadSeleccionada" class="text-caption mt-1">
-                      <strong>Descripción:</strong> {{ actividadSeleccionada.descripcion }}
-                      <br v-if="actividadSeleccionada.id_tipologia">
-                      <span v-if="actividadSeleccionada.id_tipologia"><strong>ID Tipología:</strong> {{ actividadSeleccionada.id_tipologia }}</span>
-                    </p>
-                  </v-col>
-                </v-row>
-
-                <!-- Tipología debajo de Actividad -->
-                <v-row v-if="filtros.id_actividad">
-                  <v-col cols="12">
-                    <v-card outlined class="pa-3 mt-2" v-if="tipologiaSeleccionada">
-                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
-                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
-                        TIPOLOGÍA
-                      </v-card-title>
-                      <p class="mb-0"><strong>{{ tipologiaSeleccionada.nombre }}</strong></p>
-                      <p class="text-caption mb-0" v-if="tipologiaSeleccionada.descriptacion">
-                        {{ tipologiaSeleccionada.descriptacion }}
-                      </p>
-                    </v-card>
-                    <v-card outlined class="pa-3 mt-2" v-else-if="loadingTipologia">
-                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
-                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
-                        TIPOLOGÍA
-                      </v-card-title>
-                      <v-skeleton-loader type="text" class="mb-2"></v-skeleton-loader>
-                    </v-card>
-                    <v-card outlined class="pa-3 mt-2" v-else>
-                      <v-card-title class="text-subtitle-1 pa-0 pb-2">
-                        <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
-                        TIPOLOGÍA
-                      </v-card-title>
-                      <p class="text-caption mb-1">No se encontró información de tipología para esta actividad.</p>
-                    </v-card>
-                  </v-col>
-                </v-row>
-              </v-card>
-            </v-col>
-          </v-row>
-
           <v-row class="mt-3">
             <v-col class="d-flex justify-end">
               <v-btn
@@ -222,6 +152,22 @@
               <span>Ver detalle</span>
             </v-tooltip>
             
+            <v-tooltip location="bottom" v-if="item.datosPugsCompletos && item.datosPugsCompletos.length > 0">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  icon
+                  x-small
+                  color="info"
+                  v-bind="props"
+                  @click="verUsosSuelo(item)"
+                  class="mr-1"
+                >
+                  <v-icon>mdi-map-marker-multiple</v-icon>
+                </v-btn>
+              </template>
+              <span>Ver usos de suelo ({{ item.datosPugsCompletos.length }})</span>
+            </v-tooltip>
+            
             <v-tooltip location="bottom">
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -253,6 +199,144 @@
       <v-icon left>mdi-information-outline</v-icon>
       No se encontraron resultados para esta búsqueda
     </v-alert>
+    
+    <!-- Bloque de Actividad y Tipología (movido debajo del grid de resultados) -->
+    <v-card v-if="busquedaRealizada && resultados.length > 0" class="mt-4 pa-3" outlined>
+      <v-card-title class="text-subtitle-1 pb-3">
+        <v-icon left class="mr-2">mdi-tag-multiple</v-icon>
+        SELECCIÓN DE ACTIVIDAD Y TIPOLOGÍA
+      </v-card-title>
+      
+      <v-row>
+        <v-col cols="12" md="6">
+          <v-card outlined class="pa-3">
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-tag-multiple</v-icon>
+              ACTIVIDAD
+            </v-card-title>
+            <v-autocomplete
+              v-model="filtros.id_actividad"
+              :items="actividades"
+              item-title="descripcion"
+              item-value="id_actividad"
+              label="Seleccione una actividad"
+              outlined
+              dense
+              clearable
+              @update:model-value="buscarTipologia"
+              :loading="loadingActividades"
+              no-data-text="No hay actividades disponibles"
+              :disabled="loadingActividades"
+              return-object
+            >
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props" :title="item.raw.descripcion" :subtitle="item.raw.id_tipologia ? `Tipología: ${item.raw.id_tipologia}` : 'Sin tipología'"></v-list-item>
+              </template>
+            </v-autocomplete>
+            <p v-if="actividadSeleccionada" class="text-caption mt-1">
+              <strong>Descripción:</strong> {{ actividadSeleccionada.descripcion }}
+              <br v-if="actividadSeleccionada.id_tipologia">
+              <span v-if="actividadSeleccionada.id_tipologia"><strong>ID Tipología:</strong> {{ actividadSeleccionada.id_tipologia }}</span>
+            </p>
+          </v-card>
+        </v-col>
+        
+        <v-col cols="12" md="6">
+          <v-card outlined class="pa-3" v-if="filtros.id_actividad && tipologiaSeleccionada">
+            <!-- Tipología al lado de Actividad -->
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+              TIPOLOGÍA
+            </v-card-title>
+            <p class="mb-0"><strong>{{ tipologiaSeleccionada.nombre }}</strong></p>
+            <p class="text-caption mb-2" v-if="tipologiaSeleccionada.descriptacion">
+              {{ tipologiaSeleccionada.descriptacion }}
+            </p>
+            
+            <!-- Compatibilidad -->
+            <v-divider class="my-3"></v-divider>
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
+              COMPATIBILIDAD
+            </v-card-title>
+            
+            <div v-if="compatibilidadSeleccionada" class="mt-2">
+              <!-- Componente de semáforo con color según compatibilidad -->
+              <div class="d-flex align-center mb-2">
+                <div class="semaforo-container mr-3">
+                  <div class="semaforo">
+                    <!-- Luces del semáforo -->
+                    <div 
+                      class="semaforo-light" 
+                      :class="{ 
+                        'light-active': compatibilidadSeleccionada.tipo === 1,
+                        'light-green': true
+                      }"
+                    ></div>
+                    <div 
+                      class="semaforo-light" 
+                      :class="{ 
+                        'light-active': compatibilidadSeleccionada.tipo === 2,
+                        'light-yellow': true
+                      }"
+                    ></div>
+                    <div 
+                      class="semaforo-light" 
+                      :class="{ 
+                        'light-active': compatibilidadSeleccionada.tipo === 0,
+                        'light-red': true
+                      }"
+                    ></div>
+                  </div>
+                </div>
+                
+                <!-- Chip con información textual -->
+                <v-chip
+                  :color="getCompatibilidadColorFromTipo(compatibilidadSeleccionada.tipo)"
+                  text-color="white"
+                  size="large"
+                  class="font-weight-bold"
+                  elevation="2"
+                >
+                  <v-icon start :icon="getCompatibilidadIcon(compatibilidadSeleccionada.tipo)" class="mr-1"></v-icon>
+                  {{ compatibilidadSeleccionada.resultado || getTipoCompatibilidadTexto(compatibilidadSeleccionada.tipo) }}
+                </v-chip>
+              </div>
+            </div>
+            <div v-else-if="loadingCompatibilidad">
+              <v-skeleton-loader type="chip" class="mt-1"></v-skeleton-loader>
+            </div>
+            <p v-else class="text-caption mt-1">
+              No se encontró información de compatibilidad para esta tipología y uso de suelo.
+            </p>
+          </v-card>
+          
+          <v-card outlined class="pa-3" v-else-if="loadingTipologia">
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+              TIPOLOGÍA
+            </v-card-title>
+            <v-skeleton-loader type="text" class="mb-2"></v-skeleton-loader>
+          </v-card>
+          
+          <v-card outlined class="pa-3" v-else-if="filtros.id_actividad">
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+              TIPOLOGÍA
+            </v-card-title>
+            <p class="text-caption mb-1">No se encontró información de tipología para esta actividad.</p>
+          </v-card>
+          
+          <v-card outlined class="pa-3" v-else>
+            <v-card-title class="text-subtitle-1 pa-0 pb-2">
+              <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
+              TIPOLOGÍA
+            </v-card-title>
+            <p class="text-caption mb-1">Seleccione una actividad para ver su tipología.</p>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-card>
 
     <!-- Diálogo de detalles del titular -->
     <v-dialog v-model="detalleDialog" max-width="800px">
@@ -359,9 +443,53 @@
                           <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
                           RESULTADO DE COMPATIBILIDAD
                         </v-card-title>
-                        <v-chip :color="getCompatibilidadColor(icusSeleccionado.compatibilidad)" text-color="white" class="mt-1">
-                          {{ icusSeleccionado.compatibilidad }}
-                        </v-chip>
+                        
+                        <!-- Semáforo con resultado de compatibilidad en detalle -->
+                        <div class="d-flex align-center mb-2">
+                          <div class="semaforo-container mr-3">
+                            <div class="semaforo">
+                              <!-- Luces del semáforo -->
+                              <div 
+                                class="semaforo-light" 
+                                :class="{ 
+                                  'light-active': icusSeleccionado.compatibilidad === 'COMPATIBLE',
+                                  'light-green': true
+                                }"
+                              ></div>
+                              <div 
+                                class="semaforo-light" 
+                                :class="{ 
+                                  'light-active': icusSeleccionado.compatibilidad === 'CONDICIONADO',
+                                  'light-yellow': true
+                                }"
+                              ></div>
+                              <div 
+                                class="semaforo-light" 
+                                :class="{ 
+                                  'light-active': icusSeleccionado.compatibilidad === 'NO COMPATIBLE → PROHIBIDO' || 
+                                                  icusSeleccionado.compatibilidad === 'No Compatible',
+                                  'light-red': true
+                                }"
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          <!-- Chip con el resultado -->
+                          <v-chip 
+                            :color="getCompatibilidadColor(icusSeleccionado.compatibilidad)" 
+                            text-color="white" 
+                            size="large"
+                            class="font-weight-bold"
+                            elevation="2"
+                          >
+                            <v-icon start class="mr-1">
+                              {{ icusSeleccionado.compatibilidad === 'COMPATIBLE' ? 'mdi-check-circle' : 
+                                 icusSeleccionado.compatibilidad === 'CONDICIONADO' ? 'mdi-alert-circle' : 
+                                 'mdi-close-circle' }}
+                            </v-icon>
+                            {{ icusSeleccionado.compatibilidad }}
+                          </v-chip>
+                        </div>
                       </v-card>
                     </v-col>
                     
@@ -406,6 +534,58 @@
         </v-btn>
       </template>
     </v-snackbar>
+    
+    <!-- Diálogo para mostrar todos los usos de suelo del predio -->
+    <v-dialog v-model="usosDetalleDialog" max-width="900px">
+      <v-card class="dialog-card">
+        <div class="dialog-accent-line"></div>
+        <v-card-title class="dialog-card-title">
+          <v-icon left class="mr-2">mdi-map-marker-multiple</v-icon>
+          Usos de Suelo del Predio
+          <v-spacer></v-spacer>
+          <v-btn icon @click="usosDetalleDialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-subtitle v-if="predioSeleccionado">
+          <strong>Clave Catastral:</strong> {{ predioSeleccionado.clave_catastral }} | 
+          <strong>Propietario:</strong> {{ predioSeleccionado.propietario }}
+        </v-card-subtitle>
+        <v-card-text>
+          <v-data-table
+            :headers="[
+              { title: 'Código', value: 'usc', width: '100px' },
+              { title: 'Uso de Suelo', value: 'usn' },
+              { title: 'Código Act.', value: 'act_id', width: '100px' },
+              { title: 'Actividad', value: 'act_nombre' },
+              { title: 'Código Tip.', value: 'tip_id', width: '100px' },
+              { title: 'Tipología', value: 'tip_nombre' },
+              { title: 'Compatibilidad', value: 'tipo_texto' }
+            ]"
+            :items="predioSeleccionado?.datosPugsCompletos || []"
+            :items-per-page="10"
+            dense
+            class="elevation-1"
+          >
+            <template v-slot:item.tipo_texto="{ item }">
+              <v-chip
+                x-small
+                :color="getCompatibilidadColorFromTipo(item.tipo)"
+                text-color="white"
+              >
+                {{ getTipoCompatibilidadTexto(item.tipo) }}
+              </v-chip>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey darken-1" text @click="usosDetalleDialog = false">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -418,6 +598,7 @@ import datosTitularService from '@/services/datosTitularService';
 import actividadService from '@/services/actividadService';
 import tipologiaService from '@/services/tipologiaService';
 import datosPugsService from '@/services/datosPugsService';
+import compatibilidadService from '@/services/compatibilidadService';
 
 export default {
   name: 'BusquedaICUS',
@@ -432,6 +613,8 @@ export default {
     const detalleDialog = ref(false);
     const icusSeleccionado = ref(null);
     const activeTab = ref('general'); // Para controlar las pestañas en el diálogo de detalles
+    const predioSeleccionado = ref(null); // Para mostrar los usos de suelo del predio seleccionado
+    const usosDetalleDialog = ref(false); // Para controlar el diálogo de detalles de usos
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -456,6 +639,10 @@ export default {
     
     const tipologiaSeleccionada = ref(null);
     const loadingTipologia = ref(false);
+    
+    // Variables para compatibilidad
+    const compatibilidadSeleccionada = ref(null);
+    const loadingCompatibilidad = ref(false);
     
     // Encabezados para la tabla
     const headers = [
@@ -527,6 +714,8 @@ export default {
               compatibilidad: '',
               id_suelo: '',
               uso_suelo: '',
+              // Array para almacenar todos los usos de suelo
+              datosPugsCompletos: [],
               fecha: new Date().toISOString().split('T')[0]
             };
             
@@ -537,24 +726,30 @@ export default {
                 const pugsResponse = await datosPugsService.obtenerPorClaveCatastral(titular.clave_catastral);
                 
                 if (pugsResponse.data && pugsResponse.data.success && pugsResponse.data.data && pugsResponse.data.data.length > 0) {
-                  const datosPugs = pugsResponse.data.data[0];
-                  console.log(`✅ Datos PUGS encontrados para ${titular.clave_catastral}:`, datosPugs);
+                  // Guardar todos los datos PUGS encontrados
+                  resultadoItem.datosPugsCompletos = pugsResponse.data.data;
+                  console.log(`✅ ${pugsResponse.data.data.length} datos PUGS encontrados para ${titular.clave_catastral}`);
                   
-                  // Agregar la información de uso de suelo al resultado
-                  resultadoItem.id_suelo = datosPugs.usc || '';
-                  resultadoItem.uso_suelo = datosPugs.usn || '';
-                  resultadoItem.id_actividad = datosPugs.act_id || '';
-                  resultadoItem.actividad = datosPugs.act_nombre || '';
-                  resultadoItem.id_tipologia = datosPugs.tip_id || '';
-                  resultadoItem.tipologia = datosPugs.tip_nombre || '';
-                  
-                  // Determinar la compatibilidad basada en el tipo
-                  if (datosPugs.tipo === 1) {
-                    resultadoItem.compatibilidad = 'Compatible';
-                  } else if (datosPugs.tipo === 2) {
-                    resultadoItem.compatibilidad = 'Condicionado';
-                  } else if (datosPugs.tipo === 0) {
-                    resultadoItem.compatibilidad = 'No Compatible';
+                  // Usar el primer registro como principal para mostrar en el grid principal
+                  if (pugsResponse.data.data.length > 0) {
+                    const datosPugs = pugsResponse.data.data[0];
+                    
+                    // Agregar la información de uso de suelo principal al resultado
+                    resultadoItem.id_suelo = datosPugs.usc || '';
+                    resultadoItem.uso_suelo = datosPugs.usn || '';
+                    resultadoItem.id_actividad = datosPugs.act_id || '';
+                    resultadoItem.actividad = datosPugs.act_nombre || '';
+                    resultadoItem.id_tipologia = datosPugs.tip_id || '';
+                    resultadoItem.tipologia = datosPugs.tip_nombre || '';
+                    
+                    // Determinar la compatibilidad basada en el tipo
+                    if (datosPugs.tipo === 1) {
+                      resultadoItem.compatibilidad = 'Compatible';
+                    } else if (datosPugs.tipo === 2) {
+                      resultadoItem.compatibilidad = 'Condicionado';
+                    } else if (datosPugs.tipo === 0) {
+                      resultadoItem.compatibilidad = 'No Compatible';
+                    }
                   }
                 } else {
                   console.log(`⚠️ No se encontraron datos PUGS para clave catastral: ${titular.clave_catastral}`);
@@ -609,6 +804,12 @@ export default {
     const verDetalle = (item) => {
       icusSeleccionado.value = item;
       detalleDialog.value = true;
+    };
+    
+    // Método para ver los usos de suelo de un predio
+    const verUsosSuelo = (item) => {
+      predioSeleccionado.value = item;
+      usosDetalleDialog.value = true;
     };
     
     // Método para seleccionar un titular y preparar su ICUS
@@ -692,6 +893,30 @@ export default {
       return 'grey';
     };
     
+    // Método para obtener el color de la compatibilidad a partir del tipo numérico
+    const getCompatibilidadColorFromTipo = (tipo) => {
+      if (tipo === 1) return 'success'; // Verde para COMPATIBLE
+      if (tipo === 2) return 'warning'; // Amarillo para CONDICIONADO
+      if (tipo === 0) return 'error';   // Rojo para NO COMPATIBLE
+      return 'grey';                    // Gris para no evaluado
+    };
+    
+    // Método para obtener el icono correspondiente al tipo de compatibilidad (semáforo)
+    const getCompatibilidadIcon = (tipo) => {
+      if (tipo === 1) return 'mdi-check-circle';          // Icono de verificación para COMPATIBLE
+      if (tipo === 2) return 'mdi-alert-circle';          // Icono de alerta para CONDICIONADO
+      if (tipo === 0) return 'mdi-close-circle';          // Icono de prohibición para NO COMPATIBLE
+      return 'mdi-help-circle-outline';                   // Icono de interrogación para no evaluado
+    };
+    
+    // Método para convertir el tipo numérico a texto de compatibilidad
+    const getTipoCompatibilidadTexto = (tipo) => {
+      if (tipo === 1) return 'COMPATIBLE';
+      if (tipo === 2) return 'CONDICIONADO';
+      if (tipo === 0) return 'NO COMPATIBLE → PROHIBIDO';
+      return 'No evaluado';
+    };
+    
     // Cargar actividades
     const cargarActividades = async () => {
       loadingActividades.value = true;
@@ -721,10 +946,12 @@ export default {
       if (!filtros.id_actividad) {
         actividadSeleccionada.value = null;
         tipologiaSeleccionada.value = null;
+        compatibilidadSeleccionada.value = null;
         return;
       }
       
       loadingTipologia.value = true;
+      compatibilidadSeleccionada.value = null;
       
       // Como ahora estamos usando return-object, la actividad seleccionada es el objeto completo
       actividadSeleccionada.value = filtros.id_actividad;
@@ -740,6 +967,10 @@ export default {
             if (response.data && response.data.success) {
               tipologiaSeleccionada.value = response.data.data;
               showSnackbar(`Tipología '${response.data.data.nombre}' encontrada`, 'success');
+              
+              // Una vez que tengamos la tipología, buscamos la compatibilidad con el uso de suelo seleccionado
+              await buscarCompatibilidad(idTipologia);
+              
             } else {
               tipologiaSeleccionada.value = null;
               showSnackbar('No se encontró la tipología correspondiente', 'warning');
@@ -767,6 +998,72 @@ export default {
       }
     };
     
+    // Buscar compatibilidad entre tipología y uso de suelo
+    const buscarCompatibilidad = async (idTipologia) => {
+      // Verificamos que tengamos un uso de suelo seleccionado
+      if (!resultados.value.length || !resultados.value[0].id_suelo) {
+        console.log('No hay predio seleccionado o no tiene uso de suelo definido');
+        return;
+      }
+      
+      const idUso = resultados.value[0].id_suelo;
+      
+      if (!idTipologia || !idUso) {
+        console.log('Faltan datos para consultar compatibilidad:', { idTipologia, idUso });
+        return;
+      }
+      
+      loadingCompatibilidad.value = true;
+      compatibilidadSeleccionada.value = null;
+      
+      try {
+        // Limpiar y formatear los IDs
+        const tipologiaIdLimpio = String(idTipologia).trim();
+        const usoIdLimpio = String(idUso).trim();
+        
+        console.log(`🔍 Consultando compatibilidad para tipología [${tipologiaIdLimpio}] y uso [${usoIdLimpio}]`);
+        console.log(`🔍 Tipos de datos: tipología (${typeof tipologiaIdLimpio}), uso (${typeof usoIdLimpio})`);
+        
+        // Intentar obtener la compatibilidad
+        const response = await compatibilidadService.obtenerCompatibilidadPorTipologiaYUso(tipologiaIdLimpio, usoIdLimpio);
+        
+        console.log('✅ Respuesta completa:', response);
+        
+        if (response.data && response.data.success && response.data.data) {
+          compatibilidadSeleccionada.value = response.data.data;
+          console.log('✅ Compatibilidad encontrada:', compatibilidadSeleccionada.value);
+          
+          // Mostrar notificación exitosa
+          showSnackbar(`Compatibilidad encontrada: ${compatibilidadSeleccionada.value.resultado || 'Sin resultado definido'}`, 'success');
+        } else {
+          console.log('⚠️ No se encontró información de compatibilidad en la respuesta:', response.data);
+          showSnackbar(`No existe compatibilidad para tipología ${tipologiaIdLimpio} y uso ${usoIdLimpio}`, 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Error al consultar compatibilidad:', error);
+        
+        // Verificar si es un error 404 de "no encontrado"
+        if (error.response?.status === 404) {
+          console.log('ℹ️ No se encontró compatibilidad en la base de datos');
+          
+          // Crear un objeto de compatibilidad por defecto para mostrar "NO COMPATIBLE → PROHIBIDO"
+          compatibilidadSeleccionada.value = {
+            tipo: 0,  // 0 = No compatible
+            resultado: 'NO COMPATIBLE → PROHIBIDO',
+            fcode: null
+          };
+          
+          showSnackbar(`No existe compatibilidad definida para esta tipología y uso de suelo. Se considera "NO COMPATIBLE → PROHIBIDO".`, 'warning');
+        } else {
+          console.error('❌ Detalles del error:', error.response?.data || error.message);
+          showSnackbar(`Error al consultar compatibilidad: ${error.message}`, 'error');
+          compatibilidadSeleccionada.value = null;
+        }
+      } finally {
+        loadingCompatibilidad.value = false;
+      }
+    };
+    
     // Cargar datos al inicializar el componente
     onMounted(async () => {
       await cargarActividades();
@@ -784,27 +1081,82 @@ export default {
       icusSeleccionado,
       activeTab,
       snackbar,
+      predioSeleccionado,
+      usosDetalleDialog,
       buscar,
       limpiarFiltros,
       verDetalle,
+      verUsosSuelo,
       seleccionarTitular,
       generarInforme,
       salir,
       formatearFecha,
       getCompatibilidadColor,
+      getCompatibilidadColorFromTipo,
+      getCompatibilidadIcon,
+      getTipoCompatibilidadTexto,
       // Propiedades para actividades y tipologías
       actividades,
       loadingActividades,
       actividadSeleccionada,
       tipologiaSeleccionada,
       loadingTipologia,
-      buscarTipologia
+      buscarTipologia,
+      // Propiedades para compatibilidad
+      compatibilidadSeleccionada,
+      loadingCompatibilidad,
+      buscarCompatibilidad
     };
   }
 };
 </script>
 
 <style scoped>
+/* Estilos del semáforo de compatibilidad */
+.semaforo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.semaforo {
+  background-color: #333;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  width: 25px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+.semaforo-light {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin: 3px;
+  background-color: rgba(255,255,255,0.2);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+.light-green {
+  background-color: rgba(76, 175, 80, 0.3);
+}
+.light-yellow {
+  background-color: rgba(255, 193, 7, 0.3);
+}
+.light-red {
+  background-color: rgba(244, 67, 54, 0.3);
+}
+.light-active.light-green {
+  background-color: #4CAF50;
+  box-shadow: 0 0 10px #4CAF50;
+}
+.light-active.light-yellow {
+  background-color: #FFC107;
+  box-shadow: 0 0 10px #FFC107;
+}
+.light-active.light-red {
+  background-color: #F44336;
+  box-shadow: 0 0 10px #F44336;
+}
+
 /* Container styles */
 .main-container {
   background: linear-gradient(135deg, #f5f7fa 0%, #ebf0f6 100%);

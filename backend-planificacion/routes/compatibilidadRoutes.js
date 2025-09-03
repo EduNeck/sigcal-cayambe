@@ -3,7 +3,10 @@ const router = express.Router();
 const compatibilidadController = require('../controllers/compatibilidadController');
 const { authenticateToken } = require('../middleware/auth');
 
-// Aplicar middleware de autenticación JWT a todas las rutas
+// Ruta pública para obtener compatibilidad por tipología y uso (no requiere autenticación)
+router.get('/tipologia-uso/resultado', compatibilidadController.obtenerCompatibilidadPorTipologiaYUso);
+
+// Aplicar middleware de autenticación JWT al resto de las rutas
 router.use(authenticateToken);
 
 /**
@@ -12,6 +15,8 @@ router.use(authenticateToken);
  * @access Private
  */
 router.get('/', compatibilidadController.obtenerCompatibilidades);
+
+// Esta ruta ya está definida antes del middleware de autenticación
 
 /**
  * @route GET /api/compatibilidades/:id
