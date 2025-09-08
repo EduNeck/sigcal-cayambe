@@ -762,17 +762,18 @@ export default {
     async eliminar() {
       console.log('Eliminando tenencia:', this.idTenencia);
       if (!this.idTenencia) {
-        this.snackbarError = 'No hay un tenencia seleccionado para eliminar';
+        this.snackbarError = 'No hay una tenencia seleccionada para eliminar';
         this.snackbarErrorPush = true;
         return;
       }
       try {
-        await axios.post(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
-        this.snackbarOk = 'tenencia eliminado exitosamente';
+        await axios.delete(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
+        this.snackbarOk = 'Tenencia eliminada exitosamente';
         this.snackbarOkPush = true;
         this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
         this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
-        this.nuevoRegistro(); // Limpiar el formulario después de eliminar
+        this.nuevo(); // Limpiar el formulario después de eliminar
+        this.updateIdTenencia(null); // Establecer idTenencia a null después de eliminar
       } catch (error) {
         console.error('Error al eliminar el tenencia:', error);
         this.snackbarError = 'Error al eliminar el tenencia';

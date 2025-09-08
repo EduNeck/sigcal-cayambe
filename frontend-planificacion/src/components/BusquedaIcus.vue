@@ -261,36 +261,8 @@
             </v-card-title>
             
             <div v-if="compatibilidadSeleccionada" class="mt-2">
-              <!-- Componente de semáforo con color según compatibilidad -->
+              <!-- Chip con información textual -->
               <div class="d-flex align-center mb-2">
-                <div class="semaforo-container mr-3">
-                  <div class="semaforo">
-                    <!-- Luces del semáforo -->
-                    <div 
-                      class="semaforo-light" 
-                      :class="{ 
-                        'light-active': compatibilidadSeleccionada.tipo === 1,
-                        'light-green': true
-                      }"
-                    ></div>
-                    <div 
-                      class="semaforo-light" 
-                      :class="{ 
-                        'light-active': compatibilidadSeleccionada.tipo === 2,
-                        'light-yellow': true
-                      }"
-                    ></div>
-                    <div 
-                      class="semaforo-light" 
-                      :class="{ 
-                        'light-active': compatibilidadSeleccionada.tipo === 0,
-                        'light-red': true
-                      }"
-                    ></div>
-                  </div>
-                </div>
-                
-                <!-- Chip con información textual -->
                 <v-chip
                   :color="getCompatibilidadColorFromTipo(compatibilidadSeleccionada.tipo)"
                   text-color="white"
@@ -444,37 +416,8 @@
                           RESULTADO DE COMPATIBILIDAD
                         </v-card-title>
                         
-                        <!-- Semáforo con resultado de compatibilidad en detalle -->
+                        <!-- Chip con el resultado de compatibilidad -->
                         <div class="d-flex align-center mb-2">
-                          <div class="semaforo-container mr-3">
-                            <div class="semaforo">
-                              <!-- Luces del semáforo -->
-                              <div 
-                                class="semaforo-light" 
-                                :class="{ 
-                                  'light-active': icusSeleccionado.compatibilidad === 'COMPATIBLE',
-                                  'light-green': true
-                                }"
-                              ></div>
-                              <div 
-                                class="semaforo-light" 
-                                :class="{ 
-                                  'light-active': icusSeleccionado.compatibilidad === 'CONDICIONADO',
-                                  'light-yellow': true
-                                }"
-                              ></div>
-                              <div 
-                                class="semaforo-light" 
-                                :class="{ 
-                                  'light-active': icusSeleccionado.compatibilidad === 'NO COMPATIBLE → PROHIBIDO' || 
-                                                  icusSeleccionado.compatibilidad === 'No Compatible',
-                                  'light-red': true
-                                }"
-                              ></div>
-                            </div>
-                          </div>
-                          
-                          <!-- Chip con el resultado -->
                           <v-chip 
                             :color="getCompatibilidadColor(icusSeleccionado.compatibilidad)" 
                             text-color="white" 
@@ -901,7 +844,7 @@ export default {
       return 'grey';                    // Gris para no evaluado
     };
     
-    // Método para obtener el icono correspondiente al tipo de compatibilidad (semáforo)
+    // Método para obtener el icono correspondiente al tipo de compatibilidad
     const getCompatibilidadIcon = (tipo) => {
       if (tipo === 1) return 'mdi-check-circle';          // Icono de verificación para COMPATIBLE
       if (tipo === 2) return 'mdi-alert-circle';          // Icono de alerta para CONDICIONADO
@@ -1112,50 +1055,6 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos del semáforo de compatibilidad */
-.semaforo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.semaforo {
-  background-color: #333;
-  border-radius: 10px;
-  padding: 5px;
-  display: flex;
-  flex-direction: column;
-  width: 25px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.3);
-}
-.semaforo-light {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  margin: 3px;
-  background-color: rgba(255,255,255,0.2);
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-}
-.light-green {
-  background-color: rgba(76, 175, 80, 0.3);
-}
-.light-yellow {
-  background-color: rgba(255, 193, 7, 0.3);
-}
-.light-red {
-  background-color: rgba(244, 67, 54, 0.3);
-}
-.light-active.light-green {
-  background-color: #4CAF50;
-  box-shadow: 0 0 10px #4CAF50;
-}
-.light-active.light-yellow {
-  background-color: #FFC107;
-  box-shadow: 0 0 10px #FFC107;
-}
-.light-active.light-red {
-  background-color: #F44336;
-  box-shadow: 0 0 10px #F44336;
-}
 
 /* Container styles */
 .main-container {

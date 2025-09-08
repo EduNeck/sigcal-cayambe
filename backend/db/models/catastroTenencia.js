@@ -145,24 +145,24 @@ const getTenenciaById = async (id_tenencia) => {
     }
 };
 
-// Función para eliminar un registro de la tabla de Fotos de Predio por id
+// Función para eliminar un registro de la tabla de tenencia por id
 const deleteCatastroTenencia = async (id) => {
     const query = `
-        DELETE FROM public.catastro_tenencia WHERE id_tenencia = $1;
+        DELETE FROM public.catastro_tenencia WHERE id_tenencia = $1 RETURNING id_tenencia;
     `;
     const values = [id];
 
     try {
         const result = await db.query(query, values);
-        if (result.rows.length === 0) {
-            console.warn(`⚠ No se encontró ningun tenencia con id: ${id}`);
+        if (result.rowCount === 0) {
+            console.warn(`⚠ No se encontró ninguna tenencia con id: ${id}`);
             return null;
         }
-        console.log(`✅ tenencia con id: ${id} eliminada con éxito`);
+        console.log(`✅ Tenencia con id: ${id} eliminada con éxito`);
         return result.rows[0];
     } catch (err) {
-        console.error(`❌ Error al eliminar el tenencia con id: ${id}`, err.message);
-        throw new Error('Error al eliminar el tenencia en la base de datos');
+        console.error(`❌ Error al eliminar la tenencia con id: ${id}`, err.message);
+        throw new Error('Error al eliminar la tenencia en la base de datos');
     }
 };
 
