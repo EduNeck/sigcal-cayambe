@@ -125,6 +125,31 @@ const getListadoTenenciaByPredio  = async (id) => {
     }
 };
 
+// Función para obtener el porcentaje acumulado de participación por predio
+const getPorcentajeAcumuladoByPredio = async (id_predio, id_tenencia_excluir = null) => {
+    let query = `
+        SELECT COALESCE(SUM(porcentaje_participacion), 0) as total_porcentaje
+        FROM public.catastro_tenencia
+        WHERE id_predio = $1
+    `;
+    
+    const values = [id_predio];
+    
+    // Si se proporciona un ID de tenencia para excluir (ej: cuando estamos actualizando)
+    if (id_tenencia_excluir) {
+        query += ` AND id_tenencia != $2`;
+        values.push(id_tenencia_excluir);
+    }
+    
+    try {
+        const result = await db.query(query, values);
+        return parseFloat(result.rows[0].total_porcentaje);
+    } catch (err) {
+        console.error('Error al obtener porcentaje acumulado:', err.stack);
+        throw err;
+    }
+};
+
 // Función para obtener los datos de una tenencia por id_tenencia
 const getTenenciaById = async (id_tenencia) => {
     const query = `SELECT id_predio, permite_ingreso, presenta_escritura,
@@ -200,5 +225,6 @@ module.exports = {
     getListadoTenenciaByPredio, 
     getTenenciaById,
     deleteCatastroTenencia,
-    insertMultiplesTenenciasBasicas
+    insertMultiplesTenenciasBasicas,
+    getPorcentajeAcumuladoByPredio
 }

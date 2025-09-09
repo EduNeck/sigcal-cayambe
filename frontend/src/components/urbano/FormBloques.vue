@@ -416,6 +416,25 @@ export default {
     // Recuperar datos del bloque si existe
     if (this.idBloque) {
       await this.cargaBloques(this.idBloque);
+      
+      // Verificar si después de cargar el bloque tenemos los campos necesarios pero no el área
+      // Nota: cod_uni puede ser 0, por lo que validamos si existe con typeof
+      const cod_uni_valido = typeof this.form.cod_uni === 'number' || typeof this.form.cod_uni === 'string';
+      
+      if (this.form.cod_bloq && this.form.cod_piso && cod_uni_valido && 
+          this.form.id_tipo_piso && !this.form.area_construida) {
+        console.log('⏱️ Esperando 500ms antes de intentar obtener el área del bloque...');
+        console.log('📊 Valores para cálculo:', 
+                   {cod_bloq: this.form.cod_bloq, 
+                    cod_piso: this.form.cod_piso, 
+                    cod_uni: this.form.cod_uni, 
+                    tipo_piso: this.form.id_tipo_piso});
+        // Pequeña espera para asegurar que todo esté listo
+        setTimeout(() => {
+          console.log('🔄 Intentando obtener el área del bloque después del montaje...');
+          this.obtenerAreaBloque();
+        }, 500);
+      }
     }
   },
 
@@ -424,21 +443,33 @@ export default {
   
     async obtenerAreaBloque() {
       // Validar que tenemos todos los parámetros necesarios
+      // Nota: cod_uni puede ser 0, por lo que debemos validarlo con typeof para evitar falsy
       if (!this.idPredio || !this.form.cod_bloq || !this.form.cod_piso || 
-          !this.form.cod_uni || !this.form.id_tipo_piso) {
+          (typeof this.form.cod_uni !== 'number' && typeof this.form.cod_uni !== 'string') || !this.form.id_tipo_piso) {
         console.warn('⚠️ Faltan parámetros para consultar el área del bloque');
+        console.log('Parámetros faltantes:');
+        if (!this.idPredio) console.log('  - ID Predio');
+        if (!this.form.cod_bloq) console.log('  - cod_bloq');
+        if (!this.form.cod_piso) console.log('  - cod_piso');
+        if (typeof this.form.cod_uni !== 'number' && typeof this.form.cod_uni !== 'string') console.log('  - cod_uni');
+        if (!this.form.id_tipo_piso) console.log('  - id_tipo_piso');
         return;
       }
 
       try {
+        console.log('🔄 Obteniendo clave catastral para el predio ID:', this.idPredio);
         // Primero necesitamos obtener la clave catastral del predio
         const predioResponse = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${this.idPredio}`);
         const claveCatastral = predioResponse.data.clave_catastral;
         
         if (!claveCatastral) {
           console.warn('⚠️ No se pudo obtener la clave catastral del predio');
+          this.snackbarError = 'No se pudo obtener la clave catastral del predio';
+          this.snackbarErrorPush = true;
           return;
         }
+        
+        console.log('✅ Clave catastral obtenida:', claveCatastral);
 
         // Convertir getTipoPredio a tipoZona (asumiendo que es la misma lógica)
         const tipoZona = this.getTipoPredio;
@@ -447,10 +478,19 @@ export default {
         const tipoPixoAjustado = this.form.id_tipo_piso - 4;
         console.log('🔧 Ajustando id_tipo_piso:', this.form.id_tipo_piso, '→', tipoPixoAjustado);
 
+        console.log('🔍 Consultando área para bloque con parámetros:');
+        console.log(`  - Clave Catastral: ${claveCatastral}`);
+        console.log(`  - Código Bloque: ${this.form.cod_bloq}`);
+        console.log(`  - Código Piso: ${this.form.cod_piso}`);
+        console.log(`  - Código Unidad: ${this.form.cod_uni}`);
+        console.log(`  - Tipo Piso Ajustado: ${tipoPixoAjustado}`);
+        console.log(`  - Tipo Zona: ${tipoZona}`);
+
+        const urlConsulta = `${API_BASE_URL}/geo_consultas/area_bloque/${claveCatastral}/${this.form.cod_bloq}/${this.form.cod_piso}/${this.form.cod_uni}/${tipoPixoAjustado}/${tipoZona}`;
+        console.log('📡 URL de consulta:', urlConsulta);
+
         // Llamar al servicio de área de bloque
-        const areaResponse = await axios.get(
-          `${API_BASE_URL}/geo_consultas/area_bloque/${claveCatastral}/${this.form.cod_bloq}/${this.form.cod_piso}/${this.form.cod_uni}/${tipoPixoAjustado}/${tipoZona}`
-        );
+        const areaResponse = await axios.get(urlConsulta);
 
         if (areaResponse.data && (typeof areaResponse.data === 'number' || (typeof areaResponse.data === 'string' && !isNaN(parseFloat(areaResponse.data))))) {
           // Convertir a número si es string
@@ -459,18 +499,30 @@ export default {
           console.log('✅ Área del bloque obtenida:', areaValue);
           
           // Mostrar mensaje con el área obtenida
-          this.snackbarOk = `Área del bloque calculada: ${areaValue} m²`;
+          this.snackbarOk = `Área del bloque calculada: ${areaValue.toFixed(2)} m²`;
           this.snackbarOkPush = true;
         } else {
           console.warn('⚠️ No se encontró área para este bloque');
-          this.snackbarError = 'No se encontró área para este bloque';
+          console.log('Respuesta recibida:', areaResponse.data);
+          this.snackbarError = 'No se encontró área para este bloque en la capa gráfica';
           this.snackbarErrorPush = true;
         }
 
       } catch (error) {
         console.error('❌ Error al obtener el área del bloque:', error);
+        if (error.response) {
+          console.error('Detalles del error:');
+          console.error('  - Status:', error.response.status);
+          console.error('  - Data:', error.response.data);
+        }
+        
         if (error.response?.status === 404) {
-          console.warn('⚠️ No se encontró área para este bloque en la base de datos');
+          console.warn('⚠️ No se encontró área para este bloque en la base de datos (404)');
+          this.snackbarError = 'No se encontró geometría para este bloque en la capa gráfica';
+          this.snackbarErrorPush = true;
+        } else {
+          this.snackbarError = 'Error al obtener el área del bloque';
+          this.snackbarErrorPush = true;
         }
       }
     },
@@ -484,8 +536,16 @@ export default {
       
       // Establecer nuevo timeout para evitar múltiples llamadas
       this.areaCalculationTimeout = setTimeout(() => {
-        if (this.form.cod_bloq && this.form.cod_piso && this.form.cod_uni && 
+        // Nota: cod_uni puede ser 0, por lo que validamos si existe con typeof
+        const cod_uni_valido = typeof this.form.cod_uni === 'number' || typeof this.form.cod_uni === 'string';
+        
+        if (this.form.cod_bloq && this.form.cod_piso && cod_uni_valido && 
             this.form.id_tipo_piso && this.idPredio && !this.form.area_construida) {
+          console.log('⏱️ Calculando área automáticamente con valores:',
+                     {cod_bloq: this.form.cod_bloq, 
+                      cod_piso: this.form.cod_piso, 
+                      cod_uni: this.form.cod_uni, 
+                      tipo_piso: this.form.id_tipo_piso});
           this.obtenerAreaBloque();
         }
       }, 500); // Esperar 500ms después del último cambio
@@ -681,42 +741,63 @@ export default {
 
     async cargarAreaBloqueAutomatico(claveCatastral) {      
       // Validar que tenemos todos los parámetros necesarios
+      // Nota: cod_uni puede ser 0, por lo que debemos validarlo con typeof para evitar falsy
       if (!claveCatastral || !this.form.cod_bloq || !this.form.cod_piso || 
-          !this.form.cod_uni || !this.form.id_tipo_piso) {
-        console.warn('Faltan parámetros para consultar el área del bloque automáticamente');
+          (typeof this.form.cod_uni !== 'number' && typeof this.form.cod_uni !== 'string') || !this.form.id_tipo_piso) {
+        console.warn('⚠️ Faltan parámetros para consultar el área del bloque automáticamente');
         console.log('Parámetros faltantes:');
         if (!claveCatastral) console.log('  - Clave Catastral');
         if (!this.form.cod_bloq) console.log('  - cod_bloq');
         if (!this.form.cod_piso) console.log('  - cod_piso');
-        if (!this.form.cod_uni) console.log('  - cod_uni');
+        if (typeof this.form.cod_uni !== 'number' && typeof this.form.cod_uni !== 'string') console.log('  - cod_uni');
         if (!this.form.id_tipo_piso) console.log('  - id_tipo_piso');
+        
+        // Si ya tenemos un área, no mostrar error
+        if (!this.form.area_construida) {
+          this.snackbarError = 'No se puede calcular el área: faltan datos del bloque';
+          this.snackbarErrorPush = true;
+        }
         return;
       }
 
       try {
+        console.log('🔍 Consultando área para bloque con parámetros:');
+        console.log(`  - Clave Catastral: ${claveCatastral}`);
+        console.log(`  - Código Bloque: ${this.form.cod_bloq}`);
+        console.log(`  - Código Piso: ${this.form.cod_piso}`);
+        console.log(`  - Código Unidad: ${this.form.cod_uni}`);
+        console.log(`  - Tipo Piso: ${this.form.id_tipo_piso}`);
+        
         const tipoZona = this.getTipoPredio;
         
         // Ajustar id_tipo_piso restando 4
         const tipoPixoAjustado = this.form.id_tipo_piso - 4;        
         const urlCompleta = `${API_BASE_URL}/geo_consultas/area_bloque/${claveCatastral}/${this.form.cod_bloq}/${this.form.cod_piso}/${this.form.cod_uni}/${tipoPixoAjustado}/${tipoZona}`;
+        console.log('📡 URL de consulta:', urlCompleta);
+        
         const areaResponse = await axios.get(urlCompleta);      
 
         if (areaResponse.data && (typeof areaResponse.data === 'number' || (typeof areaResponse.data === 'string' && !isNaN(parseFloat(areaResponse.data))))) {
           // Convertir a número si es string
           const areaValue = typeof areaResponse.data === 'number' ? areaResponse.data : parseFloat(areaResponse.data);
           this.form.area_construida = areaValue;
-          console.log('Área del bloque cargada automáticamente:', areaValue);
+          console.log('✅ Área del bloque cargada automáticamente:', areaValue);
           
           // Mostrar mensaje con el área cargada automáticamente
-          this.snackbarOk = `Área del bloque cargada automáticamente: ${areaValue} m²`;
+          this.snackbarOk = `Área del bloque cargada: ${areaValue.toFixed(2)} m²`;
           this.snackbarOkPush = true;
         } else {
-          console.warn('No se encontró área para este bloque o la respuesta no es válida');
+          console.warn('⚠️ No se encontró área para este bloque o la respuesta no es válida');
           console.log('Respuesta recibida:', areaResponse.data);
+          
+          if (!this.form.area_construida) {
+            this.snackbarError = 'No se encontró área para este bloque en la capa gráfica';
+            this.snackbarErrorPush = true;
+          }
         }
 
       } catch (error) {
-        console.error('Error al obtener el área del bloque automáticamente:', error);
+        console.error('❌ Error al obtener el área del bloque automáticamente:', error);
         if (error.response) {
           console.error('Detalles del error:');
           console.error('  - Status:', error.response.status);
@@ -724,7 +805,12 @@ export default {
           console.error('  - Headers:', error.response.headers);
         }
         if (error.response?.status === 404) {
-          console.warn('No se encontró área para este bloque en la base de datos (404)');
+          console.warn('⚠️ No se encontró área para este bloque en la base de datos (404)');
+          this.snackbarError = 'No se encontró geometría para este bloque en la capa gráfica';
+          this.snackbarErrorPush = true;
+        } else {
+          this.snackbarError = 'Error al obtener el área del bloque';
+          this.snackbarErrorPush = true;
         }
       }      
     },

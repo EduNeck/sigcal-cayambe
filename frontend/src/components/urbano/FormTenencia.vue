@@ -75,6 +75,10 @@
                 <v-text-field label="Porcentaje Participación" 
                   v-model="form.porcentaje_participacion" 
                   type="number"
+                  :error-messages="errorPorcentaje"
+                  @input="validarPorcentaje"
+                  hint="El porcentaje total no debe superar el 100%"
+                  persistent-hint
                   >
                 </v-text-field>
               </v-col>
@@ -100,14 +104,24 @@
       <v-card-text>
         <v-row>
           <v-col cols="12" sm="6" md="8">
-            <v-select 
+            <v-autocomplete 
               :items="ciudadanoTenencia" 
-              label="Propietario" 
+              label="Propietario (buscar por nombre, apellido o documento)" 
               v-model="form.id_propietario" 
               item-text="title" 
               item-value="id"
-              required              
-            ></v-select>
+              required
+              clearable
+              @update:search="buscarPropietarios"
+              :loading="buscandoPropietarios"
+              return-object
+              @update:model-value="seleccionarPropietario"
+              hint="Puede buscar por nombre, apellido o número de documento sin importar el orden"
+              persistent-hint
+              auto-select-first
+              :menu-props="{ auto: true }"
+              :no-data-text="'Sin resultados. Intente otra búsqueda'"
+            ></v-autocomplete>
           </v-col>
           <v-col cols="12" sm="6" md="4">
             <v-checkbox
@@ -331,10 +345,10 @@ export default {
   data() {
     return {
       form: {
-        permite_ingreso: null,
-        presenta_escritura: null,
-        asentamiento_de_hecho: null,
-        conflicto: null,
+        permite_ingreso: 'NO',
+        presenta_escritura: 'NO',
+        asentamiento_de_hecho: 'NO',
+        conflicto: 'NO',
         porcentaje_participacion: '',
         id_forma_propiedad: null,
         id_propietario: null,
@@ -357,6 +371,8 @@ export default {
         propietario_anterior: '',        
         representante: 2,
       },
+      buscandoPropietarios: false,
+      busquedaTimeout: null,
       // Listados
       items: ['SI', 'NO'],
       formaPropiedad: [],
@@ -374,6 +390,11 @@ export default {
       snackbarOk: '',
       dialogConsultaRegistro: false,
       
+      // Variables para validación del porcentaje
+      porcentajeAcumulado: 0,
+      porcentajeOriginal: 0,
+      errorPorcentaje: '',
+      porcentajeValido: true
     }
   },
   computed: { 
@@ -423,16 +444,22 @@ export default {
     this.idPredio = this.getIdPredio;
     this.idTenencia = this.getIdTenencia;
 
+    // Cargar porcentaje acumulado
+    await this.obtenerPorcentajeAcumulado();
+
     // Cargar datos de la tenencia si existe idTenencia
     if (this.idTenencia) {
       console.log('Cargando datos de la tenencia:', this.idTenencia);
       await this.cargarDatosTenencia(this.idTenencia);
+      // Guardamos el porcentaje original para la validación al actualizar
+      this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
     }
 
     // 🏠 Listener para reactividad de tenencias
     this.onTenenciaUpdated(() => {
       console.log('🏠 Evento de tenencia actualizado detectado');
-      // Aquí podrías actualizar datos si es necesario
+      // Actualizar el porcentaje acumulado cuando cambian las tenencias
+      this.obtenerPorcentajeAcumulado();
     });
   },
   methods: {
@@ -602,6 +629,97 @@ export default {
         this.ciudadanoTenencia = [];
       }      
     },
+    
+    // Buscar propietarios por nombre o número de documento
+    async buscarPropietarios(texto) {
+      // Limpiar cualquier timeout anterior
+      if (this.busquedaTimeout) {
+        clearTimeout(this.busquedaTimeout);
+      }
+      
+      // No buscar si el texto es muy corto
+      if (!texto || texto.length < 3) {
+        return;
+      }
+      
+      // Establecer un timeout para evitar demasiadas solicitudes
+      this.busquedaTimeout = setTimeout(async () => {
+        try {
+          this.buscandoPropietarios = true;
+          
+          // Intenta primero buscar por número de documento (búsqueda exacta)
+          let response = await axios.get(`${API_BASE_URL}/recupera_ciudadano`, {
+            params: { numero_documento: texto }
+          });
+          
+          // Si no hay resultados, hacemos una búsqueda local en todos los ciudadanos
+          if (response.data.length === 0) {
+            // Cargamos todos los ciudadanos para búsqueda local
+            const allCiudadanos = await axios.get(`${API_BASE_URL}/ciudadano_tenencia`);
+            
+            if (Array.isArray(allCiudadanos.data)) {
+              const busquedaTexto = texto.toLowerCase();
+              const palabrasBusqueda = busquedaTexto.split(/\s+/).filter(palabra => palabra.length > 1);
+              
+              // Filtrar ciudadanos que coincidan con cualquiera de las palabras de búsqueda
+              const ciudadanosFiltrados = allCiudadanos.data.filter(ciudadano => {
+                if (!ciudadano.nombres) return false;
+                
+                const nombreCompleto = ciudadano.nombres.toLowerCase();
+                // Verificar si al menos una palabra de búsqueda está en el nombre
+                return palabrasBusqueda.some(palabra => nombreCompleto.includes(palabra));
+              });
+              
+              // Ordenar resultados por relevancia (número de coincidencias)
+              const resultadosOrdenados = ciudadanosFiltrados.sort((a, b) => {
+                const nombreA = a.nombres.toLowerCase();
+                const nombreB = b.nombres.toLowerCase();
+                
+                // Contar coincidencias para cada ciudadano
+                const coincidenciasA = palabrasBusqueda.filter(palabra => nombreA.includes(palabra)).length;
+                const coincidenciasB = palabrasBusqueda.filter(palabra => nombreB.includes(palabra)).length;
+                
+                // Ordenar por número de coincidencias (mayor primero)
+                return coincidenciasB - coincidenciasA;
+              });
+              
+              response = { data: resultadosOrdenados };
+            }
+          }
+          
+          // Transformar los resultados al formato necesario
+          if (Array.isArray(response.data)) {
+            this.ciudadanoTenencia = response.data.map(item => ({
+              ...item,
+              title: `${item.nombres} - ${item.numero_documento}`,
+              id: item.id_ciudadano || item.id
+            }));
+          }
+        } catch (error) {
+          console.error('Error al buscar propietarios:', error);
+          this.snackbarError = 'Error al buscar propietarios';
+          this.snackbarErrorPush = true;
+        } finally {
+          this.buscandoPropietarios = false;
+        }
+      }, 500); // Esperar 500ms antes de ejecutar la búsqueda
+    },
+    
+    // Manejar la selección de un propietario
+    seleccionarPropietario(propietario) {
+      if (propietario) {
+        // Si el propietario es un objeto (cuando se selecciona de la lista)
+        if (typeof propietario === 'object') {
+          console.log('Propietario seleccionado:', propietario);
+          // Usar id_ciudadano o id, dependiendo de cuál esté disponible
+          this.form.id_propietario = propietario.id_ciudadano || propietario.id;
+        }
+      } else {
+        // Si se limpia la selección
+        this.form.id_propietario = null;
+        console.log('Selección de propietario borrada');
+      }
+    },
 
     // Método para cargar los datos de la tenencia por idTenencia
     async cargarDatosTenencia(idTenencia) {
@@ -609,34 +727,90 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/tenencia_by_id/${idTenencia}`);
         const tenencia = response.data;
         console.log('Datos de la tenencia cargados:', tenencia);
-        // Asignar los datos de la tenencia al formulario
-        this.form.permite_ingreso = tenencia.permite_ingreso ? 'SI' : 'NO';
-        this.form.presenta_escritura = tenencia.presenta_escritura ? 'SI' : 'NO';
-        this.form.asentamiento_de_hecho = tenencia.asentamiento_de_hecho ? 'SI' : 'NO';
-        this.form.conflicto = tenencia.conflicto ? 'SI' : 'NO';
-        this.form.porcentaje_participacion = tenencia.porcentaje_participacion;
+        
+        // Depurar los valores booleanos para entender qué tipo de datos se reciben
+        console.log('Valores booleanos recibidos:', {
+          permite_ingreso: {
+            valor: tenencia.permite_ingreso,
+            tipo: typeof tenencia.permite_ingreso,
+            convertido: this.convertirAOpcionSiNo(tenencia.permite_ingreso)
+          },
+          presenta_escritura: {
+            valor: tenencia.presenta_escritura,
+            tipo: typeof tenencia.presenta_escritura,
+            convertido: this.convertirAOpcionSiNo(tenencia.presenta_escritura)
+          },
+          asentamiento_de_hecho: {
+            valor: tenencia.asentamiento_de_hecho,
+            tipo: typeof tenencia.asentamiento_de_hecho,
+            convertido: this.convertirAOpcionSiNo(tenencia.asentamiento_de_hecho)
+          },
+          conflicto: {
+            valor: tenencia.conflicto,
+            tipo: typeof tenencia.conflicto,
+            convertido: this.convertirAOpcionSiNo(tenencia.conflicto)
+          }
+        });
+        // Asignar los datos de la tenencia al formulario con validaciones de tipo
+        this.form.permite_ingreso = this.convertirAOpcionSiNo(tenencia.permite_ingreso);
+        this.form.presenta_escritura = this.convertirAOpcionSiNo(tenencia.presenta_escritura);
+        this.form.asentamiento_de_hecho = this.convertirAOpcionSiNo(tenencia.asentamiento_de_hecho);
+        this.form.conflicto = this.convertirAOpcionSiNo(tenencia.conflicto);
+        
+        // Validar campos numéricos
+        this.form.porcentaje_participacion = this.validarNumero(tenencia.porcentaje_participacion);
         this.form.id_forma_propiedad = tenencia.id_forma_propiedad;
-        this.form.id_propietario = tenencia.id_propietario; 
         this.form.id_prov_protocol = tenencia.id_prov_protocol;
         this.form.id_can_protocol = tenencia.id_can_protocol;
-        this.form.fecha_inscripcion = tenencia.fecha_inscripcion ? tenencia.fecha_inscripcion.split('T')[0]: '';
-        this.form.numero_notaria = tenencia.numero_notaria;
-        this.form.area_registro = tenencia.area_registro;
+        
+        // Validar fechas
+        this.form.fecha_inscripcion = this.validarFecha(tenencia.fecha_inscripcion);
+        
+        // Validar campos numéricos
+        this.form.numero_notaria = this.validarNumero(tenencia.numero_notaria);
+        this.form.area_registro = this.validarNumero(tenencia.area_registro);
+        
         this.form.id_unidad = tenencia.id_unidad;
         this.form.id_provincia = tenencia.id_provincia;
         this.form.id_canton = tenencia.id_canton;
-        this.form.fecha_escritura = tenencia.fecha_escritura ? tenencia.fecha_escritura.split('T')[0]: '';
-        this.form.repertorio = tenencia.repertorio;
-        this.form.folio = tenencia.folio;
-        this.form.numero_registro = tenencia.numero_registro;
+        
+        // Validar fechas
+        this.form.fecha_escritura = this.validarFecha(tenencia.fecha_escritura);
+        
+        // Validar campos numéricos
+        this.form.repertorio = this.validarNumero(tenencia.repertorio);
+        this.form.folio = this.validarNumero(tenencia.folio);
+        this.form.numero_registro = this.validarNumero(tenencia.numero_registro);
+        
         this.form.lindero_norte = tenencia.lindero_norte;
         this.form.lindero_sur = tenencia.lindero_sur;
         this.form.lindero_este = tenencia.lindero_este;
         this.form.lindero_oeste = tenencia.lindero_oeste;
         this.form.propietario_anterior = tenencia.propietario_anterior;
 
-        // Cargar datos del propietario
-        await this.cargarDatosPropietario(tenencia.id_propietario);
+        // Cargar datos del propietario y asignarlos al formulario
+        try {
+          const propResponse = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${tenencia.id_propietario}`);
+          const propietario = propResponse.data;
+          
+          // Aseguramos que el ciudadano esté en la lista de opciones del autocomplete
+          const propietarioFormateado = {
+            ...propietario,
+            title: `${propietario.nombres} - ${propietario.numero_documento}`,
+            id: propietario.id_ciudadano
+          };
+          
+          // Si el propietario no está en la lista, lo agregamos
+          const existeEnLista = this.ciudadanoTenencia.some(c => c.id === propietario.id_ciudadano);
+          if (!existeEnLista) {
+            this.ciudadanoTenencia = [...this.ciudadanoTenencia, propietarioFormateado];
+          }
+          
+          // Asignamos el ID del propietario
+          this.form.id_propietario = tenencia.id_propietario;
+        } catch (error) {
+          console.error('Error al cargar los datos del propietario:', error);
+        }
       } catch (error) {
         console.error('Error al cargar los datos de la tenencia:', error);        
       }
@@ -645,6 +819,17 @@ export default {
     // Guardar formulario
     async guardar() {
       console.log('Guardar formulario');
+      
+      // Validar el porcentaje antes de guardar
+      await this.obtenerPorcentajeAcumulado();
+      this.validarPorcentaje();
+      
+      if (!this.porcentajeValido) {
+        this.snackbarError = this.errorPorcentaje;
+        this.snackbarErrorPush = true;
+        return;
+      }
+      
       // Validar permite_ingreso
       this.form.permite_ingreso = this.form.permite_ingreso === 'SI';
       this.form.presenta_escritura = this.form.presenta_escritura === 'SI';
@@ -692,6 +877,8 @@ export default {
         this.snackbarOkPush = true;
         this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
         this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
+        // Actualizar el porcentaje original para futuras validaciones
+        this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
       } catch (error) {     
         console.error('Error al guardar tenencia:', error);
         this.snackbarError = 'Error al guardar la tenencia';
@@ -702,6 +889,16 @@ export default {
     // Método para actualizar la tenencia
     async actualizaTenencia() {
       console.log('Actualizar tenencia');
+      
+      // Validar el porcentaje antes de actualizar
+      await this.obtenerPorcentajeAcumulado();
+      this.validarPorcentaje();
+      
+      if (!this.porcentajeValido) {
+        this.snackbarError = this.errorPorcentaje;
+        this.snackbarErrorPush = true;
+        return;
+      }
 
       // Validar campos tipo booleano
       this.form.permite_ingreso = this.form.permite_ingreso === 'SI';
@@ -751,6 +948,8 @@ export default {
         this.snackbarOkPush = true;
         this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
         this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
+        // Actualizar el porcentaje original para futuras validaciones
+        this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
       } catch (error) {
         console.error('Error al actualizar la tenencia:', error.message || error);
         this.snackbarError = 'Error al actualizar la tenencia';
@@ -784,10 +983,10 @@ export default {
     // Método para limpiar el formulario
     limpiarFormulario() {
       this.form = {
-        permite_ingreso: null,
-        presenta_escritura: null,
-        asentamiento_de_hecho: null,
-        conflicto: null,
+        permite_ingreso: 'NO',
+        presenta_escritura: 'NO',
+        asentamiento_de_hecho: 'NO',
+        conflicto: 'NO',
         porcentaje_participacion: '',
         id_forma_propiedad: null,
         id_propietario: null,
@@ -825,7 +1024,12 @@ export default {
     nuevo() {
       this.limpiarFormulario();
       this.idTenencia = null;
-      this.cargaCiudadanoTenecia(); 
+      // Actualizar la lista de ciudadanos
+      this.cargaCiudadanoTenecia();
+      // Asegurar que el propietario está limpio
+      this.$nextTick(() => {
+        this.form.id_propietario = null;
+      });
     },
 
     // Método para consultar el Registro de la Propiedad
@@ -882,6 +1086,123 @@ export default {
         folio: this.form.folio,
         numero_registro: this.form.numero_registro
       });
+    },
+    
+    // Método para obtener el porcentaje acumulado de participaciones
+    async obtenerPorcentajeAcumulado() {
+      if (!this.idPredio) return;
+      
+      try {
+        let url = `${API_BASE_URL}/porcentaje_acumulado_predio/${this.idPredio}`;
+        
+        // Si estamos actualizando, excluimos el porcentaje actual de la tenencia
+        if (this.idTenencia) {
+          url += `?id_tenencia_excluir=${this.idTenencia}`;
+        }
+        
+        const response = await axios.get(url);
+        this.porcentajeAcumulado = response.data.porcentaje_acumulado;
+        console.log('Porcentaje acumulado:', this.porcentajeAcumulado);
+        
+        // Validar inmediatamente si hay un porcentaje establecido
+        if (this.form.porcentaje_participacion) {
+          this.validarPorcentaje();
+        }
+      } catch (error) {
+        console.error('Error al obtener el porcentaje acumulado:', error);
+        this.snackbarError = 'Error al verificar el porcentaje acumulado';
+        this.snackbarErrorPush = true;
+      }
+    },
+    
+    // Método para validar el porcentaje de participación
+    validarPorcentaje() {
+      this.errorPorcentaje = '';
+      this.porcentajeValido = true;
+      
+      // Convertir a número y verificar que sea válido
+      const porcentaje = parseFloat(this.form.porcentaje_participacion) || 0;
+      
+      if (porcentaje <= 0) {
+        this.errorPorcentaje = 'El porcentaje debe ser mayor que 0';
+        this.porcentajeValido = false;
+        return;
+      }
+      
+      if (porcentaje > 100) {
+        this.errorPorcentaje = 'El porcentaje no puede ser mayor a 100%';
+        this.porcentajeValido = false;
+        return;
+      }
+      
+      // Verificar que no exceda el 100% en total
+      const totalPorcentaje = this.porcentajeAcumulado + porcentaje;
+      if (totalPorcentaje > 100) {
+        this.errorPorcentaje = `El porcentaje total (${totalPorcentaje.toFixed(2)}%) excede el 100%. Máximo disponible: ${(100 - this.porcentajeAcumulado).toFixed(2)}%`;
+        this.porcentajeValido = false;
+      }
+    },
+    
+    // Método para validar y convertir valores numéricos
+    validarNumero(valor) {
+      // Si el valor es null, undefined o string vacío, devolver string vacío
+      if (valor === null || valor === undefined || valor === '') {
+        return '';
+      }
+      
+      // Si es una cadena que contiene letras (como "TERCERA"), devolver string vacío
+      if (typeof valor === 'string' && isNaN(Number(valor))) {
+        console.warn(`Valor numérico no válido: "${valor}". Se establecerá como vacío.`);
+        return '';
+      }
+      
+      // Si es un número o una cadena convertible a número, devolver el valor
+      return valor;
+    },
+    
+    // Método para validar y formatear fechas
+    validarFecha(fecha) {
+      // Si la fecha es null, undefined o string vacío, devolver string vacío
+      if (fecha === null || fecha === undefined || fecha === '') {
+        return '';
+      }
+      
+      try {
+        // Intentar convertir a fecha válida
+        if (typeof fecha === 'string' && fecha.includes('T')) {
+          // Si es una fecha con formato ISO, extraer solo la parte de la fecha
+          return fecha.split('T')[0];
+        }
+        
+        // Si es una cadena que no se puede convertir a fecha, verificar
+        const fechaPrueba = new Date(fecha);
+        if (isNaN(fechaPrueba.getTime())) {
+          console.warn(`Fecha no válida: "${fecha}". Se establecerá como vacío.`);
+          return '';
+        }
+        
+        // Si todo está bien y es una fecha válida sin formato ISO, devolverla tal cual
+        return fecha;
+      } catch (error) {
+        console.error('Error al validar fecha:', error);
+        return '';
+      }
+    },
+    
+    // Método para convertir diferentes tipos de valores booleanos a 'SI' o 'NO'
+    convertirAOpcionSiNo(valor) {
+      // Comprobar el tipo y valor para manejar todos los posibles casos
+      if (valor === true || valor === 1 || valor === '1' || 
+          valor === 'true' || valor === 'TRUE' || 
+          valor === 't' || valor === 'T' || 
+          valor === 'si' || valor === 'SI' || 
+          valor === 's' || valor === 'S' || 
+          valor === 'yes' || valor === 'YES' || 
+          valor === 'y' || valor === 'Y') {
+        return 'SI';
+      } else {
+        return 'NO';
+      }
     }
   }
 }

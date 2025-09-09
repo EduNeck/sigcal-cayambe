@@ -12,7 +12,7 @@
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>       
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file" @click="valorar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Valorar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-printer" @click="imprimirFicha" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Imprimir Ficha</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" color="error" append-icon="mdi-delete" @click="eliminar" :disabled="!Boolean(getIdPredio)" v-if="canEdit"></v-btn>
+        <!-- Botón de eliminar oculto -->
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>        
       </v-col>
     </v-row>

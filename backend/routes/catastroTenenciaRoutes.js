@@ -87,5 +87,21 @@ router.post('/inserta_varias_tenencias', async (req, res) => {
   }
 });
 
+// Obtener el porcentaje acumulado de participación por predio
+router.get('/porcentaje_acumulado_predio/:id_predio', async (req, res) => {
+  const { id_predio } = req.params;
+  const { id_tenencia_excluir } = req.query;
+  
+  try {
+    const porcentajeAcumulado = await catastroTenencia.getPorcentajeAcumuladoByPredio(
+      id_predio, 
+      id_tenencia_excluir || null
+    );
+    res.json({ porcentaje_acumulado: porcentajeAcumulado });
+  } catch (err) {
+    console.error('Error al obtener porcentaje acumulado:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
