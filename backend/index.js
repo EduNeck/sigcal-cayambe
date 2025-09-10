@@ -88,6 +88,7 @@ app.use('/api', require('./routes/croquisRoutes'));
 app.use('/api', require('./routes/consultaWsRoutes'));
 app.use('/api', require('./routes/geoLinderosRoutes'));
 app.use('/api', require('./routes/parametrosGeneralesRoutes'));
+app.use('/api/icus', require('./routes/icusRoutes'));
 
 
 // ========== Iniciar servidor ==========

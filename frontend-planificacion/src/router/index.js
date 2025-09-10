@@ -6,7 +6,7 @@ import ReporteIRM from '../components/ReporteIRM.vue'
 import ReporteIcus from '../components/ReporteIcus.vue'
 import BusquedaIRM from '../components/BusquedaIRM.vue'
 import BusquedaICUS from '../components/BusquedaICUS.vue'
-
+import CrearIcus from '../components/CrearIcus.vue'
 
 
 const routes = [
@@ -33,6 +33,12 @@ const routes = [
     name: 'ReporteIcus',
     component: ReporteIcus,
     props: true
+  },
+  {
+    path: '/crear-icus',
+    name: 'CrearIcus',
+    component: CrearIcus,
+    meta: { requiresAuth: true }
   },
   {
     path: '/busqueda-irm',

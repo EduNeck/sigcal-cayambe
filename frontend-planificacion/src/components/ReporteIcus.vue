@@ -98,51 +98,66 @@
               <!-- DATOS DEL PREDIO -->
               <div class="subseccion">
                 <h4>DATOS DEL PREDIO</h4>
-                <div class="campo-grupo" v-if="datosFinales.clave_catastral || datosFinales.clave_catastral_actual">
+                <!-- Clave catastral actual -->
+                <div class="campo-grupo">
                   <label>Clave Catastral:</label>
-                  <span>{{ datosFinales.clave_catastral || datosFinales.clave_catastral_actual }}</span>
+                  <span>{{ datosFinales.clave_catastral || datosFinales.clave_catastral_actual || '-' }}</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.clave_anterior || datosFinales.clave_catastral_anterior">
+                <!-- Clave catastral anterior - Siempre mostrar este campo -->
+                <div class="campo-grupo">
                   <label>Clave Catastral Anterior:</label>
-                  <span>{{ datosFinales.clave_anterior || datosFinales.clave_catastral_anterior }}</span>
+                  <span>{{ datosFinales.clave_anterior || datosFinales.clave_catastral_anterior || '-' }}</span>
                 </div>
 
-                <div class="campo-grupo" v-if="datosFinales.derechos_acciones">
+                <!-- Derechos y acciones -->
+                <div class="campo-grupo" v-if="datosFinales.derechos_acciones !== undefined || datosFinales.derechos_y_acciones !== undefined">
                   <label>En Derechos y Acciones:</label>
-                  <span>{{ formatearArea(datosFinales.derechos_acciones) }}%</span>
+                  <span>{{ formatearArea(datosFinales.derechos_acciones || datosFinales.derechos_y_acciones) }}%</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.area_construccion">
+                <!-- Propiedad horizontal -->
+                <div class="campo-grupo" v-if="datosFinales.ph !== undefined">
+                  <label>Propiedad Horizontal:</label>
+                  <span>{{ datosFinales.ph ? 'Sí' : 'No' }}</span>
+                </div>
+                
+                <!-- Área de construcción -->
+                <div class="campo-grupo" v-if="datosFinales.area_construccion !== undefined || datosFinales.area_const !== undefined">
                   <label>Área de Construcción:</label>
-                  <span>{{ formatearArea(datosFinales.area_construccion) }} m²</span>
+                  <span>{{ formatearArea(datosFinales.area_construccion || datosFinales.area_const) }} m²</span>
                 </div>
               </div>
 
               <!-- DATOS DEL LOTE -->
               <div class="subseccion">
                 <h4>DATOS DEL LOTE</h4>
-                <div class="campo-grupo" v-if="datosFinales.area_escritura || datosFinales.area_terreno_escritura">
+                <!-- Área según escritura -->
+                <div class="campo-grupo" v-if="datosFinales.area_escritura !== undefined || datosFinales.area_terreno_escritura !== undefined">
                   <label>Área según Escritura:</label>
                   <span>{{ formatearArea(datosFinales.area_escritura || datosFinales.area_terreno_escritura) }} m²</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.area_gis || datosFinales.area_terreno_gis">
+                <!-- Área gráfica o GIS -->
+                <div class="campo-grupo" v-if="datosFinales.area_gis !== undefined || datosFinales.area_terreno_gis !== undefined || datosFinales.area_grafica !== undefined">
                   <label>Área Gráfica:</label>
-                  <span>{{ formatearArea(datosFinales.area_gis || datosFinales.area_terreno_gis) }} m²</span>
+                  <span>{{ formatearArea(datosFinales.area_gis || datosFinales.area_terreno_gis || datosFinales.area_grafica) }} m²</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.frente">
+                <!-- Frente -->
+                <div class="campo-grupo" v-if="datosFinales.frente !== undefined">
                   <label>Frente:</label>
                   <span>{{ formatearArea(datosFinales.frente) }} m</span>
                 </div>
 
+                <!-- Parroquia -->
                 <div class="campo-grupo" v-if="datosFinales.nombre_parroquia || datosFinales.parroquia">
                   <label>Parroquia:</label>
                   <span>{{ datosFinales.nombre_parroquia || datosFinales.parroquia }}</span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.sector || datosFinales.barrio">
+                <!-- Barrio/Sector -->
+                <div class="campo-grupo" v-if="datosFinales.sector !== undefined || datosFinales.barrio !== undefined">
                   <label>Barrio/Sector:</label>
                   <span>{{ datosFinales.sector || datosFinales.barrio }}</span>
                 </div>
@@ -295,6 +310,7 @@ import axios from 'axios'
 import QRCode from 'qrcode'
 import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
+import icusService from '@/services/icusService';
 
 export default {
   name: 'ReporteIcus',
@@ -332,6 +348,25 @@ export default {
         ...this.datosIcus
       };
       
+      // Normalización de campos para manejar diferentes nomenclaturas
+      const mapeoNormalizado = {
+        // Datos del predio
+        clave_anterior: datos.clave_anterior || datos.clave_catastral_anterior || datos.clave_ant || datos.clave_catastral_ant || '',
+        derechos_acciones: datos.derechos_acciones || datos.derechos_y_acciones,
+        area_construccion: datos.area_construccion || datos.area_const,
+        ph: datos.ph || false,
+        
+        // Datos del lote
+        area_escritura: datos.area_escritura || datos.area_terreno_escritura,
+        area_gis: datos.area_gis || datos.area_terreno_gis || datos.area_grafica,
+        frente: datos.frente,
+        nombre_parroquia: datos.nombre_parroquia || datos.parroquia,
+        sector: datos.sector || datos.barrio
+      };
+      
+      // Agregar los campos normalizados a los datos
+      Object.assign(datos, mapeoNormalizado);
+      
       // Si tenemos datos de compatibilidad, añadir los campos específicos
       if (this.datosCompatibilidad && this.datosCompatibilidad.actividad) {
         datos.id_actividad = this.datosCompatibilidad.actividad.codigo;
@@ -355,6 +390,15 @@ export default {
         }
       }
       
+      // Agregar logs para depuración
+      console.log('Datos finales normalizados:', datos);
+      console.log('Claves catastrales:', {
+        'clave_catastral': datos.clave_catastral,
+        'clave_catastral_actual': datos.clave_catastral_actual,
+        'clave_anterior': datos.clave_anterior,
+        'clave_catastral_anterior': datos.clave_catastral_anterior
+      });
+      
       return datos;
     },
     textoQR() {
@@ -367,21 +411,38 @@ export default {
     // Intentar obtener el ID de ICUS de distintas fuentes
     const id = this.id || this.icusId || this.getIcusIdFromRoute();
     
-    // Si tenemos un ID y no tenemos datos precargados, cargar los datos
-    if (id && !Object.keys(this.datosIcus).length) {
-      this.cargarDatosIcus(id);
-    }
+    console.log('ID de ICUS identificado:', id);
     
-    // Si tenemos una clave catastral, cargar datos adicionales
-    if (this.claveCatastral) {
+    // Si tenemos un ID, cargar los datos desde la tabla ICUS
+    if (id) {
+      console.log(`Cargando datos del ICUS con ID: ${id} desde la tabla ICUS`);
+      this.cargarDatosIcus(id);
+    } 
+    // Si no tenemos ID pero tenemos datos precargados
+    else if (Object.keys(this.datosIcus).length) {
+      console.log('Usando datos precargados:', this.datosIcus);
+      
+      // Si tenemos clave catastral en los datos precargados, cargar datos adicionales
+      if (this.datosIcus.clave_catastral) {
+        this.cargarDatosPorClaveCatastral(this.datosIcus.clave_catastral);
+      }
+    } 
+    // Si tenemos clave catastral directamente como prop
+    else if (this.claveCatastral) {
+      console.log(`Cargando datos por clave catastral: ${this.claveCatastral}`);
       this.cargarDatosPorClaveCatastral(this.claveCatastral);
-    } else if (this.datosIcus && this.datosIcus.clave_catastral) {
-      // Si no tenemos clave catastral como prop pero está en los datos, usarla
-      this.cargarDatosPorClaveCatastral(this.datosIcus.clave_catastral);
+    }
+    // Si no tenemos información suficiente
+    else {
+      console.warn('No hay suficiente información para cargar el reporte ICUS');
+      this.error = 'No se proporcionó un ID de ICUS o clave catastral válida';
     }
     
     this.$nextTick(() => { 
       this.generarQR();
+      
+      // Verificar y ajustar los datos de clave catastral anterior si es necesario
+      this.verificarClavesCatastrales();
     });
   },
   watch: {
@@ -417,16 +478,44 @@ export default {
       this.error = null;
       
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/icus/recuperarIcus/${id}`);
-        this.datosIcusLocal = data;
+        console.log(`Cargando datos del ICUS con ID: ${id}`);
         
-        // Si tenemos clave catastral en la respuesta, cargar datos adicionales
-        if (data && data.clave_catastral) {
-          await this.cargarDatosPorClaveCatastral(data.clave_catastral);
+        // Usar el servicio ICUS para cargar los datos por ID
+        const response = await icusService.obtenerIcusPorId(id);
+        
+        // Intentar extraer los datos de ICUS de diferentes formatos de respuesta
+        let icusData = null;
+        
+        // Caso 1: Formato esperado {success: true, data: {...}}
+        if (response.data && response.data.success && response.data.data) {
+          icusData = response.data.data;
+          console.log('Datos del ICUS cargados (formato estándar):', icusData);
+        }
+        // Caso 2: La respuesta contiene directamente el objeto de datos
+        else if (response.data && typeof response.data === 'object' && response.data.id && response.data.clave_catastral) {
+          icusData = response.data;
+          console.log('Datos del ICUS cargados (formato directo):', icusData);
         }
         
-        this.$nextTick(() => this.generarQR());
+        // Si se encontraron datos en cualquier formato
+        if (icusData) {
+          // Asignar los datos a la variable local
+          this.datosIcusLocal = icusData;
+          
+          // Si tenemos clave catastral en la respuesta, cargar datos adicionales
+          if (icusData.clave_catastral) {
+            await this.cargarDatosPorClaveCatastral(icusData.clave_catastral);
+          } else {
+            console.warn('El registro ICUS no tiene clave catastral');
+          }
+          
+          this.$nextTick(() => this.generarQR());
+        } else {
+          console.error('Formato de respuesta inesperado:', response.data);
+          this.error = 'El formato de la respuesta no es el esperado';
+        }
       } catch (error) {
+        console.error('Error al cargar los datos del ICUS:', error);
         this.error = 'Error al cargar los datos del ICUS';
         if (error.response) {
           if (error.response.status === 404) this.error = 'ICUS no encontrado';
@@ -441,12 +530,27 @@ export default {
     async cargarDatosPorClaveCatastral(claveCatastral) {
       if (!claveCatastral) return;
       
+      console.log(`Cargando datos adicionales por clave catastral: ${claveCatastral}`);
+      
       try {
-        // Cargar datos del titular
-        await this.cargarDatosTitular(claveCatastral);
+        // Verificar si los datos ya están completos desde el ICUS
+        const icusCompleto = this.datosIcusLocal && Object.keys(this.datosIcusLocal).length > 0;
         
-        // Cargar datos de compatibilidad de uso de suelo
-        await this.cargarDatosCompatibilidad(claveCatastral);
+        // Cargar datos del titular solo si es necesario
+        if (!icusCompleto || !this.datosIcusLocal.propietario || !this.datosIcusLocal.numero_documento) {
+          console.log('Cargando datos del titular...');
+          await this.cargarDatosTitular(claveCatastral);
+        } else {
+          console.log('Datos del titular ya disponibles en el registro ICUS');
+        }
+        
+        // Cargar datos de compatibilidad de uso de suelo solo si es necesario
+        if (!icusCompleto || !this.datosIcusLocal.compatibilidad) {
+          console.log('Cargando datos de compatibilidad...');
+          await this.cargarDatosCompatibilidad(claveCatastral);
+        } else {
+          console.log('Datos de compatibilidad ya disponibles en el registro ICUS');
+        }
       } catch (error) {
         console.error('Error al cargar datos por clave catastral:', error);
       }
@@ -553,13 +657,44 @@ export default {
 
     formatearArea(v){ if(!v) return '-'; return Number(v).toFixed(2) },
     formatearFecha(f){ if(!f) return '-'; return new Date(f).toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'}) },
+    
+    // Método para verificar y ajustar las claves catastrales
+    verificarClavesCatastrales() {
+      console.log("Verificando claves catastrales...");
+      
+      // Si no hay datos de ICUS local, no hay nada que hacer
+      if (!this.datosIcusLocal || Object.keys(this.datosIcusLocal).length === 0) return;
+      
+      // Verificar si datosIcusLocal contiene la clave anterior
+      if (!this.datosIcusLocal.clave_anterior && !this.datosIcusLocal.clave_catastral_anterior) {
+        console.log("No se encontró clave catastral anterior en los datos, intentando deducirla...");
+        
+        // Si no hay clave anterior pero sí hay clave actual, podríamos establecer un valor vacío
+        // o buscar en otras fuentes de datos
+        if (this.datosIcusLocal.clave_catastral) {
+          console.log("Estableciendo campo de clave anterior para asegurar su visualización");
+          this.datosIcusLocal.clave_anterior = '';  // Establecer vacío para que se muestre el campo
+        }
+      }
+    },
     getCompatibilidadClass(c){
-      if(!c) return ''
-      const comp = c.toLowerCase()
-      if (comp.includes('no compatible')) return 'no-compatible'
-      if (comp.includes('compatible')) return 'compatible'
-      if (comp.includes('condicion')) return 'condicionado'
-      return ''
+      if (!c) return '';
+      
+      // Si es un número (tipo_compatibilidad)
+      if (!isNaN(parseInt(c))) {
+        const tipo = parseInt(c);
+        if (tipo === 0) return 'no-compatible';
+        if (tipo === 1) return 'compatible';
+        if (tipo === 2) return 'condicionado';
+      }
+      
+      // Si es un string (compatibilidad)
+      const comp = String(c).toLowerCase();
+      if (comp.includes('no compatible')) return 'no-compatible';
+      if (comp.includes('compatible') && !comp.includes('no compatible')) return 'compatible';
+      if (comp.includes('condicion')) return 'condicionado';
+      
+      return '';
     },
 
     imprimirReporte(){ window.print() },

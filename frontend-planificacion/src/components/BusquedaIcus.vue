@@ -263,16 +263,30 @@
             <div v-if="compatibilidadSeleccionada" class="mt-2">
               <!-- Chip con información textual -->
               <div class="d-flex align-center mb-2">
-                <v-chip
-                  :color="getCompatibilidadColorFromTipo(compatibilidadSeleccionada.tipo)"
-                  text-color="white"
-                  size="large"
-                  class="font-weight-bold"
-                  elevation="2"
-                >
-                  <v-icon start :icon="getCompatibilidadIcon(compatibilidadSeleccionada.tipo)" class="mr-1"></v-icon>
-                  {{ compatibilidadSeleccionada.resultado || getTipoCompatibilidadTexto(compatibilidadSeleccionada.tipo) }}
-                </v-chip>
+                <div class="chip-custom" :style="{ backgroundColor: compatibilidadColor }">
+                  <v-icon size="small" class="mr-1" color="white">
+                    {{ getCompatibilidadIcon(compatibilidadSeleccionada.tipo) }}
+                  </v-icon>
+                  <span>{{ compatibilidadSeleccionada.resultado || getTipoCompatibilidadTexto(compatibilidadSeleccionada.tipo) }}</span>
+                </div>
+                
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ props }">
+                    <v-btn 
+                      color="primary"
+                      small
+                      class="ml-2"
+                      :loading="guardandoIcus"
+                      :disabled="guardandoIcus"
+                      @click="grabarIcus"
+                      v-bind="props"
+                    >
+                      <v-icon left small>mdi-content-save</v-icon>
+                      Grabar ICUS
+                    </v-btn>
+                  </template>
+                  <span>Guardar el resultado de compatibilidad en la base de datos</span>
+                </v-tooltip>
               </div>
             </div>
             <div v-else-if="loadingCompatibilidad">
@@ -410,7 +424,7 @@
                     </v-col>
                     
                     <v-col cols="12" v-if="icusSeleccionado.compatibilidad">
-                      <v-card outlined class="pa-3" :class="`border-${getCompatibilidadColor(icusSeleccionado.compatibilidad)}`">
+                      <v-card outlined class="pa-3" style="border-left-width: 4px; border-left-style: solid;" :style="{ 'border-left-color': getCompatibilidadColor(icusSeleccionado.compatibilidad) }">
                         <v-card-title class="text-subtitle-1 pb-2">
                           <v-icon size="small" class="mr-1">mdi-check-circle-outline</v-icon>
                           RESULTADO DE COMPATIBILIDAD
@@ -418,20 +432,21 @@
                         
                         <!-- Chip con el resultado de compatibilidad -->
                         <div class="d-flex align-center mb-2">
-                          <v-chip 
-                            :color="getCompatibilidadColor(icusSeleccionado.compatibilidad)" 
-                            text-color="white" 
-                            size="large"
-                            class="font-weight-bold"
-                            elevation="2"
+                          <div 
+                            class="chip-custom"
+                            :style="{
+                              backgroundColor: icusSeleccionado.compatibilidad?.toUpperCase() === 'CONDICIONADO' ? '#FF9800' :
+                                icusSeleccionado.compatibilidad?.toUpperCase() === 'COMPATIBLE' ? '#4CAF50' :
+                                '#F44336'
+                            }"
                           >
-                            <v-icon start class="mr-1">
-                              {{ icusSeleccionado.compatibilidad === 'COMPATIBLE' ? 'mdi-check-circle' : 
-                                 icusSeleccionado.compatibilidad === 'CONDICIONADO' ? 'mdi-alert-circle' : 
+                            <v-icon size="small" class="mr-1" color="white">
+                              {{ icusSeleccionado.compatibilidad?.toUpperCase() === 'COMPATIBLE' ? 'mdi-check-circle' : 
+                                 icusSeleccionado.compatibilidad?.toUpperCase() === 'CONDICIONADO' ? 'mdi-alert-circle' : 
                                  'mdi-close-circle' }}
                             </v-icon>
-                            {{ icusSeleccionado.compatibilidad }}
-                          </v-chip>
+                            <span>{{ icusSeleccionado.compatibilidad }}</span>
+                          </div>
                         </div>
                       </v-card>
                     </v-col>
@@ -468,6 +483,15 @@
     >
       {{ snackbar.text }}
       <template v-slot:action="{ attrs }">
+        <!-- Botón de acción personalizada si está definido -->
+        <v-btn
+          v-if="snackbar.action"
+          text
+          @click="snackbar.action.callback(); snackbar.show = false"
+        >
+          {{ snackbar.action.text }}
+        </v-btn>
+        <!-- Botón para cerrar siempre presente -->
         <v-btn
           text
           v-bind="attrs"
@@ -479,7 +503,7 @@
     </v-snackbar>
     
     <!-- Diálogo para mostrar todos los usos de suelo del predio -->
-    <v-dialog v-model="usosDetalleDialog" max-width="900px">
+    <v-dialog v-model="usosDetalleDialog" max-width="500px">
       <v-card class="dialog-card">
         <div class="dialog-accent-line"></div>
         <v-card-title class="dialog-card-title">
@@ -490,36 +514,26 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-        <v-card-subtitle v-if="predioSeleccionado">
-          <strong>Clave Catastral:</strong> {{ predioSeleccionado.clave_catastral }} | 
-          <strong>Propietario:</strong> {{ predioSeleccionado.propietario }}
+        <v-card-subtitle v-if="predioSeleccionado" class="pb-0">
+          <div class="mb-1">
+            <strong>Clave Catastral:</strong> {{ predioSeleccionado.clave_catastral }}
+          </div>
+          <div>
+            <strong>Propietario:</strong> {{ predioSeleccionado.propietario }}
+          </div>
         </v-card-subtitle>
         <v-card-text>
           <v-data-table
             :headers="[
-              { title: 'Código', value: 'usc', width: '100px' },
-              { title: 'Uso de Suelo', value: 'usn' },
-              { title: 'Código Act.', value: 'act_id', width: '100px' },
-              { title: 'Actividad', value: 'act_nombre' },
-              { title: 'Código Tip.', value: 'tip_id', width: '100px' },
-              { title: 'Tipología', value: 'tip_nombre' },
-              { title: 'Compatibilidad', value: 'tipo_texto' }
+              { title: 'Código', value: 'usc', width: '80px', align: 'center' },
+              { title: 'Uso de Suelo', value: 'usn' }
             ]"
             :items="predioSeleccionado?.datosPugsCompletos || []"
-            :items-per-page="10"
+            :items-per-page="15"
+            hide-default-footer
             dense
-            class="elevation-1"
-          >
-            <template v-slot:item.tipo_texto="{ item }">
-              <v-chip
-                x-small
-                :color="getCompatibilidadColorFromTipo(item.tipo)"
-                text-color="white"
-              >
-                {{ getTipoCompatibilidadTexto(item.tipo) }}
-              </v-chip>
-            </template>
-          </v-data-table>
+            class="elevation-1 compact-table"
+          ></v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -533,15 +547,14 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
-import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
 import actividadService from '@/services/actividadService';
 import tipologiaService from '@/services/tipologiaService';
 import datosPugsService from '@/services/datosPugsService';
 import compatibilidadService from '@/services/compatibilidadService';
+import icusService from '@/services/icusService';
 
 export default {
   name: 'BusquedaICUS',
@@ -564,7 +577,8 @@ export default {
       show: false,
       text: '',
       color: 'info',
-      timeout: 3000
+      timeout: 3000,
+      action: null // Para botones personalizados
     });
     
     // Filtros para la búsqueda
@@ -586,6 +600,160 @@ export default {
     // Variables para compatibilidad
     const compatibilidadSeleccionada = ref(null);
     const loadingCompatibilidad = ref(false);
+    
+    // Variable reactiva para el color de compatibilidad
+    const compatibilidadColor = computed(() => {
+      const t = toTipo(compatibilidadSeleccionada.value?.tipo);
+      return getCompatibilidadColorFromTipo(t);
+    });
+    
+    // Variable para controlar el estado de grabación
+    const guardandoIcus = ref(false);
+    
+    // Método para grabar la información del ICUS
+    const grabarIcus = async () => {
+      if (!resultados.value.length || !compatibilidadSeleccionada.value || !filtros.id_actividad) {
+        showSnackbar('No hay suficiente información para grabar el ICUS. Asegúrese de seleccionar un predio y una actividad.', 'warning');
+        return;
+      }
+      
+      guardandoIcus.value = true;
+      
+      try {
+        // Obtener el predio seleccionado (primer resultado)
+        const predio = resultados.value[0];
+        
+        // Preparar los datos del ICUS
+        const icusData = {
+          // Campos básicos
+          clave_catastral: predio.clave_catastral,
+          propietario: predio.propietario,
+          fecha: new Date().toISOString().split('T')[0],
+          id_suelo: predio.id_suelo,
+          uso_suelo: predio.uso_suelo,
+          id_actividad: filtros.id_actividad.id_actividad,
+          actividad: filtros.id_actividad.descripcion,
+          id_tipologia: tipologiaSeleccionada.value?.id,
+          tipologia: tipologiaSeleccionada.value?.nombre,
+          compatibilidad: compatibilidadSeleccionada.value.resultado || getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
+          tipo_compatibilidad: toTipo(compatibilidadSeleccionada.value.tipo),
+          usuario: 'sistema', // Este valor debería venir de un sistema de autenticación
+          estado: 'ACTIVO',
+          
+          // Campos adicionales del predio
+          numero_documento: predio.numero_documento,
+          clave_anterior: predio.clave_anterior,
+          derechos_acciones: predio.derechos_acciones,
+          ph: predio.ph,
+          area_construccion: predio.area_construccion,
+          area_escritura: predio.area_escritura,
+          area_gis: predio.area_grafica, // Suponiendo que area_grafica corresponde a area_gis
+          frente: predio.frente,
+          id_par: predio.id_par || null,
+          nombre_parroquia: predio.parroquia,
+          sector: predio.sector,
+          resultado_informe: `Informe de compatibilidad de uso de suelo para el predio con clave catastral ${predio.clave_catastral}. Resultado: ${compatibilidadSeleccionada.value.resultado || getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo))}`,
+          id_uso_suelo: predio.id_suelo, // Si id_uso_suelo es diferente de id_suelo, ajustar según corresponda
+          notas: `Generado automáticamente desde el sistema el ${new Date().toLocaleDateString()}`,
+          id_predio: predio.id
+          // El campo geometria es un campo especial que generalmente se maneja en el backend
+        };
+        
+        console.log('📝 Guardando ICUS con datos:', icusData);
+        
+        // Llamar al servicio para crear el ICUS
+        const response = await icusService.crearIcus(icusData);
+        
+        console.log("Respuesta completa del servidor:", response);
+        console.log("Estructura detallada de response.data:", JSON.stringify(response.data, null, 2));
+        
+        let icusId = null;
+        
+        if (response.data && response.data.success) {
+          // Respuesta exitosa con datos esperados - formato correcto del servidor
+          icusId = response.data.data?.id || null;
+          
+          if (icusId) {
+            showSnackbar(`ICUS guardado correctamente con ID: ${icusId}. Redirigiendo al reporte...`, 'success');
+            
+            // Esperar un momento para que el usuario vea el mensaje de éxito y luego redirigir
+            setTimeout(() => {
+              redirigirAReporte(icusId);
+            }, 1500);
+          } else {
+            showSnackbar(`ICUS guardado correctamente`, 'success');
+          }
+        } else if (response.status >= 200 && response.status < 300) {
+          // La petición fue exitosa pero el formato de respuesta puede no ser exactamente el esperado
+          console.log("Respuesta HTTP exitosa pero con formato diferente. Adaptando...");
+          
+          // Intentar obtener el ID u otra información relevante de la respuesta
+          if (response.data) {
+            if (typeof response.data === 'object') {
+              // Buscar el ID en diferentes posiciones y con diferentes nombres
+              if (response.data.data && response.data.data.id) {
+                icusId = response.data.data.id;
+              } else if (response.data.id) {
+                icusId = response.data.id;
+              } else if (response.data.ID) {
+                icusId = response.data.ID;
+              } else if (response.data.Id) {
+                icusId = response.data.Id;
+              } else if (response.data.insertId) {
+                icusId = response.data.insertId;
+              }
+            } else if (typeof response.data === 'number') {
+              icusId = response.data;
+            } else if (typeof response.data === 'string' && !isNaN(parseInt(response.data))) {
+              icusId = parseInt(response.data);
+            }
+          }
+          
+          if (icusId) {
+            showSnackbar(`ICUS guardado correctamente con ID: ${icusId}. Redirigiendo al reporte...`, 'success');
+            
+            // Esperar un momento para que el usuario vea el mensaje de éxito y luego redirigir
+            setTimeout(() => {
+              redirigirAReporte(icusId);
+            }, 1500);
+          } else {
+            showSnackbar(`ICUS guardado correctamente, pero no se pudo determinar el ID`, 'success');
+          }
+        } else {
+          // Error en la respuesta
+          showSnackbar('Respuesta inesperada del servidor al guardar ICUS', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error al guardar ICUS:', error);
+        
+        // Logging detallado para depurar
+        if (error.response) {
+          console.error('❌ Status:', error.response.status);
+          console.error('❌ Headers:', error.response.headers);
+          console.error('❌ Datos:', error.response.data);
+        } else if (error.request) {
+          // La petición fue realizada pero no se recibió respuesta
+          console.error('❌ No se recibió respuesta del servidor:', error.request);
+        } else {
+          // Error al configurar la petición
+          console.error('❌ Error de configuración:', error.message);
+        }
+        
+        // Mensaje para el usuario
+        let errorMessage = 'Error al guardar ICUS';
+        
+        if (error.response?.data?.message) {
+          errorMessage += `: ${error.response.data.message}`;
+        } else if (error.message) {
+          errorMessage += `: ${error.message}`;
+        }
+        
+        showSnackbar(errorMessage, 'error', 5000);
+      } finally {
+        guardandoIcus.value = false;
+      }
+    };
+
     
     // Encabezados para la tabla
     const headers = [
@@ -687,11 +855,12 @@ export default {
                     
                     // Determinar la compatibilidad basada en el tipo
                     if (datosPugs.tipo === 1) {
-                      resultadoItem.compatibilidad = 'Compatible';
+                      resultadoItem.compatibilidad = 'COMPATIBLE';
                     } else if (datosPugs.tipo === 2) {
-                      resultadoItem.compatibilidad = 'Condicionado';
+                      resultadoItem.compatibilidad = 'CONDICIONADO';
+                      console.log('Estableciendo compatibilidad CONDICIONADO para el predio');
                     } else if (datosPugs.tipo === 0) {
-                      resultadoItem.compatibilidad = 'No Compatible';
+                      resultadoItem.compatibilidad = 'NO COMPATIBLE → PROHIBIDO';
                     }
                   }
                 } else {
@@ -811,6 +980,44 @@ export default {
       snackbar.show = true;
     };
     
+    // Función para mostrar un snackbar personalizado con acción
+    const showCustomSnackbar = (message, color = 'info', timeout = 6000) => {
+      snackbar.text = message.text;
+      snackbar.color = color;
+      snackbar.timeout = timeout;
+      snackbar.action = message.action;
+      snackbar.show = true;
+    };
+    
+    // Función para generar y abrir el reporte de ICUS
+    const generarReporteIcus = (icusId) => {
+      if (!icusId) {
+        showSnackbar('No se proporcionó un ID de ICUS válido', 'error');
+        return;
+      }
+      
+      console.log(`Generando reporte para ICUS con ID: ${icusId}`);
+      
+      // URL del reporte
+      const reporteUrl = `/reporte-icus/${icusId}`;
+      
+      // Abrir el reporte en una nueva ventana o pestaña
+      window.open(reporteUrl, '_blank');
+    };
+    
+    // Función para redirigir automáticamente al reporte
+    const redirigirAReporte = (icusId) => {
+      if (!icusId) {
+        showSnackbar('No se proporcionó un ID de ICUS válido para generar el reporte', 'error');
+        return;
+      }
+      
+      console.log(`Redirigiendo automáticamente al reporte para ICUS con ID: ${icusId}`);
+      
+      // Usar el router de Vue para navegar a la página del reporte
+      router.push(`/reporte-icus/${icusId}`);
+    };
+    
     // Método para dar formato a la fecha
     const formatearFecha = (fecha) => {
       if (!fecha) return 'No especificada';
@@ -827,38 +1034,64 @@ export default {
     
     // Método para obtener el color de la compatibilidad
     const getCompatibilidadColor = (compatibilidad) => {
-      if (!compatibilidad) return 'grey';
+      if (!compatibilidad) return '#9E9E9E';
       
-      const comp = compatibilidad.toLowerCase();
-      if (comp.includes('no compatible')) return 'error';
-      if (comp.includes('condicion')) return 'warning';
-      if (comp.includes('compatible')) return 'success';
-      return 'grey';
+      const comp = String(compatibilidad).toLowerCase();
+      console.log('Comprobando compatibilidad:', comp);
+      
+      // Detectar NO COMPATIBLE
+      if (comp.includes('no compatible') || comp.includes('prohibido')) {
+        return '#F44336'; // Rojo explícito para NO COMPATIBLE
+      }
+      
+      // Detectar CONDICIONADO - primero para evitar confusión con "compatible"
+      if (comp.includes('condicion') || comp === 'condicionado') {
+        console.log('Es CONDICIONADO - devolviendo naranja');
+        return '#FF9800'; // Naranja explícito para CONDICIONADO
+      }
+      
+      // Detectar COMPATIBLE
+      if (comp.includes('compatible')) {
+        return '#4CAF50'; // Verde explícito para COMPATIBLE
+      }
+      
+      console.log('No se pudo determinar la compatibilidad:', comp);
+      return '#9E9E9E'; // Gris explícito para no evaluado
     };
     
-    // Método para obtener el color de la compatibilidad a partir del tipo numérico
+    // helpers seguros
+    const toTipo = (v) => {
+      const n = Number(String(v).trim());
+      return Number.isNaN(n) ? -1 : n; // -1 = no evaluado
+    };
+
     const getCompatibilidadColorFromTipo = (tipo) => {
-      if (tipo === 1) return 'success'; // Verde para COMPATIBLE
-      if (tipo === 2) return 'warning'; // Amarillo para CONDICIONADO
-      if (tipo === 0) return 'error';   // Rojo para NO COMPATIBLE
-      return 'grey';                    // Gris para no evaluado
+      switch (toTipo(tipo)) {
+        case 1: return '#4CAF50'; // COMPATIBLE
+        case 2: return '#FF9800'; // CONDICIONADO
+        case 0: return '#F44336'; // NO COMPATIBLE
+        default: return '#9E9E9E'; // no evaluado
+      }
     };
-    
-    // Método para obtener el icono correspondiente al tipo de compatibilidad
+
     const getCompatibilidadIcon = (tipo) => {
-      if (tipo === 1) return 'mdi-check-circle';          // Icono de verificación para COMPATIBLE
-      if (tipo === 2) return 'mdi-alert-circle';          // Icono de alerta para CONDICIONADO
-      if (tipo === 0) return 'mdi-close-circle';          // Icono de prohibición para NO COMPATIBLE
-      return 'mdi-help-circle-outline';                   // Icono de interrogación para no evaluado
+      switch (toTipo(tipo)) {
+        case 1: return 'mdi-check-circle';
+        case 2: return 'mdi-alert-circle';
+        case 0: return 'mdi-close-circle';
+        default: return 'mdi-help-circle-outline';
+      }
     };
-    
-    // Método para convertir el tipo numérico a texto de compatibilidad
+
     const getTipoCompatibilidadTexto = (tipo) => {
-      if (tipo === 1) return 'COMPATIBLE';
-      if (tipo === 2) return 'CONDICIONADO';
-      if (tipo === 0) return 'NO COMPATIBLE → PROHIBIDO';
-      return 'No evaluado';
+      switch (toTipo(tipo)) {
+        case 1: return 'COMPATIBLE';
+        case 2: return 'CONDICIONADO';
+        case 0: return 'NO COMPATIBLE → PROHIBIDO';
+        default: return 'No evaluado';
+      }
     };
+
     
     // Cargar actividades
     const cargarActividades = async () => {
@@ -1038,6 +1271,8 @@ export default {
       getCompatibilidadColorFromTipo,
       getCompatibilidadIcon,
       getTipoCompatibilidadTexto,
+      generarReporteIcus,
+      redirigirAReporte,
       // Propiedades para actividades y tipologías
       actividades,
       loadingActividades,
@@ -1048,11 +1283,35 @@ export default {
       // Propiedades para compatibilidad
       compatibilidadSeleccionada,
       loadingCompatibilidad,
-      buscarCompatibilidad
+      buscarCompatibilidad,
+      compatibilidadColor,
+      // Función y estado para grabar ICUS
+      grabarIcus,
+      guardandoIcus
     };
   }
 };
 </script>
+
+<style>
+/* Estilos globales para forzar los colores de los chips */
+.v-chip {
+  &[style*="background-color: #FF9800"] {
+    background-color: #FF9800 !important;
+    color: white !important;
+  }
+  
+  &[style*="background-color: #4CAF50"] {
+    background-color: #4CAF50 !important;
+    color: white !important;
+  }
+  
+  &[style*="background-color: #F44336"] {
+    background-color: #F44336 !important;
+    color: white !important;
+  }
+}
+</style>
 
 <style scoped>
 
@@ -1171,6 +1430,12 @@ export default {
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* Estilo para el subtítulo del diálogo */
+.v-card-subtitle {
+  word-break: break-word;
+  line-height: 1.3;
+}
+
 /* No results alert */
 .no-results-alert {
   background-color: #eef6fb !important;
@@ -1198,21 +1463,44 @@ export default {
   background-color: #f1f5f9 !important;
 }
 
-/* Bordes coloreados para las tarjetas de compatibilidad */
-.border-success {
-  border-left: 4px solid #4caf50 !important;
+/* Estilos para tabla compacta */
+.compact-table {
+  width: 100%;
 }
 
-.border-warning {
-  border-left: 4px solid #ff9800 !important;
+.compact-table :deep(.v-data-table__wrapper) {
+  margin: 0;
+  padding: 0;
 }
 
-.border-error {
-  border-left: 4px solid #f44336 !important;
+.compact-table :deep(th) {
+  padding: 0 8px !important;
+  height: 36px !important;
+  font-size: 0.8rem !important;
 }
 
-.border-grey {
-  border-left: 4px solid #9e9e9e !important;
+.compact-table :deep(td) {
+  padding: 0 8px !important;
+  height: 32px !important;
+  font-size: 0.8rem !important;
+}
+
+/* Chip personalizado completamente personalizado */
+.chip-custom {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 16px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+}
+
+.chip-custom-small {
+  padding: 0 8px;
+  height: 24px;
+  font-size: 12px;
 }
 
 /* Responsive text */

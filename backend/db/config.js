@@ -24,9 +24,41 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+/**
+ * Ejecutar una consulta SQL
+ * @param {string} query - Consulta SQL a ejecutar
+ * @param {Array} params - Parámetros para la consulta
+ * @returns {Promise<Array>} - Promesa que se resuelve con los resultados de la consulta
+ */
+const execQuery = async (query, params) => {
+  try {
+    const res = await pool.query(query, params);
+    return res.rows;
+  } catch (error) {
+    console.error('[DB] Error al ejecutar consulta:', error);
+    throw error;
+  }
+};
 
+/**
+ * Ejecutar una consulta SQL y obtener solo el primer resultado
+ * @param {string} query - Consulta SQL a ejecutar
+ * @param {Array} params - Parámetros para la consulta
+ * @returns {Promise<Object|null>} - Promesa que se resuelve con el primer resultado o null
+ */
+const execQueryOne = async (query, params) => {
+  try {
+    const res = await pool.query(query, params);
+    return res.rows[0] || null;
+  } catch (error) {
+    console.error('[DB] Error al ejecutar consulta para un resultado:', error);
+    throw error;
+  }
+};
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool,
+  execQuery,
+  execQueryOne
 };
