@@ -5,8 +5,24 @@
         <h3 class="titulo-pantalla">Registro de Tenencias</h3>
       </v-col>
 
+      <v-col cols="12">
+        <div class="d-flex align-center mb-2">
+          <h4 class="mr-4 white--text">Porcentaje de participación: </h4>
+          <v-progress-linear
+            :color="porcentajeOcupado >= 100 ? 'red' : (porcentajeOcupado >= 90 ? 'orange' : 'success')"
+            height="20"
+            :value="porcentajeOcupado"
+            striped
+          >
+            <template v-slot:default>
+              <span class="progress-text">{{ porcentajeOcupado.toFixed(2) }}% ocupado / {{ porcentajeDisponible.toFixed(2) }}% disponible</span>
+            </template>
+          </v-progress-linear>
+        </div>
+      </v-col>
+
       <v-col cols="12" class="d-flex justify-space-between align-center">
-        <v-btn :class="tipoClaseBtn" icon @click="agregarFila">
+        <v-btn :class="tipoClaseBtn" icon @click="agregarFila" :disabled="porcentajeDisponible <= 0">
           <v-icon>mdi-plus</v-icon>
         </v-btn>
         <v-btn :class="tipoClaseBtn" prepend-icon="mdi-content-save" @click="guardarTenencias">
@@ -38,7 +54,7 @@
               :rules="[rules.required, rules.porcentaje]"
               dense
               style="max-width: 120px"
-              @blur="item.porcentaje_participacion = formatDecimal(item.porcentaje_participacion)"
+              @blur="validarPorcentajeTotal(item)"
             />
           </template>
 
@@ -70,8 +86,17 @@
 import axios from 'axios';
 import API_BASE_URL from '@/config/apiConfig';
 import { mapGetters } from 'vuex';
+import useTenenciaEvents from '@/composables/useTenenciaEvents';
 
 export default {
+  setup() {
+    const { emitTenenciaUpdated, onTenenciaUpdated } = useTenenciaEvents();
+    
+    return {
+      emitTenenciaUpdated,
+      onTenenciaUpdated
+    };
+  },
   data() {
     return {
       filas: [],
@@ -80,6 +105,8 @@ export default {
       snackbarOk: false,
       mensajeOk: '',
       ciudadanos: [],
+      porcentajeOcupado: 0,
+      porcentajeDisponible: 100,
       headers: [
         { title: 'Propietario', value: 'id_propietario' },
         { title: 'Participación (%)', value: 'porcentaje_participacion' },
@@ -110,15 +137,38 @@ export default {
         console.error('Error cargando ciudadanos:', error);
       }
     },
+    
+    async cargarPorcentajeAcumulado() {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/porcentaje_acumulado_predio/${this.getIdPredio}`);
+        this.porcentajeOcupado = parseFloat(res.data.porcentaje_acumulado);
+        this.porcentajeDisponible = Math.max(0, 100 - this.porcentajeOcupado);
+        console.log(`Porcentaje ocupado: ${this.porcentajeOcupado}%, disponible: ${this.porcentajeDisponible}%`);
+      } catch (error) {
+        console.error('Error cargando porcentaje acumulado:', error);
+        this.mensajeError = 'Error al cargar el porcentaje ocupado';
+        this.snackbarError = true;
+      }
+    },
     ciudadanoLabel(ciudadano) {
     if (!ciudadano) return '';
     return `${ciudadano.nombres} - ${ciudadano.numero_documento}`;
     },
-    agregarFila() {
+    async agregarFila() {
+      // Recargar el porcentaje acumulado para tener el dato más reciente
+      await this.cargarPorcentajeAcumulado();
+      
+      // Verificar si hay porcentaje disponible
+      if (this.porcentajeDisponible <= 0) {
+        this.mensajeError = 'No hay porcentaje disponible. Ya se ha asignado el 100% de participación.';
+        this.snackbarError = true;
+        return;
+      }
+      
       this.filas.push({
         id_predio: this.getIdPredio,
         id_propietario: null,
-        porcentaje_participacion: 0,
+        porcentaje_participacion: Math.min(this.porcentajeDisponible, 100).toFixed(2),
         representante: 2
       });
     },
@@ -130,11 +180,8 @@ export default {
       this.snackbarError = false;
       this.snackbarOk = false;
 
-      const porcentajeTotal = this.filas.reduce((sum, f) => sum + Number(f.porcentaje_participacion), 0);
-
-      if (porcentajeTotal > 100) {
-        this.mensajeError = 'El total de participación no puede ser mayor al 100%.';
-        this.snackbarError = true;
+      // Verificar que la suma de todos los porcentajes sea exactamente 100%
+      if (!await this.verificarPorcentajeTotal()) {
         return;
       }
 
@@ -149,6 +196,12 @@ export default {
         this.mensajeOk = '✅ Tenencias guardadas con éxito';
         this.snackbarOk = true;
         this.filas = [];
+        
+        // Recargar el porcentaje acumulado después de guardar
+        await this.cargarPorcentajeAcumulado();
+        
+        // Emitir evento para notificar a otros componentes
+        this.emitTenenciaUpdated();
       } catch (error) {
         this.mensajeError = 'Error al guardar: ' + (error.response?.data?.message || error.message);
         this.snackbarError = true;
@@ -159,10 +212,85 @@ export default {
       const num = Number(value);
       if (isNaN(num)) return '';
       return num.toFixed(2);
+    },
+    
+    // Validar porcentaje total cuando un usuario introduce un valor
+    async validarPorcentajeTotal(item) {
+      // Recargar el porcentaje acumulado para tener el dato más reciente
+      await this.cargarPorcentajeAcumulado();
+      
+      // Formatear el valor primero
+      item.porcentaje_participacion = this.formatDecimal(item.porcentaje_participacion);
+      
+      // Calcular el porcentaje total de todas las filas actuales
+      const porcentajeTotalActual = this.filas.reduce((sum, f) => sum + Number(f.porcentaje_participacion || 0), 0);
+      
+      // Calcular el porcentaje total (ya ocupado + actual)
+      const porcentajeTotal = this.porcentajeOcupado + porcentajeTotalActual;
+      
+      // Validar que no exceda el 100%
+      if (porcentajeTotal > 100) {
+        const excedente = porcentajeTotal - 100;
+        this.mensajeError = `El total de participación (${porcentajeTotal.toFixed(2)}%) excedería el 100% por ${excedente.toFixed(2)}%. 
+                            Ya existe un ${this.porcentajeOcupado.toFixed(2)}% ocupado. Disponible: ${this.porcentajeDisponible.toFixed(2)}%.`;
+        this.snackbarError = true;
+        
+        // Ajustar automáticamente el valor al máximo disponible
+        if (Number(item.porcentaje_participacion) > this.porcentajeDisponible) {
+          item.porcentaje_participacion = this.porcentajeDisponible.toFixed(2);
+        }
+      } else if (porcentajeTotal === 100) {
+        this.mensajeOk = `¡Perfecto! Con esta asignación se completa el 100% de participación.`;
+        this.snackbarOk = true;
+      } else {
+        this.mensajeOk = `Aún queda ${(100 - porcentajeTotal).toFixed(2)}% disponible para asignar.`;
+        this.snackbarOk = true;
+      }
+      
+      return item.porcentaje_participacion;
+    },
+    
+    // Método para verificar el porcentaje total antes de guardar
+    async verificarPorcentajeTotal() {
+      // Recargar el porcentaje acumulado para tener el dato más reciente
+      await this.cargarPorcentajeAcumulado();
+      
+      // Calcular el porcentaje total de las filas actuales
+      const porcentajeTotalActual = this.filas.reduce((sum, f) => sum + Number(f.porcentaje_participacion || 0), 0);
+      
+      // Calcular el porcentaje total (ya ocupado + actual)
+      const porcentajeTotal = this.porcentajeOcupado + porcentajeTotalActual;
+      
+      if (porcentajeTotal < 100) {
+        this.mensajeError = `El total de participación (${porcentajeTotal.toFixed(2)}%) no alcanza el 100%. 
+                           Ya existe un ${this.porcentajeOcupado.toFixed(2)}% ocupado y está agregando ${porcentajeTotalActual.toFixed(2)}%. 
+                           Aún faltan ${(100 - porcentajeTotal).toFixed(2)}%.`;
+        this.snackbarError = true;
+        return false;
+      } else if (porcentajeTotal > 100) {
+        this.mensajeError = `El total de participación (${porcentajeTotal.toFixed(2)}%) excedería el 100% por ${(porcentajeTotal - 100).toFixed(2)}%. 
+                           Ya existe un ${this.porcentajeOcupado.toFixed(2)}% ocupado. Disponible: ${this.porcentajeDisponible.toFixed(2)}%. 
+                           Ajuste los valores.`;
+        this.snackbarError = true;
+        return false;
+      }
+      
+      return true;
     }
   },
   mounted() {
     this.cargarCiudadanos();
+    if (this.getIdPredio) {
+      this.cargarPorcentajeAcumulado();
+    }
+    
+    // Configurar listener para actualizar cuando cambian las tenencias en otros componentes
+    this.onTenenciaUpdated(() => {
+      console.log('🏠 GridTenencia: Evento de tenencia actualizada detectado');
+      if (this.getIdPredio) {
+        this.cargarPorcentajeAcumulado();
+      }
+    });
   }
 };
 </script>
@@ -190,5 +318,11 @@ export default {
 
 .v-data-table {
   background: #f9f9f9;
+}
+
+.progress-text {
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
 }
 </style>

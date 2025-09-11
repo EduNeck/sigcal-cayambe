@@ -836,28 +836,36 @@ export default {
       this.form.conflicto = this.form.conflicto === 'SI';
       this.form.asentamiento_de_hecho = this.form.asentamiento_de_hecho === 'SI';
 
+      // Validar campos numéricos para asegurar que sean números o null
+      const numeroNotaria = this.form.numero_notaria === '' ? null : (this.form.numero_notaria ? Number(this.form.numero_notaria) : null);
+      const areaRegistro = this.form.area_registro === '' ? null : (this.form.area_registro ? Number(this.form.area_registro) : null);
+      const repertorio = this.form.repertorio === '' ? null : (this.form.repertorio ? Number(this.form.repertorio) : null);
+      const folio = this.form.folio === '' ? null : (this.form.folio ? Number(this.form.folio) : null);
+      const numeroRegistro = this.form.numero_registro === '' ? null : (this.form.numero_registro ? Number(this.form.numero_registro) : null);
+      const porcentajeParticipacion = this.form.porcentaje_participacion === '' ? null : (this.form.porcentaje_participacion ? Number(this.form.porcentaje_participacion) : null);
+      
       const nuevaTenencia = {
         id_predio: this.idPredio, 
         permite_ingreso: this.form.permite_ingreso || null,
         presenta_escritura: this.form.presenta_escritura || null,
         asentamiento_de_hecho: this.form.asentamiento_de_hecho || null,
         conflicto: this.form.conflicto || null,
-        porcentaje_participacion: this.form.porcentaje_participacion || null,
+        porcentaje_participacion: porcentajeParticipacion,
         id_forma_propiedad: this.form.id_forma_propiedad || null,
         id_propietario: this.form.id_propietario || null, 
         representante: this.form.representante || false,
         id_prov_protocol: this.form.id_prov_protocol || null,
         id_can_protocol: this.form.id_can_protocol || null,
         fecha_inscripcion: this.form.fecha_inscripcion || null,
-        numero_notaria: this.form.numero_notaria || null,
-        area_registro: this.form.area_registro || null,
+        numero_notaria: numeroNotaria,
+        area_registro: areaRegistro,
         id_unidad: this.form.id_unidad || null,
         id_provincia: this.form.id_provincia || null,
         id_canton: this.form.id_canton || null,
         fecha_escritura: this.form.fecha_escritura || null,
-        repertorio: this.form.repertorio || null,
-        folio: this.form.folio || null,
-        numero_registro: this.form.numero_registro || null,
+        repertorio: repertorio,
+        folio: folio,
+        numero_registro: numeroRegistro,
         lindero_norte: this.form.lindero_norte || null,
         lindero_sur: this.form.lindero_sur || null,
         lindero_este: this.form.lindero_este || null,
@@ -910,28 +918,36 @@ export default {
       const fecha_escritura = this.form.fecha_escritura || null;
       const fecha_inscripcion = this.form.fecha_inscripcion || null;
 
+      // Validar campos numéricos para asegurar que sean números o null
+      const numeroNotaria = this.form.numero_notaria === '' ? null : Number(this.form.numero_notaria);
+      const areaRegistro = this.form.area_registro === '' ? null : Number(this.form.area_registro);
+      const repertorio = this.form.repertorio === '' ? null : Number(this.form.repertorio);
+      const folio = this.form.folio === '' ? null : Number(this.form.folio);
+      const numeroRegistro = this.form.numero_registro === '' ? null : Number(this.form.numero_registro);
+      const porcentajeParticipacion = this.form.porcentaje_participacion === '' ? null : Number(this.form.porcentaje_participacion);
+      
       const tenenciaActualizada = {
         id_predio: this.idPredio, 
         permite_ingreso: this.form.permite_ingreso,
         presenta_escritura: this.form.presenta_escritura,
         asentamiento_de_hecho: this.form.asentamiento_de_hecho,
         conflicto: this.form.conflicto,
-        porcentaje_participacion: this.form.porcentaje_participacion,
+        porcentaje_participacion: porcentajeParticipacion,
         id_forma_propiedad: this.form.id_forma_propiedad,
         id_propietario: this.form.id_propietario,
         representante: this.form.representante,
         id_prov_protocol: this.form.id_prov_protocol,
         id_can_protocol: this.form.id_can_protocol,
         fecha_inscripcion: fecha_inscripcion,
-        numero_notaria: this.form.numero_notaria,
-        area_registro: this.form.area_registro,
+        numero_notaria: numeroNotaria,
+        area_registro: areaRegistro,
         id_unidad: this.form.id_unidad,
         id_provincia: this.form.id_provincia,
         id_canton: this.form.id_canton,
         fecha_escritura: fecha_escritura,
-        repertorio: this.form.repertorio,
-        folio: this.form.folio,
-        numero_registro: this.form.numero_registro,
+        repertorio: repertorio,
+        folio: folio,
+        numero_registro: numeroRegistro,
         lindero_norte: this.form.lindero_norte,
         lindero_sur: this.form.lindero_sur,
         lindero_este: this.form.lindero_este,
@@ -1145,19 +1161,19 @@ export default {
     
     // Método para validar y convertir valores numéricos
     validarNumero(valor) {
-      // Si el valor es null, undefined o string vacío, devolver string vacío
+      // Si el valor es null, undefined o string vacío, devolver null
       if (valor === null || valor === undefined || valor === '') {
-        return '';
+        return null;
       }
       
-      // Si es una cadena que contiene letras (como "TERCERA"), devolver string vacío
+      // Si es una cadena que contiene letras (como "TERCERA"), devolver null
       if (typeof valor === 'string' && isNaN(Number(valor))) {
-        console.warn(`Valor numérico no válido: "${valor}". Se establecerá como vacío.`);
-        return '';
+        console.warn(`Valor numérico no válido: "${valor}". Se establecerá como null.`);
+        return null;
       }
       
-      // Si es un número o una cadena convertible a número, devolver el valor
-      return valor;
+      // Si es un número o una cadena convertible a número, devolver el número
+      return Number(valor);
     },
     
     // Método para validar y formatear fechas
