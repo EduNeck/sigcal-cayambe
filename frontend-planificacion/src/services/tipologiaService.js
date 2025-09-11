@@ -30,6 +30,24 @@ export default {
       .then(response => {
         console.log(`✅ Service: Respuesta exitosa para tipología ID ${idString}:`, response);
         console.log(`✅ Service: Datos recibidos:`, JSON.stringify(response.data));
+        
+        // Verificar y registrar estructura de datos
+        if (response.data && response.data.success && response.data.data) {
+          const tipologia = response.data.data;
+          console.log('✅ Service: Estructura de la tipología:', {
+            'Tiene id': 'id' in tipologia,
+            'Tiene codigo': 'codigo' in tipologia,
+            'Tiene id_tipologia': 'id_tipologia' in tipologia,
+            'Tiene nombre': 'nombre' in tipologia
+          });
+          
+          // Si no tiene un ID explícito, asignarle el ID que usamos para buscar
+          if (!tipologia.id && !tipologia.codigo && !tipologia.id_tipologia) {
+            console.log('⚠️ Service: La tipología no tiene ID, asignando ID de búsqueda:', idString);
+            response.data.data.id = idString;
+          }
+        }
+        
         return response;
       })
       .catch(error => {

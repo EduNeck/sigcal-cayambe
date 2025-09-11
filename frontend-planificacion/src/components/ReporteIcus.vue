@@ -1,8 +1,12 @@
 <template>
   <div class="reporte-icus compacto">
-    <!-- Botón de impresión -->
-    <div class="print-button" v-if="!cargando && !error">
-      <button @click="imprimirReporte" title="Imprimir reporte">
+    <!-- Botones de acción -->
+    <div class="action-buttons" v-if="!cargando && !error">
+      <button @click="volverABusqueda" title="Volver a la búsqueda" class="back-button">
+        <span class="back-icon">←</span>
+        <span class="back-text">Volver</span>
+      </button>
+      <button @click="imprimirReporte" title="Imprimir reporte" class="print-button-inner">
         <span class="print-icon">🖨️</span>
         <span class="print-text">Imprimir</span>
       </button>
@@ -204,13 +208,10 @@
             <div v-else>
               <!-- INFORME DE COMPATIBILIDAD -->
               <div class="subseccion informe-compatibilidad">
-                <h4>INFORME DE COMPATIBILIDAD</h4>
+                <h4>INFORME DE COMPATIBILIDAD "{{ datosFinales.resultado_informe || 'PENDIENTE' }}"</h4>
                 <div class="campo-grupo resultado-principal">
-                  <label>Resultado del Informe:</label>
-                  <span class="resultado-texto" v-if="datosFinales.resultado_informe">
-                    {{ datosFinales.resultado_informe }}
-                  </span>
-                  <span class="resultado-texto" v-else>
+                  <label>Compatibilidad:</label>
+                  <span class="resultado-texto" :class="getCompatibilidadClass(datosFinales.compatibilidad)">
                     {{ datosFinales.compatibilidad || 'Pendiente de evaluación' }}
                   </span>
                 </div>
@@ -234,11 +235,11 @@
                   </span>
                 </div>
                 
-                <div class="campo-grupo" v-if="datosFinales.id_tipologia || datosFinales.tipologia">
+                <div class="campo-grupo" v-if="datosFinales.id_tipologia || datosFinales.tipologia || datosFinales.codigo">
                   <label>Tipología:</label>
                   <span>
-                    <span v-if="datosFinales.id_tipologia" class="codigo-campo">[{{ datosFinales.id_tipologia }}]</span>
-                    {{ datosFinales.tipologia }}
+                    <span v-if="datosFinales.id_tipologia || datosFinales.codigo" class="codigo-campo">[{{ datosFinales.id_tipologia || datosFinales.codigo }}]</span>
+                    {{ datosFinales.tipologia || 'No especificado' }}
                   </span>
                 </div>
                 
@@ -371,16 +372,38 @@ export default {
       if (this.datosCompatibilidad && this.datosCompatibilidad.actividad) {
         datos.id_actividad = this.datosCompatibilidad.actividad.codigo;
         datos.actividad = this.datosCompatibilidad.actividad.nombre;
-        datos.id_tipologia = this.datosCompatibilidad.tipologia.codigo;
-        datos.tipologia = this.datosCompatibilidad.tipologia.nombre;
+        
+        // Asegurar que id_tipologia se obtenga correctamente, considerando diferentes nombres de propiedad
+        if (this.datosCompatibilidad.tipologia) {
+          datos.id_tipologia = this.datosCompatibilidad.tipologia.codigo || 
+                              this.datosCompatibilidad.tipologia.id || 
+                              this.datosCompatibilidad.tipologia.id_tipologia || 
+                              datos.id_tipologia;
+          datos.tipologia = this.datosCompatibilidad.tipologia.nombre || datos.tipologia;
+        }
+        
+        // Si ya existe resultado_informe, respetarlo
+        if (!datos.resultado_informe && datos.compatibilidad) {
+          // Determinar resultado_informe basado en compatibilidad
+          if (datos.compatibilidad.toUpperCase().includes('COMPATIBLE')) {
+            datos.resultado_informe = 'PERMITIDO';
+          } else if (datos.compatibilidad.toUpperCase().includes('CONDICIONADO')) {
+            datos.resultado_informe = 'Se verifican condiciones adicionales';
+          } else if (datos.compatibilidad.toUpperCase().includes('NO COMPATIBLE')) {
+            datos.resultado_informe = 'PROHIBIDO';
+          }
+        }
         
         // Mapear el tipo de compatibilidad a un texto descriptivo
         if (this.datosCompatibilidad.compatibilidad === 1) {
-          datos.compatibilidad = 'Compatible';
+          datos.compatibilidad = 'COMPATIBLE';
+          datos.resultado_informe = 'PERMITIDO';
         } else if (this.datosCompatibilidad.compatibilidad === 2) {
-          datos.compatibilidad = 'Condicionado';
+          datos.compatibilidad = 'CONDICIONADO';
+          datos.resultado_informe = 'Se verifican condiciones adicionales';
         } else if (this.datosCompatibilidad.compatibilidad === 0) {
-          datos.compatibilidad = 'No Compatible';
+          datos.compatibilidad = 'NO COMPATIBLE';
+          datos.resultado_informe = 'PROHIBIDO';
         }
         
         // Si tenemos datos de uso de suelo desde las regulaciones
@@ -472,6 +495,11 @@ export default {
     }
   },
   methods: {
+    // Función para volver a la página de búsqueda
+    volverABusqueda() {
+      this.$router.push('/busqueda-icus');
+    },
+    
     // Función para cargar datos del ICUS por ID
     async cargarDatosIcus(id) {
       this.cargando = true; 
@@ -733,24 +761,25 @@ export default {
       return null;
     }
   }
-}
+};
+
 </script>
 
 <style scoped>
 /* Botón de impresión */
-.print-button {
+.action-buttons {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  gap: 10px;
 }
 
-.print-button button {
+.action-buttons button {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1e40af;
-  color: white;
   border: none;
   border-radius: 4px;
   padding: 8px 12px;
@@ -761,18 +790,34 @@ export default {
   transition: all 0.2s ease;
 }
 
-.print-button button:hover {
+.print-button-inner {
+  background: #1e40af;
+  color: white;
+}
+
+.back-button {
+  background: #4b5563;
+  color: white;
+}
+
+.print-button-inner:hover {
   background: #1e3a8a;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   transform: translateY(-1px);
 }
 
-.print-icon {
+.back-button:hover {
+  background: #374151;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
+}
+
+.print-icon, .back-icon {
   font-size: 16px;
 }
 
 @media print {
-  .print-button {
+  .action-buttons {
     display: none;
   }
 }

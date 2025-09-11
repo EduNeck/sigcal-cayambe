@@ -168,20 +168,7 @@
               <span>Ver usos de suelo ({{ item.datosPugsCompletos.length }})</span>
             </v-tooltip>
             
-            <v-tooltip location="bottom">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  icon
-                  x-small
-                  color="success"
-                  v-bind="props"
-                  @click="seleccionarTitular(item)"
-                >
-                  <v-icon>mdi-certificate</v-icon>
-                </v-btn>
-              </template>
-              <span>Crear ICUS</span>
-            </v-tooltip>
+
           </div>
         </template>
       </v-data-table>
@@ -262,12 +249,16 @@
             
             <div v-if="compatibilidadSeleccionada" class="mt-2">
               <!-- Chip con información textual -->
-              <div class="d-flex align-center mb-2">
-                <div class="chip-custom" :style="{ backgroundColor: compatibilidadColor }">
+              <div class="d-flex flex-column mb-2">
+                <div class="chip-custom mb-1" :style="{ backgroundColor: compatibilidadColor }">
                   <v-icon size="small" class="mr-1" color="white">
                     {{ getCompatibilidadIcon(compatibilidadSeleccionada.tipo) }}
                   </v-icon>
-                  <span>{{ compatibilidadSeleccionada.resultado || getTipoCompatibilidadTexto(compatibilidadSeleccionada.tipo) }}</span>
+                  <span>{{ getTipoCompatibilidadTexto(compatibilidadSeleccionada.tipo) }}</span>
+                </div>
+                
+                <div class="chip-result">
+                  <span>{{ getResultadoInformeTexto(compatibilidadSeleccionada.tipo) }}</span>
                 </div>
                 
                 <v-tooltip bottom>
@@ -282,7 +273,7 @@
                       v-bind="props"
                     >
                       <v-icon left small>mdi-content-save</v-icon>
-                      Grabar ICUS
+                      Generar ICUS
                     </v-btn>
                   </template>
                   <span>Guardar el resultado de compatibilidad en la base de datos</span>
@@ -418,7 +409,7 @@
                           <v-icon size="small" class="mr-1">mdi-shape-outline</v-icon>
                           TIPOLOGÍA
                         </v-card-title>
-                        <p><strong>Código:</strong> {{ icusSeleccionado.id_tipologia || 'No especificado' }}</p>
+                        <p><strong>Código:</strong> {{ icusSeleccionado.id_tipologia || icusSeleccionado.codigo || 'No especificado' }}</p>
                         <p><strong>Nombre:</strong> {{ icusSeleccionado.tipologia || 'No especificado' }}</p>
                       </v-card>
                     </v-col>
@@ -464,10 +455,6 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="success" @click="seleccionarTitular(icusSeleccionado)">
-            <v-icon left>mdi-certificate</v-icon>
-            Crear ICUS
-          </v-btn>
           <v-btn color="grey darken-1" text @click="detalleDialog = false">
             Cerrar
           </v-btn>
@@ -623,6 +610,14 @@ export default {
         // Obtener el predio seleccionado (primer resultado)
         const predio = resultados.value[0];
         
+        // Obtener ID de tipología (asegurándonos de capturar el ID independientemente de cómo se nombre)
+        const idTipologia = tipologiaSeleccionada.value?.id || 
+                           tipologiaSeleccionada.value?.codigo || 
+                           tipologiaSeleccionada.value?.id_tipologia;
+                           
+        console.log('📝 ID Tipología seleccionada:', idTipologia);
+        console.log('📝 Objeto tipología completo:', tipologiaSeleccionada.value);
+        
         // Preparar los datos del ICUS
         const icusData = {
           // Campos básicos
@@ -633,16 +628,18 @@ export default {
           uso_suelo: predio.uso_suelo,
           id_actividad: filtros.id_actividad.id_actividad,
           actividad: filtros.id_actividad.descripcion,
-          id_tipologia: tipologiaSeleccionada.value?.id,
+          id_tipologia: idTipologia, // Usar la variable que hemos extraído y verificado
           tipologia: tipologiaSeleccionada.value?.nombre,
-          compatibilidad: compatibilidadSeleccionada.value.resultado || getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
+          compatibilidad: getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
           tipo_compatibilidad: toTipo(compatibilidadSeleccionada.value.tipo),
+          resultado_compatibilidad: getResultadoInformeTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
           usuario: 'sistema', // Este valor debería venir de un sistema de autenticación
           estado: 'ACTIVO',
           
           // Campos adicionales del predio
           numero_documento: predio.numero_documento,
           clave_anterior: predio.clave_anterior,
+          clave_catastral_anterior: predio.clave_anterior || predio.clave_catastral_anterior, // Incluir ambos campos para compatibilidad
           derechos_acciones: predio.derechos_acciones,
           ph: predio.ph,
           area_construccion: predio.area_construccion,
@@ -652,7 +649,7 @@ export default {
           id_par: predio.id_par || null,
           nombre_parroquia: predio.parroquia,
           sector: predio.sector,
-          resultado_informe: `Informe de compatibilidad de uso de suelo para el predio con clave catastral ${predio.clave_catastral}. Resultado: ${compatibilidadSeleccionada.value.resultado || getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo))}`,
+          resultado_informe: getResultadoInformeTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
           id_uso_suelo: predio.id_suelo, // Si id_uso_suelo es diferente de id_suelo, ajustar según corresponda
           notas: `Generado automáticamente desde el sistema el ${new Date().toLocaleDateString()}`,
           id_predio: predio.id
@@ -660,6 +657,13 @@ export default {
         };
         
         console.log('📝 Guardando ICUS con datos:', icusData);
+        
+        // Verificar explícitamente los datos de clave catastral
+        console.log('📝 Verificación de claves catastrales:', {
+          clave_catastral: icusData.clave_catastral,
+          clave_anterior: icusData.clave_anterior,
+          clave_catastral_anterior: icusData.clave_catastral_anterior
+        });
         
         // Llamar al servicio para crear el ICUS
         const response = await icusService.crearIcus(icusData);
@@ -819,6 +823,9 @@ export default {
               agua: titular.agua ? 'Sí' : 'No',
               energia_electrica: titular.energia_electrica ? 'Sí' : 'No',
               alcantarillado: titular.alcantarillado ? 'Sí' : 'No',
+              // Campos catastrales importantes
+              clave_anterior: titular.clave_anterior || titular.clave_catastral_anterior || '',
+              clave_catastral_anterior: titular.clave_anterior || titular.clave_catastral_anterior || '',
               // Campos adicionales que podrían ser útiles para ICUS
               actividad: '',
               tipologia: '',
@@ -1087,8 +1094,18 @@ export default {
       switch (toTipo(tipo)) {
         case 1: return 'COMPATIBLE';
         case 2: return 'CONDICIONADO';
-        case 0: return 'NO COMPATIBLE → PROHIBIDO';
+        case 0: return 'NO COMPATIBLE';
         default: return 'No evaluado';
+      }
+    };
+    
+    // Método para obtener el resultado del informe basado en el tipo de compatibilidad
+    const getResultadoInformeTexto = (tipo) => {
+      switch (toTipo(tipo)) {
+        case 1: return 'PERMITIDO';
+        case 2: return 'Se verifican condiciones adicionales';
+        case 0: return 'PROHIBIDO';
+        default: return 'Pendiente de evaluación';
       }
     };
 
@@ -1137,36 +1154,80 @@ export default {
           // Asegurarse de que el ID sea un string limpio
           const idTipologia = String(actividadSeleccionada.value.id_tipologia).trim();
           
+          console.log('🔍 Buscando tipología con ID:', idTipologia);
+          console.log('🔍 Tipo de dato del ID:', typeof idTipologia);
+          
           try {
             const response = await tipologiaService.obtenerTipologiaPorId(idTipologia);
             
+            console.log('✅ Respuesta de tipología completa:', response);
+            
             if (response.data && response.data.success) {
+              // Asignar la tipología seleccionada
               tipologiaSeleccionada.value = response.data.data;
-              showSnackbar(`Tipología '${response.data.data.nombre}' encontrada`, 'success');
+              
+              // Verificamos la estructura de datos y nos aseguramos que el ID esté disponible
+              console.log('✅ Tipología encontrada:', tipologiaSeleccionada.value);
+              console.log('✅ ID de tipología:', 
+                        tipologiaSeleccionada.value.id || 
+                        tipologiaSeleccionada.value.codigo || 
+                        tipologiaSeleccionada.value.id_tipologia || 
+                        'No disponible');
+              
+              // Si no tiene ID explícito, lo agregamos
+              if (!tipologiaSeleccionada.value.id) {
+                console.log('⚠️ El objeto tipología no tiene propiedad ID, asignando desde el ID de búsqueda');
+                tipologiaSeleccionada.value.id = idTipologia;
+              }
+              
+              showSnackbar(`Tipología '${tipologiaSeleccionada.value.nombre}' encontrada con ID ${idTipologia}`, 'success');
               
               // Una vez que tengamos la tipología, buscamos la compatibilidad con el uso de suelo seleccionado
               await buscarCompatibilidad(idTipologia);
               
             } else {
+              console.log('⚠️ No se encontró la tipología en el formato esperado');
               tipologiaSeleccionada.value = null;
               showSnackbar('No se encontró la tipología correspondiente', 'warning');
             }
           } catch (serviceError) {
+            console.error('❌ Error al buscar tipología:', serviceError);
+            
+            // Log detallado del error
+            if (serviceError.response) {
+              console.error('❌ Status:', serviceError.response.status);
+              console.error('❌ Datos:', serviceError.response.data);
+            }
+            
             // Si es un error 404, podemos intentar una consulta alternativa
             if (serviceError.response?.status === 404) {
               showSnackbar('Tipología no encontrada, realizando búsqueda alternativa', 'info');
-              // Aquí podríamos implementar una lógica alternativa si es necesario
+              
+              // Creamos un objeto tipología básico con el ID que conocemos
+              // Esto permite continuar el flujo aunque no se encuentre la tipología en la base de datos
+              tipologiaSeleccionada.value = {
+                id: idTipologia,
+                nombre: `Tipología ${idTipologia}`,
+                descriptacion: 'Información de tipología no disponible'
+              };
+              
+              console.log('ℹ️ Creando objeto tipología básico:', tipologiaSeleccionada.value);
+              
+              // Intentamos buscar compatibilidad con este ID
+              await buscarCompatibilidad(idTipologia);
+              
             } else {
               showSnackbar(`Error al cargar tipología: ${serviceError.response?.data?.message || serviceError.message}`, 'error');
+              tipologiaSeleccionada.value = null;
             }
-            
-            tipologiaSeleccionada.value = null;
           }
         } else {
+          console.warn('⚠️ La actividad no tiene tipología asociada');
           tipologiaSeleccionada.value = null;
           showSnackbar('La actividad no tiene tipología asociada', 'info');
         }
       } catch (error) {
+        console.error('❌ Error general al procesar la actividad seleccionada:', error);
         showSnackbar('Error al procesar la actividad seleccionada', 'error');
         tipologiaSeleccionada.value = null;
       } finally {
@@ -1271,6 +1332,7 @@ export default {
       getCompatibilidadColorFromTipo,
       getCompatibilidadIcon,
       getTipoCompatibilidadTexto,
+      getResultadoInformeTexto,
       generarReporteIcus,
       redirigirAReporte,
       // Propiedades para actividades y tipologías
@@ -1495,6 +1557,18 @@ export default {
   color: white;
   font-weight: bold;
   box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+}
+
+.chip-result {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 16px;
+  color: #333;
+  font-weight: bold;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
 }
 
 .chip-custom-small {
