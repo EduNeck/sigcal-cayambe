@@ -357,6 +357,7 @@ import irmService from '@/services/irmService';
 import qrService from '@/services/qrService';
 import axios from 'axios';
 import { useAuth } from '@/composables/useAuth';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 import API_BASE_URL from '@/config/apiConfig';
 
 export default {
@@ -365,6 +366,8 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const { user } = useAuth();
+    // Utilizamos el composable para obtener el usuario actual
+    const { currentUser, getUsernameForRecord, getDisplayName } = useCurrentUser();
     const datosTitular = ref({});
     const fechaActual = ref(format(new Date(), "dd 'de' MMMM 'de' yyyy, HH:mm:ss", { locale: es }));
     const fechaActualCorta = ref(format(new Date(), "yyyy-MM-dd", { locale: es }));
@@ -509,6 +512,13 @@ export default {
     };
 
     onMounted(async () => {
+      // Registramos información del usuario actual para verificar que se esté cargando correctamente
+      console.log('ReporteIRM - Usuario actual cargado:', {
+        username: getUsernameForRecord.value,
+        displayName: getDisplayName.value,
+        currentUser: currentUser.value
+      });
+      
       // Variable para controlar si ya iniciamos el proceso de guardado
       let procesoGuardadoIniciado = false;
 
@@ -596,8 +606,8 @@ export default {
           claveCatastral: datosTitular.value?.clave_catastral || '',
           idPropietario: datosTitular.value?.id_ciudadano || '',
           nombrePropietario: datosTitular.value?.nombres || '',
-          usuarioId: user?.id || '',
-          nombreUsuario: user?.nombre || ''
+          usuarioId: user?.id || currentUser.value?.id || '',
+          nombreUsuario: getUsernameForRecord.value || user?.nombre || ''
         };
         
         // Generar el QR
@@ -682,7 +692,7 @@ export default {
           energia_electrica: datosTitular.value?.energia_electrica || 'S/D',
           alcantarillado: datosTitular.value?.alcantarillado || 'S/D',
           otros: 'Transporte público',
-          usuario: user?.nombre || 'Usuario del sistema',
+          usuario: getUsernameForRecord.value || user?.nombre || 'Usuario del sistema',
           fecha_reporte: format(new Date(), "yyyy-MM-dd HH:mm:ss", { locale: es }),
           
           // Incluir las regulaciones
@@ -829,7 +839,11 @@ export default {
       guardarIRM,
       certificadoGuardado,
       idCertificado,
-      guardadoEnProgreso
+      guardadoEnProgreso,
+      // Agregamos las variables del composable useCurrentUser
+      currentUser,
+      getUsernameForRecord,
+      getDisplayName
     };
   }
 }
