@@ -285,9 +285,9 @@
 
             <div class="fecha-usuario-info">
               <div class="info-grid">
-                <div class="campo-grupo" v-if="datosFinales.usuario">
+                <div class="campo-grupo">
                   <label>Responsable:</label>
-                  <span>{{ datosFinales.usuario }}</span>
+                  <span>{{ datosFinales.usuario || getUsernameForRecord }}</span>
                 </div>
               </div>
             </div>
@@ -312,6 +312,7 @@ import QRCode from 'qrcode'
 import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
 import icusService from '@/services/icusService';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 
 export default {
   name: 'ReporteIcus',
@@ -332,8 +333,21 @@ export default {
       titularError: null,
       compatibilidadLoading: false,
       compatibilidadError: null,
-      qrCodeDataUrl: null 
+      qrCodeDataUrl: null,
+      // Datos del usuario
+      usuarioActual: null,
+      nombreUsuarioActual: 'Sistema'
     }
+  },
+  setup() {
+    // Usar el composable para obtener información del usuario actual
+    const { currentUser, getUsernameForRecord, getDisplayName } = useCurrentUser();
+    
+    return {
+      currentUser,
+      getUsernameForRecord,
+      getDisplayName
+    };
   },
   computed: {
     fechaReporte() {
@@ -413,6 +427,12 @@ export default {
         }
       }
       
+      // Asegurarnos que el usuario siempre esté presente
+      if (!datos.usuario) {
+        datos.usuario = this.getUsernameForRecord;
+        console.log('Usuario asignado desde composable:', datos.usuario);
+      }
+      
       // Agregar logs para depuración
       console.log('Datos finales normalizados:', datos);
       console.log('Claves catastrales:', {
@@ -431,6 +451,13 @@ export default {
     }
   },
   mounted() {
+    // Cargar información del usuario actual
+    this.usuarioActual = this.getUsernameForRecord;
+    this.nombreUsuarioActual = this.getDisplayName;
+    
+    console.log('Usuario actual cargado:', this.usuarioActual);
+    console.log('Nombre para mostrar:', this.nombreUsuarioActual);
+    
     // Intentar obtener el ID de ICUS de distintas fuentes
     const id = this.id || this.icusId || this.getIcusIdFromRoute();
     
@@ -529,6 +556,12 @@ export default {
         if (icusData) {
           // Asignar los datos a la variable local
           this.datosIcusLocal = icusData;
+          
+          // Asegurarse de que haya un usuario en el registro
+          if (!this.datosIcusLocal.usuario) {
+            console.log('El registro no tiene usuario asignado, asignando usuario actual');
+            this.datosIcusLocal.usuario = this.getUsernameForRecord;
+          }
           
           // Si tenemos clave catastral en la respuesta, cargar datos adicionales
           if (icusData.clave_catastral) {

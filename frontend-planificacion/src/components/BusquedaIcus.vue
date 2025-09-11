@@ -542,6 +542,7 @@ import tipologiaService from '@/services/tipologiaService';
 import datosPugsService from '@/services/datosPugsService';
 import compatibilidadService from '@/services/compatibilidadService';
 import icusService from '@/services/icusService';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 
 export default {
   name: 'BusquedaICUS',
@@ -558,6 +559,9 @@ export default {
     const activeTab = ref('general'); // Para controlar las pestañas en el diálogo de detalles
     const predioSeleccionado = ref(null); // Para mostrar los usos de suelo del predio seleccionado
     const usosDetalleDialog = ref(false); // Para controlar el diálogo de detalles de usos
+    
+    // Obtener el usuario actual desde el composable
+    const { getUsernameForRecord, getDisplayName } = useCurrentUser();
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -633,7 +637,7 @@ export default {
           compatibilidad: getTipoCompatibilidadTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
           tipo_compatibilidad: toTipo(compatibilidadSeleccionada.value.tipo),
           resultado_compatibilidad: getResultadoInformeTexto(toTipo(compatibilidadSeleccionada.value.tipo)),
-          usuario: 'sistema', // Este valor debería venir de un sistema de autenticación
+          usuario: getUsernameForRecord.value, // Usando el nombre de usuario del composable
           estado: 'ACTIVO',
           
           // Campos adicionales del predio
