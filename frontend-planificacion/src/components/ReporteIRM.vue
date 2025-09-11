@@ -82,6 +82,7 @@
           <v-row>
             <v-col cols="6">
               <p><strong>FECHA:</strong> {{ fechaActual }}</p>
+              <p><strong>GENERADO POR:</strong> {{ getDisplayName }}</p>
             </v-col>
             <v-col cols="6" class="text-end">
               <p><strong>IRM N°:</strong> {{ numeroIRM }}</p>
@@ -305,25 +306,16 @@
       </footer>
     </div>
     
-    <!-- Botones de acción flotantes -->
-    <div class="floating-actions no-print">
-      <v-btn
-        color="primary"
-        fab
-        @click="imprimirInforme"
-        title="Imprimir informe"
-      >
-        <v-icon>mdi-printer</v-icon>
-      </v-btn>
-      <v-btn
-        color="secondary"
-        fab
-        class="mt-2"
-        @click="volverABusqueda"
-        title="Volver a la búsqueda"
-      >
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
+    <!-- Botones de acción -->
+    <div class="action-buttons" v-if="!loading && !error">
+      <button @click="volverABusqueda" title="Volver a la búsqueda" class="back-button">
+        <span class="back-icon">←</span>
+        <span class="back-text">Volver</span>
+      </button>
+      <button @click="imprimirInforme" title="Imprimir informe" class="print-button-inner">
+        <span class="print-icon">🖨️</span>
+        <span class="print-text">Imprimir</span>
+      </button>
     </div>
 
     <!-- Snackbar para notificaciones -->
@@ -982,18 +974,54 @@ ul li {
   display: none;
 }
 
-/* Estilos para los botones flotantes */
-.floating-actions {
+/* Estilos para los botones de acción */
+.action-buttons {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
+  z-index: 1000;
   display: flex;
-  flex-direction: column;
-  z-index: 100;
+  gap: 10px;
 }
 
-.floating-actions .v-btn {
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+.action-buttons button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.print-button-inner {
+  background: #1e40af;
+  color: white;
+}
+
+.back-button {
+  background: #4b5563;
+  color: white;
+}
+
+.print-button-inner:hover {
+  background: #1e3a8a;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
+}
+
+.back-button:hover {
+  background: #374151;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
+}
+
+.print-icon, .back-icon {
+  font-size: 16px;
 }
 
 /* Loading Container */
@@ -1063,6 +1091,10 @@ ul li {
   
   .no-print {
     display: none !important;
+  }
+  
+  .action-buttons {
+    display: none;
   }
 }
 

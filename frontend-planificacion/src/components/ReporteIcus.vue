@@ -50,6 +50,11 @@
             <label>Fecha del Informe:</label>
             <span class="fecha-valor">{{ fechaReporte }}</span>
           </div>
+          <!-- Generado por -->
+          <div class="generado-por-container">
+            <label>Generado por:</label>
+            <span class="generado-valor">{{ getDisplayName }}</span>
+          </div>
           <!-- Número ICUS debajo de la fecha -->
           <div class="icus-numero-header">
             <span class="icus-numero-principal">ICUS N° {{ datosFinales.id || 'S/N' }}</span>
@@ -924,18 +929,19 @@ export default {
     padding-top: 6px; 
     border-top: 1px solid #e5e7eb; 
 }
-.fecha-contenedor { 
+.fecha-contenedor, .generado-por-container { 
     display: flex; 
     justify-content: flex-end; 
     align-items: center; 
     gap: 6px; 
+    margin-bottom: 4px;
 }
-.fecha-contenedor label { 
+.fecha-contenedor label, .generado-por-container label { 
     font-weight: 700; 
     color: #374151; 
     font-size: var(--fs-small); 
 }
-.fecha-valor { 
+.fecha-valor, .generado-valor { 
     background: #f3f4f6; 
     padding: 3px 8px; 
     border-radius: 3px; 
@@ -1215,8 +1221,11 @@ h3 {
     padding-top: 4px; 
     border-top: 1px solid #000!important; 
   }
-  .fecha-contenedor { justify-content: center; }
-  .fecha-valor { 
+  .fecha-contenedor, .generado-por-container { 
+    justify-content: center; 
+    margin-bottom: 3px;
+  }
+  .fecha-valor, .generado-valor { 
     border: 1px solid #000!important; 
     background: #f0f0f0!important; 
     -webkit-print-color-adjust: exact; 
