@@ -178,8 +178,13 @@
               <h3>IMPLANTACIÓN GRÁFICA DEL LOTE</h3>
               
               <div class="mapa-container">
-                <div v-if="datosFinales.geometria_geojson" class="mapa-placeholder">
+                <div v-if="croquisUrl" class="mapa-placeholder">
                   <p>Mapa del predio</p>
+                  <div class="croquis-container">
+                    <v-img :src="croquisUrl" class="custom-img" :aspect-ratio="1.5">
+                      <div class="img-title">Croquis Predio</div>
+                    </v-img>
+                  </div>
                   <span>{{ datosFinales.clave_catastral || 'Sin clave catastral' }}</span>
                 </div>
                 <div v-else class="sin-geometria">
@@ -187,8 +192,8 @@
                 </div>
               </div>
 
-              <div class="coordenadas-info" v-if="datosFinales.geometria_geojson">
-                <small>Coordenadas disponibles en formato GeoJSON</small>
+              <div class="coordenadas-info" v-if="croquisUrl">
+                <small>Visualización generada para la clave catastral</small>
               </div>
             </div>
           </div>
@@ -318,6 +323,7 @@ import API_BASE_URL from '@/config/apiConfig';
 import datosTitularService from '@/services/datosTitularService';
 import icusService from '@/services/icusService';
 import { useCurrentUser } from '@/composables/useCurrentUser';
+import { generarUrlCroquis } from '@/utils/croquisUtils';
 
 export default {
   name: 'ReporteIcus',
@@ -341,7 +347,8 @@ export default {
       qrCodeDataUrl: null,
       // Datos del usuario
       usuarioActual: null,
-      nombreUsuarioActual: 'Sistema'
+      nombreUsuarioActual: '',
+      croquisUrl: '',
     }
   },
   setup() {
@@ -526,18 +533,21 @@ export default {
       }
     }
   },
+
   methods: {
     // Función para volver a la página de búsqueda
     volverABusqueda() {
       this.$router.push('/busqueda-icus');
     },
-    
+
+
     // Función para cargar datos del ICUS por ID
     async cargarDatosIcus(id) {
       this.cargando = true; 
       this.error = null;
       
       try {
+
         console.log(`Cargando datos del ICUS con ID: ${id}`);
         
         // Usar el servicio ICUS para cargar los datos por ID
@@ -571,6 +581,15 @@ export default {
           // Si tenemos clave catastral en la respuesta, cargar datos adicionales
           if (icusData.clave_catastral) {
             await this.cargarDatosPorClaveCatastral(icusData.clave_catastral);
+            
+            // Generar el croquis utilizando la clave catastral
+            try {
+              console.log('Generando croquis para clave:', icusData.clave_catastral);
+              this.croquisUrl = await generarUrlCroquis(icusData.clave_catastral, 15);
+              console.log('URL del croquis generada:', this.croquisUrl ? 'URL generada correctamente' : 'No se generó URL');
+            } catch (croquisError) {
+              console.error('Error al generar el croquis:', croquisError);
+            }
           } else {
             console.warn('El registro ICUS no tiene clave catastral');
           }
@@ -619,6 +638,17 @@ export default {
         }
       } catch (error) {
         console.error('Error al cargar datos por clave catastral:', error);
+      }
+      
+      // Generar el croquis con la clave catastral
+      try {
+        if (claveCatastral) {
+          console.log('Generando croquis para clave (desde cargarDatosPorClaveCatastral):', claveCatastral);
+          this.croquisUrl = await generarUrlCroquis(claveCatastral, 15);
+          console.log('URL del croquis generada:', this.croquisUrl ? 'URL generada correctamente' : 'No se generó URL');
+        }
+      } catch (croquisError) {
+        console.error('Error al generar el croquis:', croquisError);
       }
     },
     
@@ -1085,12 +1115,23 @@ h3 {
 
 /* Mapa */
 .mapa-container {
-  min-height: 150px; /* antes 200px */
-  border: 1px dashed #d1d5db; /* antes 2px */
+  height: 300px; /* Altura aumentada para mejor visualización */
+  border: 1px dashed #d1d5db;
   border-radius: 6px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
   background: #f3f4f6;
-  margin: 6px 0; /* antes 10px */
+  margin: 6px 0;
+  overflow: hidden; /* Evita desbordamientos */
+}
+.mapa-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .mapa-placeholder p { 
     margin: 0 0 4px 0; 
@@ -1099,7 +1140,34 @@ h3 {
 }
 .mapa-placeholder span { 
     font-size: var(--fs-small); 
-    color: #374151; 
+    color: #374151;
+    margin-top: 4px;
+}
+.croquis-container {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.custom-img {
+    width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.img-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 3px 8px;
+    font-size: 10px;
+    text-align: center;
 }
 .sin-geometria { 
     text-align: center; 
@@ -1271,7 +1339,11 @@ h3 {
     gap: 10px; 
   }
   .mapa-container { 
-    min-height: 120px; 
+    height: 250px;
+    page-break-inside: avoid;
+  }
+  .custom-img {
+    max-height: 210px !important;
   }
   .fecha-reporte, .icus-numero { 
     font-size: 9px; 

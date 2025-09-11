@@ -8,21 +8,7 @@ export async function generarUrlCroquis(claveCatastral, margenZoom = 10) {
   }
 
   try {
-    // SOLUCIÓN TEMPORAL: Usar coordenadas simuladas mientras se arregla el backend
-    console.log('Usando coordenadas simuladas para:', claveCatastral);
-    
-    // Simular una respuesta con coordenadas fijas para que el mapa se muestre
-    const resp = { 
-      data: {
-        xmin: 803000,
-        ymin: 10000000,
-        xmax: 803100,
-        ymax: 10000100,
-        nota: "Coordenadas simuladas temporalmente"
-      }
-    };
-    
-    console.log('Usando datos simulados:', resp.data);
+    const resp = await axios.get(`${API_BASE_URL}/bbox_predio/${claveCatastral}`);
     const { xmin, ymin, xmax, ymax } = resp.data;
 
     if (

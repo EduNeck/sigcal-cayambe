@@ -67,10 +67,6 @@
                 <h2>INFORME DE REGULACIÓN MUNICIPAL</h2>
                 <p class="entidad">Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe</p>
                 </div>
-                <div class="qr-container" v-if="qrCode">
-                  <img :src="qrCode" alt="Código QR de verificación" class="qr-image" />
-                  <p class="qr-text">Verificación</p>
-                </div>
             </div>
         </header>
 
@@ -127,7 +123,21 @@
                     <p><strong>Barrio/Sector:</strong> {{ datosTitular.sector || 'No especificado' }}</p>
                 </v-col>
                 <v-col cols="6">
-                    <!-- Columna de información adicional o espacio en blanco -->
+                    <!-- Implantación Gráfica del Lote -->
+                    <h3>IMPLANTACIÓN GRÁFICA DEL LOTE</h3>
+                    <div class="mapa-container">
+                      <div v-if="croquisUrl" class="mapa-placeholder">
+                        <v-img :src="croquisUrl" class="custom-img" :aspect-ratio="1.5">
+                          <div class="img-title">Croquis Predio</div>
+                        </v-img>
+                        <span>{{ datosTitular.clave_catastral || 'Sin clave catastral' }}</span>
+                      </div>
+                      <div v-else class="sin-geometria">
+                        <p>Sin información geográfica</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Información adicional -->
                     <div class="info-adicional">
                       <p><strong>NOTA:</strong> Este documento es únicamente informativo.</p>
                       <p>Los datos mostrados corresponden a la información registrada en el sistema catastral.</p>
@@ -300,9 +310,19 @@
 
       <!-- PIE DE PÁGINA -->
       <footer class="reporte-footer">
-        <p>Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe</p>
-        <p>Dirección de Planificación y Ordenamiento Territorial</p>
-        <div class="pagina-info">Página <span class="pagina-num"></span></div>
+        <div class="footer-content">
+          <div class="footer-info">
+            <p>Gobierno Autónomo Descentralizado Intercultural y Plurinacional del Municipio de Cayambe</p>
+            <p>Dirección de Planificación y Ordenamiento Territorial</p>
+            <div class="pagina-info">Página <span class="pagina-num"></span></div>
+          </div>
+          <div class="qr-info" v-if="qrCode">
+            <h4>CÓDIGO QR DE VERIFICACIÓN</h4>
+            <div class="qr-container">
+              <img :src="qrCode" alt="Código QR de verificación" class="qr-code" />
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
     
@@ -351,6 +371,8 @@ import axios from 'axios';
 import { useAuth } from '@/composables/useAuth';
 import { useCurrentUser } from '@/composables/useCurrentUser';
 import API_BASE_URL from '@/config/apiConfig';
+import { generarUrlCroquis } from '@/utils/croquisUtils';
+import QRCode from 'qrcode';
 
 export default {
   name: 'ReporteIRM',
@@ -372,6 +394,7 @@ export default {
     const qrCode = ref(null);
     const certificadoGuardado = ref(false);
     const idCertificado = ref(null);
+    const croquisUrl = ref('');
     
     // Estado para el snackbar
     const snackbar = reactive({
@@ -489,6 +512,9 @@ export default {
           
           // Una vez cargados los datos del titular, cargamos los datos de regulaciones
           await cargarDatosRegulaciones(claveCatastral);
+          
+          // Generar el croquis del predio
+          await generarCroquis(claveCatastral);
         } else {
           console.warn('No se encontraron datos para la clave catastral:', claveCatastral);
           error.value = `No se encontraron datos para la clave catastral: ${claveCatastral}`;
@@ -602,10 +628,19 @@ export default {
           nombreUsuario: getUsernameForRecord.value || user?.nombre || ''
         };
         
-        // Generar el QR
-        const qrDataUrl = await qrService.generarQRIRM(datosQR);
-        qrCode.value = qrDataUrl;
-        console.log('Código QR generado exitosamente');
+        // Generar texto para el QR
+        const textoQR = `IPRU|${numeroIRM.value || 'S/N'}|${fechaHoraQR}|${datosTitular.value?.id_predio || ''}|${datosTitular.value?.clave_catastral || 'Sin-clave'}|${datosTitular.value?.id_ciudadano || ''}|${(datosTitular.value?.nombres || 'Sin-propietario').substring(0, 50)}|${user?.id || currentUser.value?.id || ''}|${getUsernameForRecord.value || ''}`;
+        
+        try {
+          // Usar los mismos parámetros que en ReporteIcus.vue para consistencia
+          qrCode.value = await QRCode.toDataURL(textoQR, { width: 96, margin: 0 });
+          console.log('Código QR generado exitosamente');
+        } catch (error) {
+          console.error('Error generando QR directamente:', error);
+          // Plan B: Si falla el método directo, usar el servicio
+          const qrDataUrl = await qrService.generarQRIRM(datosQR);
+          qrCode.value = qrDataUrl;
+        }
       } catch (err) {
         console.error('Error al generar el código QR:', err);
         mostrarSnackbar('Error al generar el código QR', 'error');
@@ -811,6 +846,22 @@ export default {
       }
     };
     
+    // Función para generar el croquis del predio
+    const generarCroquis = async (claveCatastral) => {
+      try {
+        if (claveCatastral) {
+          console.log('Generando croquis para clave catastral:', claveCatastral);
+          const url = await generarUrlCroquis(claveCatastral, 15);
+          croquisUrl.value = url;
+          console.log('URL del croquis generada:', url ? 'URL generada correctamente' : 'No se generó URL');
+        } else {
+          console.warn('No se puede generar croquis: clave catastral no proporcionada');
+        }
+      } catch (error) {
+        console.error('Error al generar el croquis:', error);
+      }
+    };
+    
     return {
       datosTitular,
       fechaActual,
@@ -832,6 +883,9 @@ export default {
       certificadoGuardado,
       idCertificado,
       guardadoEnProgreso,
+      // Variables para el croquis
+      croquisUrl,
+      generarCroquis,
       // Agregamos las variables del composable useCurrentUser
       currentUser,
       getUsernameForRecord,
@@ -882,33 +936,112 @@ export default {
   height: auto;
 }
 
-.qr-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 80px;
+/* QR */
+.qr-info { 
+    margin-top: 10px; 
+    padding: 10px; 
+    background: #f8fafc; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 6px; 
+    text-align: center; 
 }
-
-.qr-image {
-  width: 80px;
-  height: 80px;
+.qr-info h4 { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: #374151; 
+    margin: 0 0 6px 0; 
+    text-transform: uppercase; 
+    letter-spacing: .3px; 
 }
-
-.qr-text {
-  font-size: 10px;
-  margin-top: 2px;
-  text-align: center;
+.qr-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 6px; 
+}
+.qr-code { 
+    width: 96px; 
+    height: 96px; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 4px; 
+    background: #fff; 
+    padding: 4px; 
 }
 
 .info-adicional {
-  min-height: 280px;
+  min-height: 80px;
   background-color: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  margin-top: 15px;
+}
+
+/* Estilos para el croquis */
+.mapa-container {
+  height: 220px;
+  border: 1px dashed #d1d5db;
+  border-radius: 6px;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
+  background: #f3f4f6;
+  margin: 6px 0;
+  overflow: hidden;
+}
+
+.mapa-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mapa-placeholder span {
+  font-size: 12px;
+  color: #374151;
+  margin-top: 4px;
+}
+
+.croquis-container {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-img {
+  width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.img-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 3px 8px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.sin-geometria {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 20px;
 }
 
 .titulo-municipio {
@@ -959,7 +1092,6 @@ ul li {
 
 /* Pie de página */
 .reporte-footer {
-  text-align: center;
   font-size: 12px;
   border-top: 1px solid #ccc;
   padding-top: 10px;
@@ -967,11 +1099,33 @@ ul li {
   position: relative;
 }
 
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-info {
+  text-align: center;
+  flex: 1;
+}
+
 .pagina-info {
   font-size: 10px;
   color: #666;
   margin-top: 5px;
   display: none;
+}
+
+/* QR en el footer */
+.reporte-footer .qr-info {
+  margin: 0;
+  padding: 5px;
+  max-width: 120px;
+  text-align: center;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 /* Estilos para los botones de acción */
