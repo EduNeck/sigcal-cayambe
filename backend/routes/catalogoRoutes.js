@@ -155,4 +155,33 @@ router.get('/tipo_atributo', async (req, res) => {
   }
 });
 
+// Eliminar un dominio del catálogo por ID
+router.delete('/elimina_catalogo_dominios/:id', async (req, res) => {
+  const id = req.params.id;
+  
+  if (!id) {
+    return res.status(400).json({ error: 'Se requiere el ID del dominio para eliminar' });
+  }
+  
+  try {
+    const deleted = await catalogoModel.deleteCatalogoDominio(id);
+    if (deleted) {
+      res.json({ success: true, message: 'Dominio eliminado correctamente', id: deleted.id });
+    } else {
+      res.status(404).json({ error: 'Dominio no encontrado' });
+    }
+  } catch (error) {
+    console.error('Error al eliminar el dominio:', error);
+    // Si hay un error de clave foránea, envía un mensaje más específico
+    if (error.code === '23503') { // foreign_key_violation
+      res.status(400).json({ 
+        error: 'No se puede eliminar este dominio porque está siendo utilizado en otros registros',
+        detail: error.detail
+      });
+    } else {
+      res.status(500).json({ error: 'Error al eliminar el dominio', detail: error.message });
+    }
+  }
+});
+
 module.exports = router;

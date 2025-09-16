@@ -104,6 +104,17 @@ const updateCatastroPredio = async (id, data) => {
       RETURNING *;
     `;
 
+    // Validar que los valores integer no sean vacíos o indefinidos
+    const integerFields = [
+      'id_tipo_predio', 'id_regimen_propiedad', 'id_prov', 'id_can', 'id_par', 'cod_zon', 'cod_sec',
+      'cod_pol_man', 'cod_pred', 'cod_uni', 'cod_bloq', 'id_tipo_piso', 'cod_piso', 'id_unidad_area'
+    ];
+    for (const field of integerFields) {
+      if (data[field] === '' || data[field] === undefined || data[field] === null) {
+        throw new Error(`El campo ${field} no puede ser vacío, nulo o indefinido.`);
+      }
+    }
+
     const values = [
       data.id_tipo_predio,
       data.id_regimen_propiedad,
@@ -134,7 +145,6 @@ const updateCatastroPredio = async (id, data) => {
       data.nombre_predio,
       id
     ];
-
 
     const result = await db.query(query, values);
     return result.rows[0];

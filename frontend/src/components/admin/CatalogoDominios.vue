@@ -13,39 +13,53 @@
   </v-overlay>
   <v-container class="container">
     <v-row justify="center" align="center">
-      <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">Catálogo de Dominios</h2>
+      <v-col cols="12" class="pb-0">
+        <v-card elevation="2" class="header-card rounded-lg mb-4">
+          <v-row align="center" no-gutters>
+            <v-col cols="12" md="6" class="text-center text-md-start px-4 py-3">
+              <h2 class="titulo-pantalla mb-0">Catálogo de Dominios</h2>
+            </v-col>
+            <v-col cols="12" md="6" class="d-flex justify-end px-4 py-3 gap-2">
+              <v-btn color="secondary" variant="elevated" prepend-icon="mdi-refresh" @click="recargarTodo" class="action-button">
+                Recargar
+              </v-btn>
+              <v-btn color="primary" variant="elevated" prepend-icon="mdi-logout" @click="salirMenuAdmin" class="action-button">
+                Salir
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-col>
-      <v-spacer></v-spacer>
-      <v-btn color="white" class="text-primary" @click="recargarTodo">
-        <v-icon left>mdi-refresh</v-icon>Recargar
-      </v-btn>
-      <v-btn color="white" class="text-primary" @click="salirMenuAdmin">
-        <v-icon left>mdi-logout</v-icon>Salir
-      </v-btn>
       <v-col cols="12">
         <v-data-table
           :headers="headers"
           :items="filteredDominios"
           :search="search"
           item-key="id"
-          class="elevation-2 rounded-lg"
-          dense
+          class="elevation-3 rounded-lg table-dominios"
+          :items-per-page="15"
+          :footer-props="{
+            'items-per-page-options': [10, 15, 25, 50, -1],
+            'items-per-page-text': 'Registros por página',
+          }"
         >
           <!-- Barra superior -->
           <template v-slot:top>
             <v-toolbar flat class="bg-primary rounded-t-lg">
-              <v-toolbar-title class="white--text">Dominios</v-toolbar-title>
+              <v-toolbar-title class="white--text font-weight-bold">Dominios</v-toolbar-title>
               <v-spacer></v-spacer>
               <v-text-field
                 v-model="search"
-                append-icon="mdi-magnify"
+                prepend-icon="mdi-magnify"
                 label="Buscar en el catálogo"
                 single-line
                 hide-details
                 clearable
-                class="ma-2"
-                style="max-width: 300px;"
+                variant="solo"
+                density="comfortable"
+                bg-color="white"
+                class="search-field mx-2"
+                style="max-width: 320px;"
               ></v-text-field>
             </v-toolbar>
           </template>
@@ -57,9 +71,10 @@
               :items="tipoAtributos"
               item-title="descripcion"
               item-value="id"
-              density="compact"
-              variant="underlined"
+              density="comfortable"
+              variant="outlined"
               hide-details
+              class="field-select"
               style="min-width: 260px; max-width: 320px;"
               @change="item.tipo_atributo_desc = getDescripcionTipoAtributo(item.id_tipo_atributo)"
             />
@@ -67,12 +82,19 @@
 
           <!-- Descripción Tipo Atributo -->
           <template v-slot:item.tipo_atributo_desc="{ item }">
-            <span>{{ item.tipo_atributo_desc }}</span>
+            <div class="text-body-1 font-weight-medium">{{ item.tipo_atributo_desc }}</div>
           </template>
 
           <!-- Código -->
           <template v-slot:item.codigo="{ item }">
-            <v-text-field v-model="item.codigo" variant="underlined" hide-details density="compact" style="max-width: 70px;" />
+            <v-text-field 
+              v-model="item.codigo" 
+              variant="outlined" 
+              hide-details 
+              density="comfortable" 
+              class="field-input"
+              style="max-width: 80px;" 
+            />
           </template>
 
           <!-- Descripción -->
@@ -83,7 +105,7 @@
               hide-details
               auto-grow
               rows="1"
-              class="text-md"
+              class="field-textarea"
               style="min-width: 200px"
             />
           </template>
@@ -92,12 +114,12 @@
           <template v-slot:item.factor="{ item }">
             <v-text-field
               v-model="item.factor"
-              variant="underlined"
+              variant="outlined"
               hide-details
-              density="compact"
+              density="comfortable"
               type="number"
-              class="text-sm"
-              style="max-width: 70px;"
+              class="field-input"
+              style="max-width: 80px;"
             />
           </template>
 
@@ -105,27 +127,79 @@
           <template v-slot:item.factor_alt="{ item }">
             <v-text-field
               v-model="item.factor_alt"
-              variant="underlined"
+              variant="outlined"
               hide-details
-              density="compact"
+              density="comfortable"
               type="number"
-              class="text-sm"
-              style="max-width: 70px;"
+              class="field-input"
+              style="max-width: 80px;"
             />
           </template>
 
           <!-- Tipo Exclusivo -->
           <template v-slot:item.tipo_exclusivo="{ item }">
-            <v-text-field v-model="item.tipo_exclusivo" variant="underlined" hide-details density="compact" style="max-width: 70px;" />
+            <v-text-field 
+              v-model="item.tipo_exclusivo" 
+              variant="outlined" 
+              hide-details 
+              density="comfortable" 
+              class="field-input"
+              style="max-width: 80px;" 
+            />
           </template>
 
           <!-- Acciones -->
           <template v-slot:item.actions="{ item }">
-            <v-btn icon color="primary" @click="guardarFila(item)">
-              <v-icon>mdi-content-save</v-icon>
-            </v-btn>
+            <div class="d-flex justify-center">
+              <v-btn 
+                icon 
+                color="primary" 
+                variant="elevated" 
+                class="action-icon mr-2" 
+                @click="guardarFila(item)" 
+                title="Guardar"
+              >
+                <v-icon>mdi-content-save</v-icon>
+              </v-btn>
+              <!-- Botón eliminar oculto -->
+              <v-btn 
+                v-if="false" 
+                icon 
+                color="error" 
+                variant="elevated" 
+                class="action-icon" 
+                @click="confirmarEliminar(item)" 
+                title="Eliminar"
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </div>
           </template>
         </v-data-table>
+        
+        <!-- Diálogo de confirmación para eliminar -->
+        <v-dialog v-model="dialogEliminar" max-width="400">
+          <v-card>
+            <v-card-title class="text-h5">Confirmar eliminación</v-card-title>
+            <v-card-text>
+              ¿Está seguro que desea eliminar este dominio?
+              <v-alert type="warning" dense class="mt-2">
+                Esta acción no se puede deshacer y podría afectar a otros registros que usen este dominio.
+              </v-alert>
+              <div class="mt-2">
+                <strong>Tipo:</strong> {{ dominioAEliminar?.tipo_atributo_desc || 'N/A' }}<br>
+                <strong>Código:</strong> {{ dominioAEliminar?.codigo || 'N/A' }}<br>
+                <strong>Descripción:</strong> {{ dominioAEliminar?.descripcion || 'N/A' }}
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" variant="text" @click="dialogEliminar = false">Cancelar</v-btn>
+              <v-btn color="error" @click="eliminarDominio">Eliminar</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        
         <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" top right>
           {{ snackbarText }}
         </v-snackbar>
@@ -149,6 +223,8 @@ export default {
       snackbarColor: 'success',
       search: '',
       loadingCatalogo: false,
+      dialogEliminar: false,
+      dominioAEliminar: null,
       headers: [
         { title: 'Tipo Atributo', value: 'id_tipo_atributo', align: 'start' },
         { title: 'Descripción Tipo Atributo', value: 'tipo_atributo_desc', align: 'start' },
@@ -248,6 +324,49 @@ export default {
     },
     salirMenuAdmin() {
       this.$router.push('/menu-admin');
+    },
+    
+    confirmarEliminar(item) {
+      this.dominioAEliminar = item;
+      this.dialogEliminar = true;
+    },
+    
+    async eliminarDominio() {
+      if (!this.dominioAEliminar || !this.dominioAEliminar.id) {
+        this.snackbarText = 'Error: No se ha seleccionado un dominio para eliminar';
+        this.snackbarColor = 'error';
+        this.snackbar = true;
+        this.dialogEliminar = false;
+        return;
+      }
+      
+      try {
+        await axios.delete(`${API_BASE_URL}/elimina_catalogo_dominios/${this.dominioAEliminar.id}`);
+        this.snackbarText = 'Dominio eliminado correctamente';
+        this.snackbarColor = 'success';
+        this.snackbar = true;
+        this.dialogEliminar = false;
+        
+        // Recargar la lista de dominios
+        await this.cargarDominios();
+      } catch (error) {
+        console.error('Error al eliminar el dominio:', error);
+        
+        let mensajeError = 'Error al eliminar el dominio';
+        
+        // Manejar mensajes específicos de error
+        if (error.response && error.response.data) {
+          if (error.response.data.error) {
+            mensajeError = error.response.data.error;
+          }
+        }
+        
+        this.snackbarText = mensajeError;
+        this.snackbarColor = 'error';
+        this.snackbar = true;
+      } finally {
+        this.dialogEliminar = false;
+      }
     }
   },
   async mounted() {
@@ -279,5 +398,71 @@ export default {
 
 .v-toolbar-title {
   font-weight: bold;
+}
+
+/* Nuevos estilos para el diseño mejorado */
+.header-card {
+  background-color: white;
+  border-left: 5px solid #324b21;
+}
+
+.search-field {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-field:focus-within {
+  box-shadow: 0 0 8px rgba(50, 75, 33, 0.3);
+}
+
+.field-input {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.field-input:hover, .field-select:hover, .field-textarea:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.field-input:focus-within, .field-select:focus-within, .field-textarea:focus-within {
+  border-color: #324b21;
+  box-shadow: 0 2px 8px rgba(50, 75, 33, 0.2);
+}
+
+.field-textarea {
+  border-radius: 6px;
+}
+
+.field-select {
+  border-radius: 6px;
+}
+
+.action-button {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-dominios {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-dominios :deep(.v-data-table__tr:hover) {
+  background-color: #f8fcf5;
 }
 </style>

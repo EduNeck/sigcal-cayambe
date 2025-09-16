@@ -100,10 +100,27 @@ const getTipoAtributo = async () => {
   }
 };
 
+// Función para eliminar un registro de catastro_catalogo por ID
+const deleteCatalogoDominio = async (id) => {
+  const query = `
+    DELETE FROM public.catastro_catalogo
+    WHERE id = $1
+    RETURNING id;
+  `;
+  try {
+    const result = await db.query(query, [id]);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error al eliminar el dominio del catálogo', err.stack);
+    throw err;
+  }
+};
+
 module.exports = {
   getCatalogoByTipoAtributo,
   getDescripcionById,
   getCatalogoDominio,
   updateCatalogoDominio,
   getTipoAtributo,
+  deleteCatalogoDominio,
 };

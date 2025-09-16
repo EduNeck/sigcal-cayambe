@@ -659,7 +659,22 @@ export default {
 
       } catch (error) {
         console.error('Error al guardar el predio:', error);
-        this.snackbarError = 'Error al guardar el predio';
+        
+        // Capturar error específico de clave duplicada
+        if (error.response && error.response.data) {
+          // Si el backend envía mensaje específico
+          if (error.response.data.error && error.response.data.error.includes('duplicada') || 
+              error.response.data.error && error.response.data.error.includes('duplicate') ||
+              error.response.data.error && error.response.data.error.includes('unique')) {
+            this.snackbarError = 'Error: La clave catastral ya existe. No se permiten claves duplicadas.';
+          } else {
+            // Usar el mensaje de error que viene del backend
+            this.snackbarError = error.response.data.error || 'Error al guardar el predio';
+          }
+        } else {
+          this.snackbarError = 'Error al guardar el predio';
+        }
+        
         this.snackbarErrorPush = true;
       }
     },
@@ -668,6 +683,17 @@ export default {
     async actualizar() {
       console.log('Actualizando identificación');
       // Obtener la fecha y hora actuales      
+
+      // Validar id_predio antes de continuar
+      if (!this.getIdPredio) {
+        this.snackbarError = 'No se puede actualizar: el ID del predio es inválido.';
+        this.snackbarErrorPush = true;
+        return;
+      }
+      
+      // Usar el ID del predio desde el store
+      const id_predio = this.getIdPredio;
+
       const fechaActual = new Date();
       const anio = fechaActual.getFullYear();
       const mes = String(fechaActual.getMonth() + 1).padStart(2, '0'); 
@@ -696,6 +722,25 @@ export default {
       };
 
       if (this.form.id_regimen_propiedad === 4) {
+        // Validar campos PH
+        const camposPH = [
+          { nombre: 'cod_uni', valor: this.form.cod_uni },
+          { nombre: 'cod_bloq', valor: this.form.cod_bloq },
+          { nombre: 'id_tipo_piso', valor: this.form.id_tipo_piso },
+          { nombre: 'cod_piso', valor: this.form.cod_piso },
+          { nombre: 'alicuota', valor: this.form.alicuota },
+          { nombre: 'area_terreno', valor: this.form.area_terreno },
+          { nombre: 'area_comun_terreno', valor: this.form.area_comun_terreno },
+          { nombre: 'id_unidad_area', valor: this.form.id_unidad_area },
+          { nombre: 'area_individual_construida', valor: this.form.area_individual_construida },
+          { nombre: 'area_comun_construida', valor: this.form.area_comun_construida }
+        ];
+        const campoFaltante = camposPH.find(c => c.valor === '' || c.valor === undefined || c.valor === null);
+        if (campoFaltante) {
+          this.snackbarError = `El campo ${campoFaltante.nombre} no puede estar vacío.`;
+          this.snackbarErrorPush = true;
+          return;
+        }
         // Si el régimen de propiedad es PROPIEDAD HORIZONTAL - PH (código 4)
         detalle_json.cod_uni = this.form.cod_uni;
         detalle_json.cod_bloq = this.form.cod_bloq;
@@ -720,18 +765,32 @@ export default {
         detalle_json.area_individual_construida = null;
         detalle_json.area_comun_construida = null;
       }
-    
+
       console.log('Datos a actualizar:', JSON.stringify(detalle_json, null, 2));
 
       try {
-        const response = await axios.put(`${API_BASE_URL}/actualiza_catastro_predio/${this.id_predio}`, detalle_json);
+        const response = await axios.put(`${API_BASE_URL}/actualiza_catastro_predio/${id_predio}`, detalle_json);
         console.log('Identificación actualizada:', response.data);
         this.snackbarOk = 'Datos actualizados exitosamente';        
         this.snackbarOkPush = true;
         
       } catch (error) {
         console.error('Error al actualizar la identificación:', error);
-        this.snackbarError = 'Error al actualizar la identificación';
+        
+        // Capturar error específico de clave duplicada
+        if (error.response && error.response.data) {
+          // Si el backend envía mensaje específico
+          if (error.response.data.error && error.response.data.error.includes('duplicada') || 
+              error.response.data.error && error.response.data.error.includes('duplicate')) {
+            this.snackbarError = 'Error: La clave catastral ya existe. No se permiten claves duplicadas.';
+          } else {
+            // Usar el mensaje de error que viene del backend
+            this.snackbarError = error.response.data.error || 'Error al actualizar la identificación';
+          }
+        } else {
+          this.snackbarError = 'Error al actualizar la identificación';
+        }
+        
         this.snackbarErrorPush = true;
       }
     },
