@@ -1,34 +1,61 @@
 <template>
     <v-container class="container">
-      <v-card class="pa-5" outlined>
-        <!-- Título principal centrado con fondo gris -->
-        <v-card-title class="headline text-center grey lighten-2">Búsqueda de Predios</v-card-title>
+      <v-card class="pa-6 rounded-lg" elevation="3">
+        <!-- Título principal con diseño moderno -->
+        <v-card-title class="d-flex align-center mb-6">
+          <v-icon large color="primary" class="mr-3">mdi-magnify</v-icon>
+          <span class="text-h4 font-weight-medium">Búsqueda de Predios</span>
+        </v-card-title>
         
         <v-form ref="form" v-model="valid" lazy-validation>
-          <!-- Campos del formulario -->
+          <!-- Campos del formulario con diseño mejorado -->
           <v-row>
-            <v-col cols="12">
+            <v-col cols="12" sm="6">
               <v-text-field
                 v-model="form.clave_catastral"
                 label="Clave Catastral"
+                prepend-inner-icon="mdi-key-variant"
+                outlined
+                dense
+                clearable
+                hide-details="auto"
+                class="mb-3"
               ></v-text-field>
             </v-col>
-            <v-col cols="12">
+            <v-col cols="12" sm="6">
               <v-text-field
                 v-model="form.clave_catastral_anterior"
                 label="Clave Catastral Anterior"
+                prepend-inner-icon="mdi-key"
+                outlined
+                dense
+                clearable
+                hide-details="auto"
+                class="mb-3"
               ></v-text-field>
             </v-col>
-            <v-col cols="12">
+            <v-col cols="12" sm="6">
               <v-text-field
                 v-model="form.nombres"
                 label="Nombres"
+                prepend-inner-icon="mdi-account"
+                outlined
+                dense
+                clearable
+                hide-details="auto"
+                class="mb-3"
               ></v-text-field>
             </v-col>
-            <v-col cols="12">
+            <v-col cols="12" sm="6">
               <v-text-field
                 v-model="form.numero_documento"
                 label="Número de Documento"
+                prepend-inner-icon="mdi-card-account-details"
+                outlined
+                dense
+                clearable
+                hide-details="auto"
+                class="mb-3"
               ></v-text-field>
             </v-col>
             <v-col cols="12">
@@ -37,19 +64,51 @@
                 :items="regimen"
                 item-text="tipoNombre"
                 item-value="tipoNombre"
-                label="Regimen de Propiedad"
+                label="Régimen de Propiedad"
+                prepend-inner-icon="mdi-home-city"
+                outlined
+                dense
+                clearable
+                hide-details="auto"
               ></v-select>
             </v-col>            
           </v-row>
           
-          <!-- Botones de acción -->
-          <v-row class="mt-4">
-            <v-col cols="12" class="d-flex justify-center">
-              <v-btn class="mx-2" color="primary" @click="buscar">Buscar</v-btn>
-              <v-btn class="mx-2" color="secondary" @click="limpiar">Limpiar</v-btn>
-              <v-btn class="mx-2" color="error" @click="salir">Salir</v-btn>
-            </v-col>
-          </v-row>
+          <!-- Botones de acción con diseño mejorado -->
+          <v-card-actions class="pt-6 pb-2">
+            <v-spacer></v-spacer>
+            <v-btn 
+              color="primary" 
+              @click="buscar" 
+              elevation="2"
+              x-large
+              class="px-6"
+              :disabled="!valid"
+            >
+              <v-icon left>mdi-magnify</v-icon>
+              Buscar
+            </v-btn>
+            <v-btn 
+              color="secondary" 
+              @click="limpiar" 
+              elevation="2"
+              outlined
+              class="mx-3"
+            >
+              <v-icon left>mdi-refresh</v-icon>
+              Limpiar
+            </v-btn>
+            <v-btn 
+              color="error" 
+              @click="salir" 
+              elevation="2"
+              text
+            >
+              <v-icon left>mdi-exit-to-app</v-icon>
+              Salir
+            </v-btn>
+            <v-spacer></v-spacer>
+          </v-card-actions>
         </v-form>
       </v-card>
     </v-container>
@@ -161,15 +220,50 @@
   </script>
   
   <style scoped>
-  /* Agrega tus estilos aquí */
+  /* Estilos modernizados */
   .v-card {
     background-color: white;
-    max-width: 600px; /* Ajusta el ancho máximo de la tarjeta */
+    max-width: 800px; /* Aumentado para mejor responsividad */
     margin: 0 auto; /* Centra la tarjeta horizontalmente */
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
-  
+
+  .v-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+  }
+
   .container {
-    max-width: 600px; /* Ajusta el ancho máximo del contenedor */
+    max-width: 800px; /* Ajusta el ancho máximo del contenedor */
     margin: 0 auto; /* Centra el contenedor horizontalmente */
+  }
+
+  /* Estilo para los inputs */
+  .v-text-field >>> .v-input__slot:hover,
+  .v-select >>> .v-input__slot:hover {
+    border-color: var(--v-primary-base) !important;
+  }
+
+  /* Animación para los botones */
+  .v-btn {
+    transition: all 0.3s ease;
+  }
+
+  .v-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Estilos responsivos para dispositivos móviles */
+  @media (max-width: 600px) {
+    .v-card-title {
+      font-size: 1.5rem !important;
+    }
+    
+    .v-card {
+      padding: 16px !important;
+    }
   }
   </style>
