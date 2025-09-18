@@ -40,7 +40,7 @@
             <v-card class="bloques">
 
                 <v-card-title class="block-title">
-                    <p class="titulo-text-header">FICHA CATASTRAL URBANA</p>
+                    <p class="titulo-text-header">FICHA CATASTRAL {{ getTipoPredioTitulo }}</p>
                 </v-card-title>
                 <!-- Datos Predio -->
                 <v-card-subtitle class="block-title-sub">
@@ -303,9 +303,34 @@
                     </v-row>
                 </v-card-text>
 
+                <!-- Sección de firmas y datos adicionales -->
+                <v-card-text class="mt-4 mb-4">
+                    <v-row class="mt-12">
+                        <v-col cols="12" class="text-center">
+                            <!-- Línea para firma -->
+                            <div class="firma-container">
+                                <div class="linea-firma"></div>
+                                <p class="mt-2 firma-text">{{ getNombreJefeAvaluos }}</p>
+                                <p class="cargo-text">{{ getTituloJefeAvaluos }}</p>
+                                <p class="tipo-predio-text">TIPO DE PREDIO: {{ getTipoPredioTexto }}</p>
+                            </div>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+
                 <!-- Pie de página -->
                 <v-footer class="footer">
-                    <p class="footer-text">Página {{ currentPage }} de {{ totalPages }}</p>
+                    <v-row class="text-center d-flex align-center justify-space-between w-100">
+                        <v-col cols="4" class="text-left">
+                            <span class="caption">Fecha impresión: {{ fechaImpresion }}</span>
+                        </v-col>
+                        <v-col cols="4" class="text-center">
+                            <p class="footer-text">Página {{ currentPage }} de {{ totalPages }}</p>
+                        </v-col>
+                        <v-col cols="4" class="text-right">
+                            <span class="caption">Usuario: {{ nombreUsuario }}</span>
+                        </v-col>
+                    </v-row>
                 </v-footer>
 
                 <!-- Salto de hoja -->
@@ -472,13 +497,32 @@ export default {
             try {
                 if (!claveCatastral) {
                     console.log('claveCatastral no está definida');
+                    this.colindantesFicha = [];
                     return;
                 }
-                const response = await axios.get(`${API_BASE_URL}/geo_linderos_by_clave/${claveCatastral}`);
-                this.colindantesFicha = response.data;
-                console.log('Colindantes recuperados:', this.colindantesFicha);
+                
+                // Verificar que la URL sea correcta
+                if (!API_BASE_URL) {
+                    console.error('API_BASE_URL no está definida');
+                    this.colindantesFicha = [];
+                    return;
+                }
+                
+                const response = await axios.get(`${API_BASE_URL}/geo_linderos_by_clave/${claveCatastral}`, {
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 600; // Acepta cualquier código de estado
+                    }
+                });
+                
+                if (response.status === 200 && Array.isArray(response.data)) {
+                    this.colindantesFicha = response.data;
+                    console.log(`Colindantes recuperados: ${this.colindantesFicha.length}`);
+                } else {
+                    console.warn('Formato de datos incorrecto o respuesta vacía:', response.status);
+                    this.colindantesFicha = [];
+                }
             } catch (error) {
-                console.warn('Datos de colindantes faltantes para la clave:', claveCatastral);
+                console.warn('Error al recuperar datos de colindantes para la clave:', claveCatastral, error);
                 this.colindantesFicha = [];
             }
         },
@@ -562,12 +606,25 @@ export default {
             try {
                 if (!idPredio) {
                     console.log('idPredio no está definido, no es una cadena de texto o está vacío');
+                    this.tenenciasFicha = [];
                     return;
                 }
-                const response = await axios.get(`${API_BASE_URL}/ficha_tenencia/${idPredio}`);
-                this.tenenciasFicha = response.data;
+                const response = await axios.get(`${API_BASE_URL}/ficha_tenencia/${idPredio}`, {
+                    // Configuración para evitar que axios lance errores en códigos de estado distintos de 2xx
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 600; // Acepta cualquier código de estado
+                    }
+                });
+                
+                if (response.status === 200 && Array.isArray(response.data)) {
+                    this.tenenciasFicha = response.data;
+                    console.log(`Tenencias recuperadas: ${this.tenenciasFicha.length}`);
+                } else {
+                    console.warn('Formato de datos incorrecto o respuesta vacía:', response.status);
+                    this.tenenciasFicha = [];
+                }
             } catch (error) {
-                console.warn('Datos de tenencia faltantes para el predio:', idPredio);
+                console.warn('Datos de tenencia faltantes para el predio:', idPredio, error);
                 this.tenenciasFicha = [];
             }
         },
@@ -623,25 +680,59 @@ export default {
         // Método para recuperar los datos de valoración desde la API
         async recuperaDatosValoracion(idPredio) {
             try {
-                const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano/${idPredio}`);
-                const patrimonioFicha = response.data; 
-                console.log('Datos de valoración:', patrimonioFicha);                
-                this.form = {
-                    ...this.form,                    
-                    area_suelo_porcentual: patrimonioFicha.area_suelo_porcentual, 
-                    area_construcciones_porcentual: patrimonioFicha.area_construcciones_porcentual, 
-                    valor_suelo_porcentual: patrimonioFicha.valor_suelo_porcentual, 
-                    valor_construcciones_porcentual: patrimonioFicha.valor_construcciones_porcentual, 
-                    valor_instalaciones_porcentual: patrimonioFicha.valor_instalaciones_porcentual, 
-                    valor_adicionales_porcentual: patrimonioFicha.valor_adicionales_porcentual, 
-                    avaluo_predio_porcentual: patrimonioFicha.avaluo_predio_porcentual,
-                };
+                if (!idPredio) {
+                    console.log('idPredio no está definido, no es una cadena de texto o está vacío');
+                    this.actualizarValoresPredeterminados();
+                    return null;
+                }
 
-                return patrimonioFicha;
+                const response = await axios.get(`${API_BASE_URL}/patrimonio-urbano/${idPredio}`, {
+                    // Configuración para evitar que axios lance errores en códigos de estado distintos de 2xx
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 600; // Acepta cualquier código de estado
+                    }
+                });
+                
+                if (response.status === 200 && response.data) {
+                    const patrimonioFicha = response.data;
+                    console.log('Datos de valoración:', patrimonioFicha);
+                    
+                    this.form = {
+                        ...this.form,                    
+                        area_suelo_porcentual: patrimonioFicha.area_suelo_porcentual || 0, 
+                        area_construcciones_porcentual: patrimonioFicha.area_construcciones_porcentual || 0, 
+                        valor_suelo_porcentual: patrimonioFicha.valor_suelo_porcentual || 0, 
+                        valor_construcciones_porcentual: patrimonioFicha.valor_construcciones_porcentual || 0, 
+                        valor_instalaciones_porcentual: patrimonioFicha.valor_instalaciones_porcentual || 0, 
+                        valor_adicionales_porcentual: patrimonioFicha.valor_adicionales_porcentual || 0, 
+                        avaluo_predio_porcentual: patrimonioFicha.avaluo_predio_porcentual || 0,
+                    };
+
+                    return patrimonioFicha;
+                } else {
+                    console.warn('Formato de datos incorrecto o respuesta vacía:', response.status);
+                    this.actualizarValoresPredeterminados();
+                    return null;
+                }
             } catch (error) {
                 console.warn('Error al recuperar los datos de valoracion:', error);
-                this.patrimonioFicha = [];
+                this.actualizarValoresPredeterminados();
+                return null;
             }
+        },
+
+        // Método auxiliar para actualizar con valores predeterminados
+        actualizarValoresPredeterminados() {
+            this.form = {
+                ...this.form,                    
+                area_suelo_porcentual: 0, 
+                area_construcciones_porcentual: 0, 
+                valor_suelo_porcentual: 0, 
+                valor_construcciones_porcentual: 0, 
+                valor_instalaciones_porcentual: 0, 
+                valor_adicionales_porcentual: 0, 
+                avaluo_predio_porcentual: 0,
+            };
         },        
 
         // Método para recuperar la foto del predio desde la API
@@ -799,6 +890,74 @@ export default {
         
     },
     
+    computed: {
+        // Obtiene la fecha actual formateada para mostrar en el pie de página
+        fechaImpresion() {
+            const now = new Date();
+            return now.toLocaleDateString('es-ES', {
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+        
+        // Obtiene el nombre del usuario actual desde el store o muestra un valor por defecto
+        nombreUsuario() {
+            // Intenta obtener el nombre del usuario del store si está disponible
+            try {
+                return this.$store.getters.userName || this.$store.state.user?.name || 'Usuario del sistema';
+            } catch (error) {
+                return 'Usuario del sistema';
+            }
+        },
+        
+        // Convierte el tipo de predio numérico a texto
+        getTipoPredioTexto() {
+            if (this.form.tipo_predio === 1 || this.form.tipo_predio === '1' || this.form.tipo_predio === 'URBANO') {
+                return 'URBANO';
+            } else if (this.form.tipo_predio === 2 || this.form.tipo_predio === '2' || this.form.tipo_predio === 'RURAL') {
+                return 'RURAL';
+            } else {
+                return 'NO ESPECIFICADO';
+            }
+        },
+
+        // Devuelve la palabra correcta para el título (género femenino)
+        getTipoPredioTitulo() {
+            if (this.form.tipo_predio === 1 || this.form.tipo_predio === '1' || this.form.tipo_predio === 'URBANO') {
+                return 'URBANA';
+            } else if (this.form.tipo_predio === 2 || this.form.tipo_predio === '2' || this.form.tipo_predio === 'RURAL') {
+                return 'RURAL';
+            } else {
+                return 'URBANA'; // Valor predeterminado
+            }
+        },
+
+        // Obtiene el nombre del jefe de avalúos según el tipo de predio
+        getNombreJefeAvaluos() {
+            if (this.form.tipo_predio === 1 || this.form.tipo_predio === '1' || this.form.tipo_predio === 'URBANO') {
+                return textVariables.experto_urbano?.jefe || 'Arq. Silvia Mora Eras';
+            } else if (this.form.tipo_predio === 2 || this.form.tipo_predio === '2' || this.form.tipo_predio === 'RURAL') {
+                return textVariables.experto_rural?.jefe || 'Ing. Juan Pérez';
+            } else {
+                return 'JEFE DE AVALÚOS Y CATASTROS';
+            }
+        },
+
+        // Obtiene el título del jefe de avalúos según el tipo de predio
+        getTituloJefeAvaluos() {
+            if (this.form.tipo_predio === 1 || this.form.tipo_predio === '1' || this.form.tipo_predio === 'URBANO') {
+                return textVariables.experto_urbano?.titulo || 'Jefe de Avaluos y Catastros Urbanos';
+            } else if (this.form.tipo_predio === 2 || this.form.tipo_predio === '2' || this.form.tipo_predio === 'RURAL') {
+                return textVariables.experto_rural?.titulo || 'Jefe de Avaluos y Catastros Rurales';
+            } else {
+                return 'Jefe de Avaluos y Catastros';
+            }
+        }
+    },
+    
     async mounted() {  
         this.calculateTotalPages();
     },
@@ -916,14 +1075,51 @@ export default {
   font-size: 12px;
   color: #000;
   margin-top: 20px;
+  width: 100%;
 }
 
 .footer-text {
   font-weight: bold;
 }
 
+.caption {
+  font-size: 10px;
+}
+
 .page-break {
   page-break-after: always;
+}
+
+.firma-container {
+  margin-top: 60px;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.linea-firma {
+  width: 200px;
+  border-bottom: 1px solid black;
+  margin-bottom: 5px;
+}
+
+.firma-text {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.cargo-text {
+  font-size: 11px;
+  margin: 2px 0;
+}
+
+.tipo-predio-text {
+  font-size: 11px;
+  font-weight: bold;
+  margin-top: 5px;
+  color: #276E90;
 }
 
 </style>

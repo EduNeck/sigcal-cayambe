@@ -6,11 +6,11 @@ export const textVariables = {
   },
   experto_urbano: {
     jefe: 'Arq. Silvia Mora Eras',
-    titulo: 'Experto Catastral'
+    titulo: 'Jefe de Avaluos y Catastros Urbanos'
   },
   experto_rural: {
-    jefe: 'Ing. Juan Pérez',
-    titulo: 'Experto Catastral'
+    jefe: 'Ing. Luis Andrade',
+    titulo: 'Jefe de Avaluos y Catastros Rurales'
   },
   visual: {
     logoPath: '@/assets/logo_ventana.png'

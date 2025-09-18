@@ -1,14 +1,20 @@
 const db = require('../config');
 
 // Función para insertar un registro en la tabla de Fotos de Predio`
-const insertFotoPredio = async (descripcion, fotoBuffer, principal, id_predio, certificado) => {
+const insertFotoPredio = async (descripcion, fotoBuffer, principal, id_predio, certificado = false) => {
+    // Convertir principal y certificado a booleanos para asegurar consistencia
+    const isPrincipal = principal === 'true' || principal === true;
+    const isCertificado = certificado === 'true' || certificado === true;
+    
+    console.log(`Insertando foto: principal=${isPrincipal}, certificado=${isCertificado}`);
+    
     const query = `
         INSERT INTO public.catastro_foto_predio (descripcion, foto, principal, id_predio, certificado, fecha_registro)
         VALUES ($1, $2, $3, $4, $5, NOW())
         RETURNING id_foto;
     `;
 
-    const values = [descripcion, fotoBuffer, principal, id_predio, certificado];
+    const values = [descripcion, fotoBuffer, isPrincipal, id_predio, isCertificado];
 
     try {
         const result = await db.query(query, values);
@@ -83,7 +89,8 @@ const getFotoPredioByIdPredio = async (id_predio) => {
             CASE WHEN foto IS NOT NULL THEN encode(foto, 'base64') ELSE NULL END AS foto,
             certificado
         FROM public.catastro_foto_predio
-        WHERE id_predio = $1 AND principal = true;
+        WHERE id_predio = $1
+        ORDER BY principal DESC, id_foto DESC;
     `;
     
     const values = [id_predio];

@@ -8,19 +8,27 @@ const catalogoFotosModel = require('../db/models/catalogoFotos');
 // Insertar nueva foto en catalogo_fotos
 router.post('/inserta_foto', upload.single('foto'), async (req, res) => {
   try {
-    const { descripcion, principal, id_predio } = req.body;
+    const { descripcion, principal, id_predio, certificado } = req.body;
     const fotoBuffer = req.file ? req.file.buffer : null;
 
     if (!fotoBuffer) {
       return res.status(400).json({ error: 'No se recibió una imagen válida' });
     }
+    
+    console.log('Recibida solicitud para insertar foto:', {
+      descripcion,
+      principal,
+      id_predio,
+      certificado,
+      tieneImagen: !!fotoBuffer
+    });
 
-    const result = await catalogoFotosModel.insertFotoPredio(descripcion, fotoBuffer, principal, id_predio);
+    const result = await catalogoFotosModel.insertFotoPredio(descripcion, fotoBuffer, principal, id_predio, certificado);
     res.json({ message: 'Foto guardada correctamente', id_foto: result.id_foto });
 
   } catch (error) {
     console.error('❌ Error al insertar foto:', error);
-    res.status(500).json({ error: 'Error al insertar la foto' });
+    res.status(500).json({ error: error.message || 'Error al insertar la foto' });
   }
 });
 

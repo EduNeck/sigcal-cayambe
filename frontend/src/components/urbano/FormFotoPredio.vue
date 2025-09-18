@@ -203,20 +203,52 @@ export default {
     },
 
     async guardar() {
+      // Validar que se haya seleccionado una foto
+      if (!this.form.foto) {
+        this.snackbarError = 'Debe seleccionar una foto';
+        this.snackbarErrorPush = true;
+        return;
+      }
+      
+      // Validar que se haya ingresado una descripción
+      if (!this.form.descripcion) {
+        this.snackbarError = 'Debe ingresar una descripción para la foto';
+        this.snackbarErrorPush = true;
+        return;
+      }
+
+      // Verificar si ya existen fotos para decidir si esta debe ser principal
+      let debeSerprincipal = this.form.principal;
+      
+      // Si no hay fotos existentes, sugerir marcar como principal
+      if (this.fotos.length === 0 && !debeSerprincipal) {
+        if (confirm('Esta es la primera foto del predio. ¿Desea marcarla como principal?')) {
+          debeSerprincipal = true;
+        }
+      }
+      
       const formData = new FormData();
       formData.append('descripcion', this.form.descripcion);
       formData.append('foto', this.form.foto);
-      formData.append('principal', this.form.principal);
+      formData.append('principal', debeSerprincipal);
       formData.append('id_predio', this.getIdPredio);
       formData.append('certificado', this.form.certificado || false);
       formData.append('fecha_registro', new Date().toISOString().split('T')[0]);
 
       try {
+        console.log('Enviando datos de foto:', {
+          descripcion: this.form.descripcion,
+          principal: debeSerprincipal,
+          certificado: this.form.certificado || false,
+          id_predio: this.getIdPredio
+        });
+        
         const response = await axios.post(`${API_BASE_URL}/inserta_foto`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
+        
         this.idFoto = response.data.id_foto;
         this.snackbarOk = 'Foto guardada correctamente';
         this.snackbarOkPush = true;
@@ -224,8 +256,8 @@ export default {
         this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
         this.nuevo();
       } catch (error) {
-        
-        this.snackbarError = 'Error al guardar la foto';
+        console.error('Error al guardar la foto:', error);
+        this.snackbarError = error.response?.data?.message || 'Error al guardar la foto';
         this.snackbarErrorPush = true;
       }
     },
@@ -305,7 +337,26 @@ export default {
     },
 
     async actualiza() {
+      // Validar que se haya ingresado una descripción
+      if (!this.form.descripcion) {
+        this.snackbarError = 'Debe ingresar una descripción para la foto';
+        this.snackbarErrorPush = true;
+        return;
+      }
+
       try {
+        // Si la foto era principal y se está desmarcando, verificar si es la única foto principal
+        if (!this.form.principal) {
+          const principalFotos = this.fotos.filter(f => f.principal && f.id_foto !== this.idFoto);
+          if (principalFotos.length === 0) {
+            // No hay otras fotos principales
+            if (!confirm('Esta es la única foto principal. Si la desmarca, no habrá foto principal en este predio. ¿Desea continuar?')) {
+              // Usuario no confirmó, restaurar el valor principal a true
+              this.form.principal = true;
+            }
+          }
+        }
+
         const formData = new FormData();
         formData.append('id_foto', this.idFoto);
         formData.append('descripcion', this.form.descripcion);
@@ -316,6 +367,13 @@ export default {
         formData.append('id_predio', this.getIdPredio);
         formData.append('fecha_registro', new Date().toISOString().split('T')[0]);
         formData.append('certificado', this.form.certificado || false);
+
+        console.log('Actualizando foto con datos:', {
+          id_foto: this.idFoto,
+          descripcion: this.form.descripcion,
+          principal: this.form.principal,
+          certificado: this.form.certificado
+        });
 
         await axios.put(`${API_BASE_URL}/actualiza_foto/${this.idFoto}`, formData, {
           headers: {
@@ -328,7 +386,8 @@ export default {
         this.emitFotoUpdated(); // 📸 Emitir evento de foto actualizada
         this.nuevo();
       } catch (error) {
-        this.snackbarError = 'Error al actualizar la foto';
+        console.error('Error al actualizar la foto:', error);
+        this.snackbarError = error.response?.data?.message || 'Error al actualizar la foto';
         this.snackbarErrorPush = true;
       }
     },
