@@ -235,6 +235,17 @@
                 item-value="id"                
               ></v-select>
             </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="pisos" 
+                label="Pisos" 
+                v-model="form.id_pisos" 
+                item-text="title" 
+                item-value="id"                
+                placeholder="Seleccione"
+              ></v-select>
+            </v-col>
           </v-row>
         </v-card-text>
       </v-card>
@@ -345,6 +356,17 @@
               ></v-select>
             </v-col>
 
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="acabadosVivienda" 
+                label="Acabados Vivienda" 
+                v-model="form.id_acabados_vivienda" 
+                item-text="title" 
+                item-value="id"
+                placeholder="Seleccione"                
+              ></v-select>
+            </v-col>
+
           </v-row>
         </v-card-text>
       </v-card>
@@ -441,6 +463,7 @@ export default {
         id_paredes: null,
         id_escaleras: null,
         id_cubierta: null,
+        id_pisos: null,
         id_revestimiento_cubierta: null,
         id_acabados_vivienda: null,
         id_revestimiento_pisos: null,
@@ -474,6 +497,7 @@ export default {
       paredes: [],
       escaleras: [],
       cubierta: [],
+      pisos: [],
       acabadosVivienda: [],
       revPiso: [],
       revInterior: [],        
@@ -764,14 +788,15 @@ export default {
 
         this.paredes = await this.cargaCatalogo(36,tipoPredioFlag); 
         this.escaleras = await this.cargaCatalogo(71,tipoPredioFlag);   
-        this.cubiertaEstructura = await this.cargaCatalogo(37,tipoPredioFlag);
+        this.cubiertaEstructura = await this.cargaCatalogo(39,tipoPredioFlag);
+        this.pisos = await this.cargaCatalogo(55,tipoPredioFlag);
 
         this.revPiso = await this.cargaCatalogo(88,tipoPredioFlag);
         this.revInterior = await this.cargaCatalogo(89,tipoPredioFlag);
         this.revExterior = await this.cargaCatalogo(90,tipoPredioFlag);
         this.revEscaleras = await this.cargaCatalogo(91,tipoPredioFlag);
         this.tumbado = await this.cargaCatalogo(56,tipoPredioFlag);
-        this.cubAcabados = await this.cargaCatalogo(39,tipoPredioFlag);
+        this.cubAcabados = await this.cargaCatalogo(37,tipoPredioFlag);
         this.puertas = await this.cargaCatalogo(41,tipoPredioFlag);
         this.ventanas = await this.cargaCatalogo(81,tipoPredioFlag);
         this.cubVentanas = await this.cargaCatalogo(40,tipoPredioFlag);
@@ -816,6 +841,7 @@ export default {
           id_paredes: this.form.id_paredes || null,
           id_escaleras: this.form.id_escaleras || null,
           id_cubierta: this.form.id_cubierta || null,
+          id_pisos: this.form.id_pisos || null,
           id_revestimiento_cubierta: this.form.id_revestimiento_cubierta || null,
           id_acabados_vivienda: this.form.id_acabados_vivienda || null,
           id_revestimiento_pisos: this.form.id_revestimiento_pisos || null,
@@ -880,6 +906,7 @@ export default {
           id_paredes: this.form.id_paredes || null,
           id_escaleras: this.form.id_escaleras || null,
           id_cubierta: this.form.id_cubierta || null,
+          id_pisos: this.form.id_pisos || null,
           id_revestimiento_cubierta: this.form.id_revestimiento_cubierta || null,
           id_acabados_vivienda: this.form.id_acabados_vivienda || null,
           id_revestimiento_pisos: this.form.id_revestimiento_pisos || null,
@@ -895,6 +922,7 @@ export default {
           id_instalaciones_sanitarias: this.form.id_instalaciones_sanitarias || null,
           id_banios: this.form.id_banios || null,
           id_instalaciones_electricas: this.form.id_instalaciones_electricas || null,
+
           permiso_construccion: this.form.permiso_construccion || null 
         };
         console.log('Datos a actualizar:', bloqueActualizado);
@@ -1065,6 +1093,7 @@ export default {
         id_paredes: null,
         id_escaleras: null,
         id_cubierta: null,
+        id_pisos: null,
         id_revestimiento_cubierta: null,
         id_acabados_vivienda: null,
         id_revestimiento_pisos: null,
