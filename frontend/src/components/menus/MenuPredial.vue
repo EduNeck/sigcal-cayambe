@@ -75,7 +75,7 @@ export default {
         {
           titulo: 'GESTIÓN CATASTRAL',
           items: [
-            { title: 'Ingreso Predio', route: '/ficha-predial' },
+            { title: 'Ingreso Predio', route: '/ficha-predial?new=true' },
             { title: 'Búsqueda Predio', route: '/busqueda-predios-urb' },            
             { title: 'Anexo Documental', route: '/gestion-documental' },
             { title: 'Listado Documental', route: '/listado-documental' },

@@ -25,6 +25,29 @@
           <v-card class="pa-4 neutral-card mb-4">
             <h3 class="seccion-titulo">Certificados</h3>
             <v-row>
+              <v-col cols="6" class="d-flex align-center">
+                <v-checkbox
+                  v-model="form.certificadoCatastral"
+                  label="Certificado Catastral"
+                  color="primary"
+                  hide-details
+                  class="ma-0 pa-0"
+                  :style="'margin-top: 0px;'"
+                  disabled
+                />
+              </v-col>
+              <v-col cols="6" class="d-flex align-center">
+                <v-checkbox
+                  v-model="form.certificadoLinderos"
+                  label="Áreas y Linderos"
+                  color="primary"
+                  hide-details
+                  class="ma-0 pa-0"
+                  :style="'margin-top: 0px;'"
+                />
+              </v-col>
+            </v-row>
+            <v-row>
               <v-col cols="12" class="d-flex align-center">
                 <v-checkbox
                   v-model="form.certificadoPlusvalia"
@@ -215,8 +238,13 @@ export default {
         tipoTramite: '',
         cuantias: '',
         certificadoPlusvalia: false,
+        certificadoCatastral: true, // Siempre seleccionado por defecto
+        certificadoLinderos: false,
         clave_anterior: '',
-        alicuota: ''
+        alicuota: '',
+        numero_documento: '',
+        direccion_principal: '',
+        nombre_parroquia: ''
       },
       snackbarErrorPush: false,
       snackbarError: '',
@@ -253,6 +281,7 @@ export default {
         area_suelo: this.form.areasSuelo,
         tipo_tramite: JSON.stringify(this.form.tipoTramite),
         certificado_plusvalia: this.form.certificadoPlusvalia,
+        certificado_linderos: this.form.certificadoLinderos,
         cuantia: this.form.cuantias,
         numero_documento: this.form.numero_documento,
         direccion_principal: this.form.direccion_principal,
@@ -262,6 +291,7 @@ export default {
         porcentaje_participacion: this.form.alicuota
       };
       console.log('Datos enviados al certificado:', datosEnviados);
+      
       // Abrir Certificado Plusvalía en nueva ventana si está seleccionado
       if (this.form.certificadoPlusvalia) {
         const queryString = Object.entries(datosEnviados)
@@ -269,6 +299,16 @@ export default {
           .join('&');
         window.open(`/certificado-plusvalia?${queryString}`, '_blank');
       }
+      
+      // Abrir Certificado de Áreas y Linderos en nueva ventana si está seleccionado
+      if (this.form.certificadoLinderos) {
+        const queryString = Object.entries(datosEnviados)
+          .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+          .join('&');
+        window.open(`/linderos-certificado?${queryString}`, '_blank');
+      }
+      
+      // Siempre abrir el certificado catastral (está seleccionado por defecto)
       this.$router.push({
         path: '/certificado-catastral',
         query: datosEnviados

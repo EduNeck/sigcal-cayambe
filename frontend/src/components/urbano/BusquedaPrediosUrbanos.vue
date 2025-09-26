@@ -241,8 +241,8 @@
   }
 
   /* Estilo para los inputs */
-  .v-text-field >>> .v-input__slot:hover,
-  .v-select >>> .v-input__slot:hover {
+  .v-text-field :deep(.v-input__slot:hover),
+  .v-select :deep(.v-input__slot:hover) {
     border-color: var(--v-primary-base) !important;
   }
 

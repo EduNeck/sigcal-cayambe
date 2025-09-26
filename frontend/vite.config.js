@@ -4,6 +4,17 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  base: '/',
+  build: {
+    // Añade una marca de tiempo a los archivos para evitar problemas de caché
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

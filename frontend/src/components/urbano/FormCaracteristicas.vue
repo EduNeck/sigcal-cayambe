@@ -20,6 +20,7 @@
               v-model="form.id_uso_predio" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
         </v-row>
@@ -37,6 +38,7 @@
               v-model="form.lote_conflicto" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="4">
@@ -60,6 +62,7 @@
               v-model="form.id_forma_lote" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -69,6 +72,7 @@
               v-model="form.id_topografia" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -78,6 +82,7 @@
               v-model="form.id_localizacion_manzana" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
         </v-row>
@@ -95,6 +100,7 @@
               v-model="form.id_agua" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -104,6 +110,7 @@
               v-model="form.id_sanitarias" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -113,6 +120,7 @@
               v-model="form.id_energia_electrica" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -122,6 +130,7 @@
               v-model="form.aceras" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -131,6 +140,7 @@
               v-model="form.bordillos" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -140,6 +150,7 @@
               v-model="form.aseo_calles" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -149,6 +160,7 @@
               v-model="form.recoleccion_basura" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -158,6 +170,7 @@
               v-model="form.id_eliminacion_basura" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -167,6 +180,7 @@
               v-model="form.transporte_urbano" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
         </v-row>
@@ -184,6 +198,7 @@
               v-model="form.agua_potable_via" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="3">
@@ -193,6 +208,7 @@
               v-model="form.alcantarillado_via" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="3">
@@ -202,6 +218,7 @@
               v-model="form.energia_electrica_via" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="3">
@@ -211,6 +228,7 @@
               v-model="form.alumbrado" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
         </v-row>
@@ -228,6 +246,7 @@
               v-model="form.telefonia_fija" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -237,6 +256,7 @@
               v-model="form.telefonia_satelital" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
           <v-col cols="12" sm="6" md="2">
@@ -246,6 +266,7 @@
               v-model="form.internet" 
               item-text="title" 
               item-value="id" 
+              placeholder="Seleccione"
             ></v-select>
           </v-col>
         </v-row>

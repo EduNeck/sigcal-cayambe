@@ -638,7 +638,8 @@ export default {
         eje_secundario: this.form.eje_secundario || '',
         sector: this.form.sector || '',
         area_grafica: this.form.area_grafica ||  0,
-        direccion_principal: this.form.direccion_principal || ''
+        direccion_principal: this.form.direccion_principal || '',
+        nombre_predio: this.form.nombre_predio || ''
         // Otros campos necesarios
       };
 
@@ -719,6 +720,7 @@ export default {
         actualizador: this.userName,
         fecha_actualizacion: fechaActualiza,
         direccion_principal: this.form.direccion_principal,
+        nombre_predio: this.form.nombre_predio,
       };
 
       if (this.form.id_regimen_propiedad === 4) {
@@ -801,6 +803,7 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/catastro_predio_by_id/${idPredio}`);
         const predio = response.data;
         console.log('Datos del predio:', predio);
+        console.log('Nombre del predio:', predio.nombre_predio);
         // ✅ Establecer el tipo de predio en Vuex
         this.$store.commit('setTipoPredio', predio.id_tipo_predio);
         console.log('Tipo de predio establecido en Vuex:', predio.id_tipo_predio);        
@@ -810,6 +813,7 @@ export default {
           id_regimen_propiedad: predio.id_regimen_propiedad,
           clave_catastral_anterior: predio.clave_catastral_anterior,
           clave_catastral: predio.clave_catastral,
+          nombre_predio: predio.nombre_predio,
           id_prov: predio.id_prov,
           id_can: predio.id_can,
           id_par: predio.id_par,

@@ -12,7 +12,7 @@
   </v-col>
 
 
-      <!-- Primer Bloque -->  
+      <!-- Primer Bloque - Información del Bloque -->  
        <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
         <v-card-title class="centered-title">BLOQUE CONSTRUCTIVO - PISO</v-card-title>
         <v-card-text>
@@ -56,51 +56,27 @@
                 v-model="form.cuen"
                 ></v-text-field>
             </v-col>
+            
+            <v-col cols="12" sm="6" md="3">                
+              <v-select 
+                :items="ocupacionBloque" 
+                label="Uso del Bloque" 
+                v-model="form.id_ocupacion" 
+                item-text="title" 
+                item-value="id"
+              ></v-select>
+            </v-col>
 
           </v-row>
         </v-card-text>
       </v-card>
       
-      <!-- Segundo Bloque -->
+      <!-- Nueva Sección: DATOS DEL PISO -->
        <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
-        <v-card-title class="centered-title"> DATOS DESCRIPTIVOS DEL BLOQUE CONSTRUCTIVO - PISO</v-card-title>
+        <v-card-title class="centered-title">DATOS DEL PISO</v-card-title>
         <v-card-text>
           <v-row>
-
-            <v-col cols="12" sm="6" md="2">                
-              <v-select 
-                :items="condicionFisica" 
-                label="Condición Fisica" 
-                v-model="form.id_condicion_fisica" 
-                item-text="title" 
-                item-value="id"
-                
-              ></v-select>
-            </v-col>
-            
-            <v-col cols="12" sm="6" md="2">                
-              <v-select 
-                :items="estadoConservacion" 
-                label="Estado de Conservación" 
-                v-model="form.id_estado_conservacion" 
-                item-text="title" 
-                item-value="id"
-                
-              ></v-select>
-            </v-col>
-
-            <v-col cols="12" sm="6" md="2">                
-              <v-select 
-                :items="condicionPatrimonial" 
-                label="Condición Patrimonial" 
-                v-model="form.id_condicion_patrimonial" 
-                item-text="title" 
-                item-value="id"
-                
-              ></v-select>
-            </v-col>
-
-            <v-col cols="12" sm="6" md="2">
+            <v-col cols="12" sm="6" md="3">
               <v-text-field label="Año Construcción *" 
                 v-model="form.anio_construccion" 
                 type="number"
@@ -109,7 +85,7 @@
                 ></v-text-field>
             </v-col>
 
-            <v-col cols="12" sm="6" md="2">
+            <v-col cols="12" sm="6" md="3">
               <v-text-field label="Año Restauración" 
                 v-model="form.anio_restauracion" 
                 type="number"
@@ -123,37 +99,35 @@
                 ></v-text-field>
             </v-col>
 
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Tercer Bloque -->
-       <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
-        <v-card-title></v-card-title>
-        <v-card-text>
-          <v-row>
-
-            <v-col cols="12" sm="6" md="4">                
+            <v-col cols="12" sm="6" md="2">                
               <v-select 
-                :items="ocupacionBloque" 
-                label="Ocupación del Bloque o Piso" 
-                v-model="form.id_ocupacion" 
+                :items="condicionFisica" 
+                label="Condición Física" 
+                v-model="form.id_condicion_fisica" 
                 item-text="title" 
                 item-value="id"
-                 
               ></v-select>
             </v-col>
-
+            
+            <v-col cols="12" sm="6" md="2">                
+              <v-select 
+                :items="condicionPatrimonial" 
+                label="Condición Patrimonial" 
+                v-model="form.id_condicion_patrimonial" 
+                item-text="title" 
+                item-value="id"
+              ></v-select>
+            </v-col>
           </v-row>
         </v-card-text>
       </v-card>
-
-      <!-- Cuarto Bloque -->
+      
+      <!-- Sección 1: CARACTERÍSTICAS GENERALES -->
        <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
-        <v-card-title class="centered-title">ELEMENTOS CONSTRUCTIVOS</v-card-title>
+        <v-card-title class="centered-title">CARACTERÍSTICAS GENERALES</v-card-title>
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
                 :items="estructura" 
                 label="Estructura" 
@@ -163,7 +137,76 @@
               ></v-select>
             </v-col>
             
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="estadoConservacion" 
+                label="Estado de Conservación" 
+                v-model="form.id_estado_conservacion" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="valorCultural" 
+                label="Valor Cultural" 
+                v-model="form.id_valor_cultural" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+
+          </v-row>
+        </v-card-text>
+      </v-card>
+
+      <!-- Sección 2: ESTRUCTURA -->
+       <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+        <v-card-title class="centered-title">ESTRUCTURA</v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="columnas" 
+                label="Columnas" 
+                v-model="form.id_columnas" 
+                item-text="title" 
+                item-value="id"                 
+              ></v-select>
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="vigas" 
+                label="Vigas" 
+                v-model="form.id_vigas" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="entrepisos" 
+                label="Entrepisos" 
+                v-model="form.id_entrepisos" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="contrapiso" 
+                label="Contrapiso" 
+                v-model="form.id_contrapiso" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
                 :items="paredes" 
                 label="Paredes" 
@@ -173,77 +216,96 @@
               ></v-select>
             </v-col>
 
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
-                :items="cubierta" 
-                label="Cubierta" 
+                :items="escaleras" 
+                label="Escaleras" 
+                v-model="form.id_escaleras" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="cubiertaEstructura" 
+                label="Cubierta Estructura" 
                 v-model="form.id_cubierta" 
                 item-text="title" 
                 item-value="id"                
               ></v-select>
             </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
 
-            <v-col cols="12" sm="6" md="3">                
+      <!-- Sección 3: ACABADOS -->
+       <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+        <v-card-title class="centered-title">ACABADOS</v-card-title>
+        <v-card-text>
+          <v-row>
+
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
-                :items="acabadosVivienda" 
-                label="Acabados Vivienda" 
-                v-model="form.id_acabados_vivienda" 
+                :items="revPiso" 
+                label="Revestimiento Piso" 
+                v-model="form.id_revestimiento_pisos" 
                 item-text="title" 
                 item-value="id"                
               ></v-select>
             </v-col>
 
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Quinto Bloque -->
-       <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
-        <v-card-title class="centered-title">ACABADOS EXTERIORES</v-card-title>
-        <v-card-text>
-          <v-row>
-
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
-                :items="revParedes" 
-                label="Revestimiento Paredes" 
+                :items="revInterior" 
+                label="Revestimiento Interior" 
                 v-model="form.id_revestimiento_paredes" 
                 item-text="title" 
                 item-value="id"                
               ></v-select>
             </v-col>
 
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
-                :items="revCubierta" 
-                label="Revestimiento Cubierta" 
+                :items="revExterior" 
+                label="Revestimiento Exterior" 
                 v-model="form.id_revestimiento_cubierta" 
                 item-text="title" 
                 item-value="id"                
               ></v-select>
             </v-col>
-
-            <v-col cols="12" sm="6" md="3">                
+            
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
-                :items="ventanas" 
-                label="Marco Ventanas" 
-                v-model="form.id_marco_ventanas" 
+                :items="revEscaleras" 
+                label="Revestimiento Escaleras" 
+                v-model="form.id_revestimiento_escaleras" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="tumbado" 
+                label="Tumbado" 
+                v-model="form.id_tumbado" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="cubAcabados" 
+                label="Cubierta Acabados" 
+                v-model="form.id_revestimiento_acabados" 
                 item-text="title" 
                 item-value="id"                
               ></v-select>
             </v-col>
 
-            <v-col cols="12" sm="6" md="3">                
-              <v-select 
-                :items="vidrios" 
-                label="Vidrios" 
-                v-model="form.id_vidrios" 
-                item-text="title" 
-                item-value="id"                
-              ></v-select>
-            </v-col>
-
-            <v-col cols="12" sm="6" md="3">                
+            <v-col cols="12" sm="6" md="4">                
               <v-select 
                 :items="puertas" 
                 label="Puertas" 
@@ -252,17 +314,77 @@
                 item-value="id"                
               ></v-select>
             </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="ventanas" 
+                label="Ventanas" 
+                v-model="form.id_ventanas" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="cubVentanas" 
+                label="Cubierta Ventanas" 
+                v-model="form.id_marco_ventanas" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="closets" 
+                label="Closets" 
+                v-model="form.id_closets" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
 
           </v-row>
         </v-card-text>
       </v-card>
 
-      <!-- Sexto Bloque -->
+      <!-- Sección 4: INSTALACIONES -->
        <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
-        <v-card-title class="centered-title">PERMISO DE CONSTRUCCIÓN</v-card-title>
+        <v-card-title class="centered-title">INSTALACIONES</v-card-title>
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6" md="6">
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="instalacionesSanitarias" 
+                label="Instalaciones Sanitarias" 
+                v-model="form.id_instalaciones_sanitarias" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="banios" 
+                label="Baños" 
+                v-model="form.id_banios" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">                
+              <v-select 
+                :items="instalacionesElectricas" 
+                label="Instalaciones Eléctricas" 
+                v-model="form.id_instalaciones_electricas" 
+                item-text="title" 
+                item-value="id"                
+              ></v-select>
+            </v-col>
+            
+            <v-col cols="12" sm="6" md="4">
               <v-select label="Permiso de Construcción" 
                 :items="valida"
                 v-model="form.permiso_construccion"
@@ -306,19 +428,34 @@ export default {
         id_condicion_fisica: null,
         id_estado_conservacion: null,
         id_condicion_patrimonial: null,
+        id_valor_cultural: null,
         anio_construccion: '',
         anio_restauracion: '', 
         area_construida: '',
         id_ocupacion: null,
         id_estructura: null,
+        id_columnas: null,
+        id_vigas: null,
+        id_entrepisos: null,
+        id_contrapiso: null,
         id_paredes: null,
+        id_escaleras: null,
         id_cubierta: null,
-        id_acabados_vivienda: null,
-        id_revestimiento_paredes: null,
         id_revestimiento_cubierta: null,
+        id_acabados_vivienda: null,
+        id_revestimiento_pisos: null,
+        id_revestimiento_paredes: null,
+        id_revestimiento_escaleras: null,
+        id_tumbado: null,
+        id_revestimiento_acabados: null,
+        id_puertas: null,
+        id_ventanas: null,
         id_marco_ventanas: null,
         id_vidrios: null,
-        id_puertas: null,        
+        id_closets: null,
+        id_instalaciones_sanitarias: null,
+        id_banios: null,
+        id_instalaciones_electricas: null,
         permiso_construccion: ''
       },
 
@@ -326,18 +463,34 @@ export default {
       tipoPiso: [],      
       condicionFisica: [],
       estadoConservacion: [],        
-      condicionPatrimonial: [],   
+      condicionPatrimonial: [],
+      valorCultural: [],   
       ocupacionBloque: [],      
       estructura: [],
+      columnas: [],
+      vigas: [],
+      entrepisos: [],
+      contrapiso: [],
       paredes: [],
+      escaleras: [],
       cubierta: [],
       acabadosVivienda: [],
-      revParedes: [],        
-      revCubierta: [],
-      ventanas: [],
-      vidrios: [],
+      revPiso: [],
+      revInterior: [],        
+      revExterior: [],
+      revEscaleras: [],
+      tumbado: [],
+      cubAcabados: [],
       puertas: [],
+      ventanas: [],
+      cubVentanas: [],
+      vidrios: [],
+      closets: [],
+      instalacionesSanitarias: [],
+      banios: [],
+      instalacionesElectricas: [],
       valida: [ 'SI' , 'NO' ],
+      cubiertaEstructura: [],
       idBloque: null,
       idPredio: null,
       areaCalculationTimeout: null, // Para el debounce del cálculo automático
@@ -595,19 +748,39 @@ export default {
       
       try {
         this.tipoPiso = await this.cargaCatalogo(3,0);         
-        this.condicionFisica = await this.cargaCatalogo(99,tipoPredioFlag);
-        this.estadoConservacion = await this.cargaCatalogo(27,tipoPredioFlag); 
-        this.ocupacionBloque = await this.cargaCatalogo(30,tipoPredioFlag);
-        this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag);
+        this.ocupacionBloque = await this.cargaCatalogo(30,tipoPredioFlag);               
+        this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);   
+          
         this.estructura = await this.cargaCatalogo(35,tipoPredioFlag); 
+        this.condicionFisica = await this.cargaCatalogo(28,tipoPredioFlag);
+        this.estadoConservacion = await this.cargaCatalogo(27,tipoPredioFlag); 
+        this.valorCultural = await this.cargaCatalogo(66,tipoPredioFlag);
+        this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag); 
+
+        this.columnas = await this.cargaCatalogo(85,tipoPredioFlag);
+        this.vigas = await this.cargaCatalogo(86,tipoPredioFlag);
+        this.entrepisos = await this.cargaCatalogo(70,tipoPredioFlag);
+        this.contrapiso = await this.cargaCatalogo(87,tipoPredioFlag);
+
         this.paredes = await this.cargaCatalogo(36,tipoPredioFlag); 
-        this.cubierta = await this.cargaCatalogo(37,tipoPredioFlag);
-        this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);
-        this.revParedes = await this.cargaCatalogo(89,tipoPredioFlag);
-        this.revCubierta = await this.cargaCatalogo(90,tipoPredioFlag);
-        this.ventanas = await this.cargaCatalogo(40,tipoPredioFlag);
-        this.vidrios = await this.cargaCatalogo(42,tipoPredioFlag);
+        this.escaleras = await this.cargaCatalogo(71,tipoPredioFlag);   
+        this.cubiertaEstructura = await this.cargaCatalogo(37,tipoPredioFlag);
+
+        this.revPiso = await this.cargaCatalogo(88,tipoPredioFlag);
+        this.revInterior = await this.cargaCatalogo(89,tipoPredioFlag);
+        this.revExterior = await this.cargaCatalogo(90,tipoPredioFlag);
+        this.revEscaleras = await this.cargaCatalogo(91,tipoPredioFlag);
+        this.tumbado = await this.cargaCatalogo(56,tipoPredioFlag);
+        this.cubAcabados = await this.cargaCatalogo(39,tipoPredioFlag);
         this.puertas = await this.cargaCatalogo(41,tipoPredioFlag);
+        this.ventanas = await this.cargaCatalogo(81,tipoPredioFlag);
+        this.cubVentanas = await this.cargaCatalogo(40,tipoPredioFlag);
+        this.closets = await this.cargaCatalogo(92,tipoPredioFlag);
+
+        this.instalacionesSanitarias = await this.cargaCatalogo(58,tipoPredioFlag);
+        this.banios = await this.cargaCatalogo(93,tipoPredioFlag);
+        this.instalacionesElectricas = await this.cargaCatalogo(57,tipoPredioFlag); 
+
         
         console.log('✅ Catálogos cargados según tipo de predio:', tipoPredioFlag === 0 ? 'Urbano' : 'Rural');
       } catch (error) {
@@ -630,19 +803,34 @@ export default {
           id_condicion_fisica: this.form.id_condicion_fisica || null,
           id_estado_conservacion: this.form.id_estado_conservacion || null,
           id_condicion_patrimonial: this.form.id_condicion_patrimonial || null,
+          id_valor_cultural: this.form.id_valor_cultural || null,
           anio_construccion: this.form.anio_construccion,
           anio_restauracion: this.form.anio_restauracion || null,
           area_construida: this.form.area_construida || null,
           id_ocupacion: this.form.id_ocupacion || null,
           id_estructura: this.form.id_estructura || null,
+          id_columnas: this.form.id_columnas || null,
+          id_vigas: this.form.id_vigas || null,
+          id_entrepisos: this.form.id_entrepisos || null,
+          id_contrapiso: this.form.id_contrapiso || null,
           id_paredes: this.form.id_paredes || null,
+          id_escaleras: this.form.id_escaleras || null,
           id_cubierta: this.form.id_cubierta || null,
-          id_acabados_vivienda: this.form.id_acabados_vivienda || null,
-          id_revestimiento_paredes: this.form.id_revestimiento_paredes|| null,
           id_revestimiento_cubierta: this.form.id_revestimiento_cubierta || null,
+          id_acabados_vivienda: this.form.id_acabados_vivienda || null,
+          id_revestimiento_pisos: this.form.id_revestimiento_pisos || null,
+          id_revestimiento_paredes: this.form.id_revestimiento_paredes || null,
+          id_revestimiento_escaleras: this.form.id_revestimiento_escaleras || null,
+          id_tumbado: this.form.id_tumbado || null,
+          id_revestimiento_acabados: this.form.id_revestimiento_acabados || null,
+          id_puertas: this.form.id_puertas || null,
+          id_ventanas: this.form.id_ventanas || null,
           id_marco_ventanas: this.form.id_marco_ventanas || null,
           id_vidrios: this.form.id_vidrios || null,
-          id_puertas: this.form.id_puertas || null,
+          id_closets: this.form.id_closets || null,
+          id_instalaciones_sanitarias: this.form.id_instalaciones_sanitarias || null,
+          id_banios: this.form.id_banios || null,
+          id_instalaciones_electricas: this.form.id_instalaciones_electricas || null,
           permiso_construccion: this.form.permiso_construccion || null          
         };
         console.log('Datos a guardar:', nuevoBloque);        
@@ -679,19 +867,34 @@ export default {
           id_condicion_fisica: this.form.id_condicion_fisica  || null,
           id_estado_conservacion: this.form.id_estado_conservacion || null,
           id_condicion_patrimonial: this.form.id_condicion_patrimonial || null,
+          id_valor_cultural: this.form.id_valor_cultural || null,
           anio_construccion: this.form.anio_construccion || null,
           anio_restauracion: this.form.anio_restauracion || null,
           area_construida: this.form.area_construida || null,
           id_ocupacion: this.form.id_ocupacion || null,
           id_estructura: this.form.id_estructura || null,
+          id_columnas: this.form.id_columnas || null,
+          id_vigas: this.form.id_vigas || null,
+          id_entrepisos: this.form.id_entrepisos || null,
+          id_contrapiso: this.form.id_contrapiso || null,
           id_paredes: this.form.id_paredes || null,
+          id_escaleras: this.form.id_escaleras || null,
           id_cubierta: this.form.id_cubierta || null,
-          id_acabados_vivienda: this.form.id_acabados_vivienda || null,
-          id_revestimiento_paredes: this.form.id_revestimiento_paredes || null,
           id_revestimiento_cubierta: this.form.id_revestimiento_cubierta || null,
+          id_acabados_vivienda: this.form.id_acabados_vivienda || null,
+          id_revestimiento_pisos: this.form.id_revestimiento_pisos || null,
+          id_revestimiento_paredes: this.form.id_revestimiento_paredes || null,
+          id_revestimiento_escaleras: this.form.id_revestimiento_escaleras || null,
+          id_tumbado: this.form.id_tumbado || null,
+          id_revestimiento_acabados: this.form.id_revestimiento_acabados || null,
+          id_puertas: this.form.id_puertas || null,
+          id_ventanas: this.form.id_ventanas || null,
           id_marco_ventanas: this.form.id_marco_ventanas || null,
           id_vidrios: this.form.id_vidrios || null,
-          id_puertas: this.form.id_puertas || null,
+          id_closets: this.form.id_closets || null,
+          id_instalaciones_sanitarias: this.form.id_instalaciones_sanitarias || null,
+          id_banios: this.form.id_banios || null,
+          id_instalaciones_electricas: this.form.id_instalaciones_electricas || null,
           permiso_construccion: this.form.permiso_construccion || null 
         };
         console.log('Datos a actualizar:', bloqueActualizado);
@@ -849,19 +1052,34 @@ export default {
         id_condicion_fisica: null,
         id_estado_conservacion: null,
         id_condicion_patrimonial: null,
+        id_valor_cultural: null,
         anio_construccion: '',
         anio_restauracion: '', 
         area_construida: '',
         id_ocupacion: null,
         id_estructura: null,
+        id_columnas: null,
+        id_vigas: null,
+        id_entrepisos: null,
+        id_contrapiso: null,
         id_paredes: null,
+        id_escaleras: null,
         id_cubierta: null,
-        id_acabados_vivienda: null,
-        id_revestimiento_paredes: null,
         id_revestimiento_cubierta: null,
+        id_acabados_vivienda: null,
+        id_revestimiento_pisos: null,
+        id_revestimiento_paredes: null,
+        id_revestimiento_escaleras: null,
+        id_tumbado: null,
+        id_revestimiento_acabados: null,
+        id_puertas: null,
+        id_ventanas: null,
         id_marco_ventanas: null,
         id_vidrios: null,
-        id_puertas: null,        
+        id_closets: null,
+        id_instalaciones_sanitarias: null,
+        id_banios: null,
+        id_instalaciones_electricas: null,
         permiso_construccion: ''
       };
     },
