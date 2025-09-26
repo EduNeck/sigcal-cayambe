@@ -1024,6 +1024,9 @@ export default {
       this.idFoto = null;
       this.fotoRecuperadaUrl = '';
       this.resetClaveCatastral();
+      // Limpiar también en el store
+      this.$store.dispatch('resetClaveCatastral');
+      this.$store.dispatch('resetIdPredio');
       this.$router.push('/menu-predial');
     },
 
