@@ -773,13 +773,14 @@ export default {
       try {
         this.tipoPiso = await this.cargaCatalogo(3,0);         
         this.ocupacionBloque = await this.cargaCatalogo(30,tipoPredioFlag);               
-        this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);   
-          
-        this.estructura = await this.cargaCatalogo(35,tipoPredioFlag); 
+           
         this.condicionFisica = await this.cargaCatalogo(28,tipoPredioFlag);
+        this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag); 
+
+        this.estructura = await this.cargaCatalogo(35,tipoPredioFlag); 
         this.estadoConservacion = await this.cargaCatalogo(27,tipoPredioFlag); 
         this.valorCultural = await this.cargaCatalogo(66,tipoPredioFlag);
-        this.condicionPatrimonial = await this.cargaCatalogo(29,tipoPredioFlag); 
+        
 
         this.columnas = await this.cargaCatalogo(85,tipoPredioFlag);
         this.vigas = await this.cargaCatalogo(86,tipoPredioFlag);
@@ -801,6 +802,7 @@ export default {
         this.ventanas = await this.cargaCatalogo(81,tipoPredioFlag);
         this.cubVentanas = await this.cargaCatalogo(40,tipoPredioFlag);
         this.closets = await this.cargaCatalogo(92,tipoPredioFlag);
+        this.acabadosVivienda = await this.cargaCatalogo(33,tipoPredioFlag);
 
         this.instalacionesSanitarias = await this.cargaCatalogo(58,tipoPredioFlag);
         this.banios = await this.cargaCatalogo(93,tipoPredioFlag);
