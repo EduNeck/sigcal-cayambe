@@ -85,6 +85,10 @@
               <v-text-field label="Comparece" :model-value="seleccionado.CALI_COMPARECE" readonly variant="outlined" dense />
             </v-col>
             <v-col cols="12" md="6">
+              <v-text-field label="Clave Catastral" :model-value="seleccionado.CLAVE_CATASTRAL" readonly variant="outlined" dense />
+            </v-col>
+
+            <v-col cols="12" md="6">
               <v-text-field label="Folio" :model-value="seleccionado.NUM_FOLIO" readonly variant="outlined" dense />
             </v-col>
 
@@ -199,6 +203,7 @@ export default {
         { title: 'Identificación', key: 'NUM_IDENTIFICACION' },
         { title: 'Nombres', key: 'NOMBRES' },
         { title: 'Comparece', key: 'CALI_COMPARECE' },
+        { title: 'Clave Catastral', key: 'CLAVE_CATASTRAL' },
         { title: 'Contrato', key: 'ACTO_CONTRATO' },
         { title: 'Cuantía', key: 'CUANTIA' },
         { title: 'Ver', key: 'acciones', sortable: false },
@@ -304,7 +309,10 @@ export default {
         fecha_inscripcion: fechaFormateada,
         repertorio: this.seleccionado.NUM_REPERTORIO || '',
         folio: this.seleccionado.NUM_FOLIO || '',
-        numero_registro: this.seleccionado.NUM_INSCRPCION || ''
+        numero_registro: this.seleccionado.NUM_INSCRPCION || '',
+        lindero_norte: this.seleccionado.LINDEROS || '',
+        numero_notaria: this.seleccionado.NOTARIA || '',
+        clave_catastral: this.seleccionado.CLAVE_CATASTRAL || ''
       };
       console.log('Datos completos para sincronización:', datosSincronizacion);
 

@@ -49,7 +49,7 @@ const obtieneDatosCiudadanoById = async (id) => {
     throw new Error('El ID proporcionado es undefined');
   }
 
-  const query = 'SELECT id_ciudadano, id_tipo_documento, id_tipo_persona, id_personeria, numero_documento, nombre_principal, nombre_secundario, apellido_primario, apellido_secundario, nombres, fecha_nacimiento, telefono, email, direccion, id_estado_civil, fecha_registro FROM public.catastro_ciudadano WHERE id_ciudadano = $1';
+  const query = 'SELECT id_ciudadano, id_tipo_documento, id_tipo_persona, id_personeria, numero_documento, nombre_principal, nombre_secundario, apellido_primario, apellido_secundario, nombres, fecha_nacimiento, telefono, email, direccion, id_estado_civil, fecha_registro, digitador, fecha_actualizacion_aud FROM public.catastro_ciudadano WHERE id_ciudadano = $1';
   try {
     const result = await db.query(query, [id]);
     if (result.rows.length === 0) {
@@ -65,12 +65,12 @@ const obtieneDatosCiudadanoById = async (id) => {
 // Función para insertar un registro en la tabla `catastro_ciudadano`
 const insertaCiudadano = async (data) => {
   const query = `
-    INSERT INTO public.catastro_ciudadano (id_tipo_documento, id_tipo_persona, id_personeria, numero_documento, nombre_principal, nombre_secundario, apellido_primario, apellido_secundario, nombres, fecha_nacimiento, telefono, email, direccion, id_estado_civil, fecha_registro)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+    INSERT INTO public.catastro_ciudadano (id_tipo_documento, id_tipo_persona, id_personeria, numero_documento, nombre_principal, nombre_secundario, apellido_primario, apellido_secundario, nombres, fecha_nacimiento, telefono, email, direccion, id_estado_civil, fecha_registro, digitador)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), $15)
     RETURNING id_ciudadano;
   `;
   const values = [
-    data.id_tipo_documento, data.id_tipo_persona, data.id_personeria, data.numero_documento, data.nombre_principal, data.nombre_secundario, data.apellido_primario, data.apellido_secundario, data.nombres, data.fecha_nacimiento, data.telefono, data.email, data.direccion, data.id_estado_civil
+    data.id_tipo_documento, data.id_tipo_persona, data.id_personeria, data.numero_documento, data.nombre_principal, data.nombre_secundario, data.apellido_primario, data.apellido_secundario, data.nombres, data.fecha_nacimiento, data.telefono, data.email, data.direccion, data.id_estado_civil, data.digitador
   ];
 
   // Validar solo los campos que no pueden ser nulos
@@ -118,14 +118,16 @@ const actualizaCiudadanoByid = async (id, data) => {
     UPDATE public.catastro_ciudadano
     SET id_tipo_persona = $1, id_personeria = $2, apellido_primario = $3, nombre_principal = $4,
         id_tipo_documento = $5, numero_documento = $6, id_estado_civil = $7, fecha_nacimiento = $8,
-        telefono = $9, email = $10, direccion = $11, nombres = $12, nombre_secundario = $13, apellido_secundario = $14
-    WHERE id_ciudadano = $15
+        telefono = $9, email = $10, direccion = $11, nombres = $12, nombre_secundario = $13, apellido_secundario = $14,
+        digitador = $15, fecha_actualizacion_aud = NOW()
+    WHERE id_ciudadano = $16
     RETURNING *;
   `;
   const values = [
     data.id_tipo_persona, data.id_personeria, data.apellido_primario, data.nombre_principal,
     data.id_tipo_documento, data.numero_documento, data.id_estado_civil, data.fecha_nacimiento,
-    data.telefono, data.email, data.direccion, data.nombres, data.nombre_secundario, data.apellido_secundario, id
+    data.telefono, data.email, data.direccion, data.nombres, data.nombre_secundario, data.apellido_secundario, 
+    data.digitador, id
   ];
 
   try {

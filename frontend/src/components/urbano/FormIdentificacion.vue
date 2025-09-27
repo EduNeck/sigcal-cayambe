@@ -1,11 +1,11 @@
 <template>
   <v-container :class="['container', tipoClaseContainer]">
-    <v-row justify="center">
-      <v-col cols="12" class="text-center">
-        <h2 class="titulo-pantalla">FICHA CATASTRAL - IDENTIFICACIÓN</h2>
+    <v-row justify="center" class="header-row" no-gutters>
+      <v-col cols="12" class="text-center pa-0">
+        <h2 class="titulo-pantalla mb-0">FICHA CATASTRAL - IDENTIFICACIÓN</h2>
       </v-col>
       <!-- Botones -->
-      <v-col cols="12" class="d-flex justify-center flex-wrap">
+      <v-col cols="12" class="d-flex justify-center flex-wrap pa-0 mt-1">
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-refresh" @click="refrescarIdentificacion" :disabled="!Boolean(getIdPredio)" v-if="canEdit"></v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevoRegistro" v-if="canEdit">Nuevo</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="Boolean(Boolean(getIdPredio))" v-if="canEdit">Guardar</v-btn>
@@ -18,30 +18,32 @@
     </v-row>
 
     <!-- Primer Bloque -->
-    <v-btn variant="text" color="white" :append-icon="isWindowVisible ? 'mdi-close' : 'mdi-plus'" size="small" @click="alternaVentanas">{{ isWindowVisible ? 'Cerrar' : 'Abrir' }}</v-btn>
-    <v-window class="custom-window" v-show="isWindowVisible">
-      <v-card-title class="window-title">INFORMACIÓN</v-card-title>
-      <div class="ma-4 d-flex" >
-        <!-- Foto Predio - 📸 Usar computed reactivo -->
-        <v-img v-if="fotoRecuperadaUrlReactiva" :src="fotoRecuperadaUrlReactiva" class="custom-img">
-          <div class="img-title">Foto Predio</div>
-        </v-img>
-        <v-img
-          v-else :src="sinPredio" class="custom-img">
-          <div class="img-title">Sin Foto</div>
-        </v-img>       
-        <!-- Croquis Predio -->
-        <v-img v-if="croquisUrl" :src="croquisUrl" class="custom-img">
-          <div class="img-title">Croquis Predio</div>
-        </v-img>
-        <v-img
-          v-else :src="sinCroquis" class="custom-img">
-          <div class="img-title">Sin Croquis</div>
-        </v-img>
-      </div>
-    </v-window>
+    <div class="mt-1">
+      <v-btn variant="text" color="white" :append-icon="isWindowVisible ? 'mdi-close' : 'mdi-plus'" size="small" @click="alternaVentanas">{{ isWindowVisible ? 'Cerrar' : 'Abrir' }}</v-btn>
+      <v-window class="custom-window" v-show="isWindowVisible">
+        <v-card-title class="window-title">INFORMACIÓN</v-card-title>
+        <div class="ma-4 d-flex" >
+          <!-- Foto Predio - 📸 Usar computed reactivo -->
+          <v-img v-if="fotoRecuperadaUrlReactiva" :src="fotoRecuperadaUrlReactiva" class="custom-img">
+            <div class="img-title">Foto Predio</div>
+          </v-img>
+          <v-img
+            v-else :src="sinPredio" class="custom-img">
+            <div class="img-title">Sin Foto</div>
+          </v-img>       
+          <!-- Croquis Predio -->
+          <v-img v-if="croquisUrl" :src="croquisUrl" class="custom-img">
+            <div class="img-title">Croquis Predio</div>
+          </v-img>
+          <v-img
+            v-else :src="sinCroquis" class="custom-img">
+            <div class="img-title">Sin Croquis</div>
+          </v-img>
+        </div>
+      </v-window>
+    </div>
     <!-- Segundo Bloque -->
-   <v-card :class="[tipoClaseBlock]" class="fill-width">
+   <v-card :class="[tipoClaseBlock]" class="fill-width mt-1">
       <v-card-title class="centered-title">IDENTIFICACIÓN</v-card-title>
       <v-card-text>
         <v-row>
@@ -52,6 +54,7 @@
               :items="tipoPredios"
               item-title="descripcion"
               item-value="id"
+              class="dark-label"
               required>
             </v-select>
           </v-col>
@@ -157,74 +160,83 @@
       </v-row> 
       </v-card-text> 
     </v-card>     
-    <!-- Tercer Bloque Ph -->
-    <v-card :class="[tipoClaseBlock]" class="fill-width" v-if="form.id_regimen_propiedad === 4">
+    <!-- Bloque combinado de Propiedad Horizontal y Áreas -->
+    <v-card :class="[tipoClaseBlock, 'amarillo-pastel']" class="fill-width" v-if="form.id_regimen_propiedad === 4">
       <v-card-title class="centered-title">PROPIEDAD HORIZONTAL</v-card-title>
       <v-card-text>
+        <!-- Datos de Propiedad Horizontal -->
         <v-row>
-          <v-col cols="12" sm="6" md="2" v-if="form.id_regimen_propiedad === 4"> 
-              <v-text-field 
-                label="Unidad"                  
-                v-model="form.cod_uni"               
-                type="number"
-                :rules="[v => !!v && v >= 0 && v <= 999 || 'Debe ser un número entre 0 y 999']"
-                maxlength="3"
-                @input="actualizaClaveCatastral"></v-text-field> 
-            </v-col> 
-            <v-col cols="12" sm="6" md="2" v-if="form.id_regimen_propiedad === 4"> 
-              <v-text-field 
-                label="Bloque"                  
-                v-model="form.cod_bloq"
-                type="number"
-                :rules = "[v => !!v && v >= 0 && v <= 999 || 'Debe ser un número entre 0 y 999']"
-                maxlength="3"
-                @input="actualizaClaveCatastral"></v-text-field> 
-            </v-col> 
-            <v-col cols="12" sm="6" md="2" v-if="form.id_regimen_propiedad === 4"> 
-              <v-select
-              label="Tipo de Piso" v-model="form.id_tipo_piso" :items="tipoPisos" 
-              item-title="descripcion" item-value="id" required  
+          <v-col cols="12">
+            <div class="subtitle-section">Datos de la Unidad</div>
+          </v-col>
+          <v-col cols="12" sm="6" md="2"> 
+            <v-text-field 
+              label="Unidad"                  
+              v-model="form.cod_uni"               
+              type="number"
+              :rules="[v => !!v && v >= 0 && v <= 999 || 'Debe ser un número entre 0 y 999']"
+              maxlength="3"
+              @input="actualizaClaveCatastral">
+            </v-text-field> 
+          </v-col> 
+          <v-col cols="12" sm="6" md="2"> 
+            <v-text-field 
+              label="Bloque"                  
+              v-model="form.cod_bloq"
+              type="number"
+              :rules = "[v => !!v && v >= 0 && v <= 999 || 'Debe ser un número entre 0 y 999']"
+              maxlength="3"
+              @input="actualizaClaveCatastral">
+            </v-text-field> 
+          </v-col> 
+          <v-col cols="12" sm="6" md="2"> 
+            <v-select
+              label="Tipo de Piso" 
+              v-model="form.id_tipo_piso" 
+              :items="tipoPisos" 
+              item-title="descripcion" 
+              item-value="id" 
+              required  
               @input="actualizaClaveCatastral">
             </v-select> 
-            </v-col> 
-            <v-col cols="12" sm="6" md="2" v-if="form.id_regimen_propiedad === 4"> 
-              <v-text-field 
-                label="Piso"                  
-                v-model="form.cod_piso"
-                type="number"
-                :rules = "[v => !!v && v >= 0 && v <= 99 || 'Debe ser un número entre 0 y 99']"
-                maxlength="2"
-                @input="actualizaClaveCatastral"></v-text-field> 
-          </v-col>        
+          </v-col> 
+          <v-col cols="12" sm="6" md="2"> 
+            <v-text-field 
+              label="Piso"                  
+              v-model="form.cod_piso"
+              type="number"
+              :rules = "[v => !!v && v >= 0 && v <= 99 || 'Debe ser un número entre 0 y 99']"
+              maxlength="2"
+              @input="actualizaClaveCatastral">
+            </v-text-field> 
+          </v-col>
         </v-row>
-      </v-card-text>
-    </v-card>
-    <!-- Cuarto Bloque Areas -->
-    <v-card :class="[tipoClaseBlock]" class="fill-width" v-if="form.id_regimen_propiedad === 4">
-      <v-card-title class="centered-title">ÁREAS</v-card-title>
-      <v-card-text>
+        
+        <!-- Sección de Áreas -->
+        <v-divider class="my-3"></v-divider>
         <v-row>
+          <v-col cols="12">
+            <div class="subtitle-section">Áreas</div>
+          </v-col>
           <v-col cols="12" sm="6" md="2">
             <v-text-field 
-             label="Alicuota"                          
-             v-model="form.alicuota" 
-             type="number"
-             >
+              label="Alicuota"                          
+              v-model="form.alicuota" 
+              type="number">
             </v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="2">
             <v-text-field 
-             label="Área de Terreno" 
-             v-model="form.area_terreno" 
-             type="number" 
-             >
+              label="Área de Terreno" 
+              v-model="form.area_terreno" 
+              type="number">
             </v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="2">
-            <v-text-field label="Área Común de Terreno"               
-             v-model="form.area_comun_terreno" 
-             type="number"
-              >
+            <v-text-field 
+              label="Área Común de Terreno"               
+              v-model="form.area_comun_terreno" 
+              type="number">
             </v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="2">                
@@ -234,23 +246,23 @@
               v-model="form.id_unidad_area" 
               item-title="descripcion" 
               item-value="id" 
-              required 
-            ></v-select>
+              required>
+            </v-select>
           </v-col>          
           <v-col cols="12" sm="6" md="2">
-            <v-text-field label="Área Individual Construida" 
-             color = #F2AA1F 
-             v-model="form.area_individual_construida" 
-             type="number"
-             >
+            <v-text-field 
+              label="Área Individual Construida" 
+              color = #F2AA1F 
+              v-model="form.area_individual_construida" 
+              type="number">
             </v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="2">
-            <v-text-field label="Área Común Construida" 
-             color = #F2AA1F 
-             v-model="form.area_comun_construida" 
-             type="number"
-             >
+            <v-text-field 
+              label="Área Común Construida" 
+              color = #F2AA1F 
+              v-model="form.area_comun_construida" 
+              type="number">
             </v-text-field>
           </v-col>
         </v-row>
@@ -1300,6 +1312,94 @@ export default {
   font-size: 1.15rem;
 }
 
+/* Estilos para título y botones más compactos */
+.titulo-pantalla {
+  margin-top: 0;
+  padding-top: 8px;
+  padding-bottom: 4px;
+}
 
+.header-row {
+  margin-bottom: 4px !important;
+}
+
+.btn_app {
+  margin: 2px 4px !important;
+}
+
+/* Estilos para etiquetas más oscuras */
+:deep(.v-label) {
+  color: #333333 !important; 
+  font-weight: 500 !important;
+}
+
+/* Etiquetas en selects */
+:deep(.v-select .v-label) {
+  color: #2c2c2c !important;
+  font-weight: 500 !important;
+}
+
+/* Etiquetas cuando el campo está enfocado */
+:deep(.v-field--focused .v-label) {
+  color: #276E90 !important;
+  font-weight: 600 !important;
+}
+
+/* Mejorar legibilidad de texto en los campos */
+:deep(.v-field__input) {
+  color: #121212 !important;
+  font-weight: 500 !important;
+}
+
+/* Mejorar contraste de las etiquetas en diferentes estados */
+:deep(.v-field--variant-filled .v-label) {
+  opacity: 1 !important;
+  text-shadow: 0px 0px 0px rgba(0,0,0,0.1);
+}
+
+/* Estilo para bloques de propiedad horizontal y áreas */
+.amarillo-pastel {
+  background-color: #c3f8ff !important;  /* Color naranja brillante */
+}
+
+.amarillo-pastel .centered-title,
+.amarillo-pastel .v-card-title {
+  color: rgb(0, 0, 0) !important;  /* Título en negro para mejor contraste */
+  font-weight: bold !important; /* Negrita para resaltar más */
+}
+
+/* Subtítulos para las secciones */
+.subtitle-section {
+  color: rgb(0, 0, 0) !important;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  text-decoration: underline;
+}
+
+/* Asegurar que las etiquetas de los campos sean visibles */
+.amarillo-pastel :deep(.v-label) {
+  color: rgb(0, 0, 0) !important;
+  font-weight: 500 !important;
+}
+
+/* Mejorar la visibilidad del texto en los inputs */
+.amarillo-pastel :deep(.v-field__input) {
+  color: rgb(0, 0, 0) !important;
+  font-weight: 500 !important;
+}
+
+/* Ajustar color del texto en estados específicos */
+.amarillo-pastel :deep(.v-field--focused .v-label) {
+  color: rgb(0, 0, 0) !important;
+  font-weight: 600 !important;
+}
+
+/* Clase para aplicar a campos específicos si es necesario */
+.dark-label :deep(.v-label) {
+  color: #222222 !important;
+  font-weight: 600 !important;
+}
 
 </style>

@@ -1,64 +1,59 @@
 <template>
   <v-container :class="['container', tipoClaseContainer]">
-    <v-row justify="center">
-      <v-col cols="12" class="text-center">
+    <v-row justify="center" dense>
+      <v-col cols="12" class="text-center py-1">
         <h2 class="titulo-pantalla">Tenencia Propiedad</h2>
       </v-col>
-      <v-col cols="auto" class="d-flex justify-center">
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevo" :disabled="!getIdPredio" v-if="canEdit">Nuevo</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!getIdPredio || !!idTenencia" v-if="canEdit">Guardar</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizaTenencia" :disabled="!idTenencia" v-if="canEdit">Actualizar</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idTenencia" v-if="canEdit">Eliminar</v-btn>
-        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file-document" @click="consultarRegistroPropiedad" :disabled="!getIdPredio">Reg. Propiedad</v-btn>
+      <v-col cols="auto" class="d-flex justify-center py-1">
+        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevo" :disabled="!getIdPredio" v-if="canEdit">Nuevo</v-btn>
+        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!getIdPredio || !!idTenencia" v-if="canEdit">Guardar</v-btn>
+        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizaTenencia" :disabled="!idTenencia" v-if="canEdit">Actualizar</v-btn>
+        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idTenencia" v-if="canEdit">Eliminar</v-btn>
+        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-file-document" @click="consultarRegistroPropiedad" :disabled="!getIdPredio">Reg. Prop.</v-btn>
       </v-col>
 
     </v-row>              
     <!-- Primer y Segundo Bloque juntos en horizontal -->
-    <v-row justify="center" class="mb-3">
+    <v-row justify="center" class="mb-2" dense>
       <v-col cols="12" md="6">
          <v-card :class="['block-color', tipoClaseBlock]">
           <v-card-title :class="['centered-title', tipoClaseTitle]">INFORMACIÓN LEGAL</v-card-title>
           <v-card-text>
             <v-row>
               <v-col cols="12" sm="6" md="3">
-                <v-select
-                  v-model="form.permite_ingreso"
-                  :items="items"
+                <v-checkbox
+                  :model-value="form.permite_ingreso === true || form.permite_ingreso === 'SI'"
+                  @update:model-value="val => form.permite_ingreso = val"
                   label="Permite Ingreso"
-                  item-text="text"
-                  item-value="value"
-                ></v-select>                
+                  color="primary"
+                ></v-checkbox>                
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select 
-                  :items="items" 
+                <v-checkbox 
+                  :model-value="form.presenta_escritura === true || form.presenta_escritura === 'SI'" 
+                  @update:model-value="val => form.presenta_escritura = val" 
                   label="Presenta Escritura" 
-                  v-model="form.presenta_escritura" 
-                  item-text="name" 
-                  item-value="value"                   
-                ></v-select>
+                  color="primary"                   
+                ></v-checkbox>
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select 
-                  :items="items" 
+                <v-checkbox 
+                  :model-value="form.asentamiento_de_hecho === true || form.asentamiento_de_hecho === 'SI'" 
+                  @update:model-value="val => form.asentamiento_de_hecho = val" 
                   label="Asent. de Hecho" 
-                  v-model="form.asentamiento_de_hecho" 
-                  item-text="descripcion"
-                  item-value="id"
-                  required>                  
-                ></v-select>
+                  color="primary"                  
+                ></v-checkbox>
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select 
-                  :items="items" 
+                <v-checkbox 
+                  :model-value="form.conflicto === true || form.conflicto === 'SI'" 
+                  @update:model-value="val => form.conflicto = val" 
                   label="Conflicto" 
-                  v-model="form.conflicto" 
-                  item-text="name" 
-                  item-value="value"                  
-                ></v-select>
+                  color="primary"                  
+                ></v-checkbox>
               </v-col>
               
             </v-row>
@@ -99,11 +94,11 @@
     </v-row>
 
     <!-- Tercer Bloque -->
-    <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+    <v-card class="mb-2" :class="['block-color', tipoClaseBlock]">
       <v-card-title :class="['centered-title', tipoClaseTitle]">PROPIETARIO</v-card-title>
       <v-card-text>
         <v-row>
-          <v-col cols="12" sm="6" md="8">
+          <v-col cols="12" sm="6" md="7">
             <v-autocomplete 
               :items="ciudadanoTenencia" 
               label="Propietario (buscar por nombre, apellido o documento)" 
@@ -123,6 +118,17 @@
               :no-data-text="'Sin resultados. Intente otra búsqueda'"
             ></v-autocomplete>
           </v-col>
+          <v-col cols="12" sm="6" md="1" class="d-flex align-center">
+            <v-btn 
+              :class="['btn_app', tipoClaseButton]" 
+              icon 
+              variant="text" 
+              @click="abrirNuevoCiudadano"
+              title="Nuevo ciudadano"
+            >
+              <v-icon>mdi-account-plus</v-icon>
+            </v-btn>
+          </v-col>
           <v-col cols="12" sm="6" md="4">
             <v-checkbox
               :model-value="form.representante === 1"
@@ -136,7 +142,7 @@
     </v-card>
 
     <!-- Cuarto Bloque Protocolización-->
-    <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+    <v-card class="mb-2" :class="['block-color', tipoClaseBlock]">
       <v-card-title :class="['centered-title', tipoClaseTitle]">PROTOCOLIZACIÓN - NOTARIA</v-card-title>
       <v-card-text>
         <v-row>
@@ -147,7 +153,7 @@
               item-text="title"
               item-value="id"
               label="Provincia"
-              @click="onProvinciaProto"
+              @change="onProvinciaProto"
             ></v-select>
           </v-col>
 
@@ -157,9 +163,7 @@
               label="Cantón" 
               v-model="form.id_can_protocol" 
               item-text="title" 
-              item-value="id" 
-              required
-              @click="onProvinciaProto"
+              item-value="id"
             ></v-select>
           </v-col>
 
@@ -173,7 +177,7 @@
           <v-col cols="12" sm="6" md="2">                
             <v-text-field label="Número de Notaría" 
               v-model="form.numero_notaria" 
-              type="number" >
+              type="text" >
             </v-text-field>
           </v-col>
           
@@ -199,36 +203,25 @@
     </v-card>
 
     <!-- Quinto Bloque  Registro -->
-    <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+    <v-card class="mb-2" :class="['block-color', tipoClaseBlock]">
       <v-card-title :class="['centered-title', tipoClaseTitle]">DATOS DE INSCRIPCIÓN - REGISTRO</v-card-title>
       <v-card-text>
         <v-row>
 
           <v-col cols="12" sm="6" md="2">                  
-            <v-select               
-              label="Provincia"   
-              :items="provincias"               
-              v-model="form.id_provincia" 
-              item-text="title" 
-              item-value="id"   
-              @change="onProvinciaRegistro"
-              disabled
-              hint="Provincia fija: Pichincha"
-              persistent-hint             
-            ></v-select>
+            <v-text-field               
+              label="Pichincha"   
+              value="Pichincha"  
+              disabled                                                 
+            ></v-text-field>
           </v-col>
 
           <v-col cols="12" sm="6" md="2">
-            <v-select               
-              label="Cantón" 
-              :items="cantonesReg"
-              v-model="form.id_canton" 
-              item-text="title" 
-              item-value="id" 
+            <v-text-field               
+              label="Cayambe" 
+              value="Cayambe"
               disabled
-              hint="Cantón fijo: Cayambe"
-              persistent-hint
-            ></v-select>
+            ></v-text-field>
           </v-col>
 
           <v-col cols="12" sm="6" md="2">
@@ -264,34 +257,15 @@
     </v-card>  
 
     <!-- Sexto Bloque  Linderos -->
-    <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
+    <v-card class="mb-2" :class="['block-color', tipoClaseBlock]">
       <v-card-title :class="['centered-title', tipoClaseTitle]">LINDEROS</v-card-title>
       <v-card-text>
         <v-row>
-          <v-col cols="12" sm="6" md="6">
-            <v-text-field label="Lindero Norte" 
+          <v-col cols="12">
+            <v-text-field label="Linderos" 
             v-model="form.lindero_norte" type="text" >
           </v-text-field>
           </v-col>
-
-          <v-col cols="12" sm="6" md="6">
-            <v-text-field label="Lindero Sur" 
-            v-model="form.lindero_sur" type="text" >
-          </v-text-field>
-          </v-col>  
-
-          <v-col cols="12" sm="6" md="6">
-            <v-text-field label="Lindero Este" 
-            v-model="form.lindero_este" type="text" >
-          </v-text-field>
-          </v-col>  
-
-          <v-col cols="12" sm="6" md="6">
-            <v-text-field label="Lindero Oeste" 
-            v-model="form.lindero_oeste" type="text" >
-          </v-text-field>
-          </v-col>  
-
         </v-row>
       </v-card-text>
     </v-card>
@@ -316,6 +290,31 @@
         <v-card-text class="pa-0">
           <ConsultaWsRegistro @sincronizar-datos="recibirDatosSincronizados" />
         </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal para Ingreso de Nuevos Ciudadanos -->
+    <v-dialog v-model="dialogCiudadano" max-width="1200px" persistent>
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span class="text-h5">Ingreso de Nuevo Ciudadano</span>
+          <v-btn icon @click="cerrarDialogCiudadano" variant="plain">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="pa-0" style="height: 80vh;">
+          <iframe 
+            src="/ciudadano" 
+            style="width: 100%; height: 100%; border: none;" 
+            ref="ciudadanoFrame"
+            @load="onIframeLoaded"
+          ></iframe>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="actualizarCiudadanos">Actualizar lista de ciudadanos</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="cerrarDialogCiudadano">Cerrar</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -345,10 +344,10 @@ export default {
   data() {
     return {
       form: {
-        permite_ingreso: 'NO',
-        presenta_escritura: 'NO',
-        asentamiento_de_hecho: 'NO',
-        conflicto: 'NO',
+        permite_ingreso: false,
+        presenta_escritura: false,
+        asentamiento_de_hecho: false,
+        conflicto: false,
         porcentaje_participacion: '',
         id_forma_propiedad: null,
         id_propietario: null,
@@ -365,9 +364,6 @@ export default {
         folio: '',
         numero_registro: '',
         lindero_norte: '',
-        lindero_sur: '',
-        lindero_este: '',
-        lindero_oeste: '', 
         propietario_anterior: '',        
         representante: 2,
       },
@@ -389,6 +385,7 @@ export default {
       snackbarOkPush: false,
       snackbarOk: '',
       dialogConsultaRegistro: false,
+      dialogCiudadano: false, // Para controlar la visibilidad del diálogo de ciudadanos
       
       // Variables para validación del porcentaje
       porcentajeAcumulado: 0,
@@ -429,8 +426,12 @@ export default {
     // Establecer Pichincha como provincia por defecto para registro
     this.form.id_provincia = 17;
     this.form.id_canton = 1702; // Establecer cantón fijo
-    // Cargar cantones de Pichincha automáticamente
+    // Establecer Pichincha como provincia por defecto para protocolización
+    this.form.id_prov_protocol = 17;
+    this.form.id_can_protocol = 1702; // Establecer cantón fijo
+    // Cargar cantones de Pichincha automáticamente para registro y protocolización
     await this.cargaCantonesByProvinciaRegistro(17);
+    await this.cargaCantonesByProvincia(17);
 
     console.log('Componente TabTenencia montado');
     // Validar idPredio
@@ -478,7 +479,7 @@ export default {
       }
     },
 
-    // Metodo para fitrar cantones por provincia de protocolizacion
+    // Método para filtrar cantones por provincia de protocolización
     async onProvinciaProto() {
       this.form.id_can_protocol = '';      
       if (this.form.id_prov_protocol) {        
@@ -727,6 +728,10 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/tenencia_by_id/${idTenencia}`);
         const tenencia = response.data;
         console.log('Datos de la tenencia cargados:', tenencia);
+        console.log('Valor de representante recibido:', {
+          valor: tenencia.representante,
+          tipo: typeof tenencia.representante
+        });
         
         // Depurar los valores booleanos para entender qué tipo de datos se reciben
         console.log('Valores booleanos recibidos:', {
@@ -752,10 +757,10 @@ export default {
           }
         });
         // Asignar los datos de la tenencia al formulario con validaciones de tipo
-        this.form.permite_ingreso = this.convertirAOpcionSiNo(tenencia.permite_ingreso);
-        this.form.presenta_escritura = this.convertirAOpcionSiNo(tenencia.presenta_escritura);
-        this.form.asentamiento_de_hecho = this.convertirAOpcionSiNo(tenencia.asentamiento_de_hecho);
-        this.form.conflicto = this.convertirAOpcionSiNo(tenencia.conflicto);
+        this.form.permite_ingreso = this.convertirABoolean(tenencia.permite_ingreso);
+        this.form.presenta_escritura = this.convertirABoolean(tenencia.presenta_escritura);
+        this.form.asentamiento_de_hecho = this.convertirABoolean(tenencia.asentamiento_de_hecho);
+        this.form.conflicto = this.convertirABoolean(tenencia.conflicto);
         
         // Validar campos numéricos
         this.form.porcentaje_participacion = this.validarNumero(tenencia.porcentaje_participacion);
@@ -783,10 +788,18 @@ export default {
         this.form.numero_registro = this.validarNumero(tenencia.numero_registro);
         
         this.form.lindero_norte = tenencia.lindero_norte;
-        this.form.lindero_sur = tenencia.lindero_sur;
-        this.form.lindero_este = tenencia.lindero_este;
-        this.form.lindero_oeste = tenencia.lindero_oeste;
         this.form.propietario_anterior = tenencia.propietario_anterior;
+        
+        // Procesar y asignar el valor de representante
+        const valorRepresentanteOriginal = tenencia.representante;
+        const valorProcesado = this.procesarValorRepresentante(valorRepresentanteOriginal);
+        console.log('Procesando valor de representante:', { 
+          original: valorRepresentanteOriginal, 
+          tipo: typeof valorRepresentanteOriginal,
+          procesado: valorProcesado,
+          checkbox_estara_marcado: valorProcesado === 1 
+        });
+        this.form.representante = valorProcesado;
 
         // Cargar datos del propietario y asignarlos al formulario
         try {
@@ -830,14 +843,11 @@ export default {
         return;
       }
       
-      // Validar permite_ingreso
-      this.form.permite_ingreso = this.form.permite_ingreso === 'SI';
-      this.form.presenta_escritura = this.form.presenta_escritura === 'SI';
-      this.form.conflicto = this.form.conflicto === 'SI';
-      this.form.asentamiento_de_hecho = this.form.asentamiento_de_hecho === 'SI';
+      // Ya tenemos valores booleanos, no necesitamos conversión
+      // this.form.permite_ingreso, this.form.presenta_escritura, etc. ya son booleanos
 
-      // Validar campos numéricos para asegurar que sean números o null
-      const numeroNotaria = this.form.numero_notaria === '' ? null : (this.form.numero_notaria ? Number(this.form.numero_notaria) : null);
+      // Validar campos numéricos para asegurar que sean números o null, excepto notaría que es texto
+      const numeroNotaria = this.form.numero_notaria === '' ? null : this.form.numero_notaria;
       const areaRegistro = this.form.area_registro === '' ? null : (this.form.area_registro ? Number(this.form.area_registro) : null);
       const repertorio = this.form.repertorio === '' ? null : (this.form.repertorio ? Number(this.form.repertorio) : null);
       const folio = this.form.folio === '' ? null : (this.form.folio ? Number(this.form.folio) : null);
@@ -853,7 +863,7 @@ export default {
         porcentaje_participacion: porcentajeParticipacion,
         id_forma_propiedad: this.form.id_forma_propiedad || null,
         id_propietario: this.form.id_propietario || null, 
-        representante: this.form.representante || false,
+        representante: this.form.representante || 2,
         id_prov_protocol: this.form.id_prov_protocol || null,
         id_can_protocol: this.form.id_can_protocol || null,
         fecha_inscripcion: this.form.fecha_inscripcion || null,
@@ -867,9 +877,6 @@ export default {
         folio: folio,
         numero_registro: numeroRegistro,
         lindero_norte: this.form.lindero_norte || null,
-        lindero_sur: this.form.lindero_sur || null,
-        lindero_este: this.form.lindero_este || null,
-        lindero_oeste: this.form.lindero_oeste || null,  
         propietario_anterior: this.form.propietario_anterior || null
       }
       console.log('Datos a guardar', nuevaTenencia);
@@ -908,18 +915,15 @@ export default {
         return;
       }
 
-      // Validar campos tipo booleano
-      this.form.permite_ingreso = this.form.permite_ingreso === 'SI';
-      this.form.presenta_escritura = this.form.presenta_escritura === 'SI';
-      this.form.conflicto = this.form.conflicto === 'SI';
-      this.form.asentamiento_de_hecho = this.form.asentamiento_de_hecho === 'SI';
+      // Ya tenemos valores booleanos, no necesitamos conversión
+      // this.form.permite_ingreso, this.form.presenta_escritura, etc. ya son booleanos
 
       // Corregido: usar `this.form` en lugar de `data`
       const fecha_escritura = this.form.fecha_escritura || null;
       const fecha_inscripcion = this.form.fecha_inscripcion || null;
 
-      // Validar campos numéricos para asegurar que sean números o null
-      const numeroNotaria = this.form.numero_notaria === '' ? null : Number(this.form.numero_notaria);
+      // Validar campos numéricos para asegurar que sean números o null, excepto notaría que es texto
+      const numeroNotaria = this.form.numero_notaria === '' ? null : this.form.numero_notaria;
       const areaRegistro = this.form.area_registro === '' ? null : Number(this.form.area_registro);
       const repertorio = this.form.repertorio === '' ? null : Number(this.form.repertorio);
       const folio = this.form.folio === '' ? null : Number(this.form.folio);
@@ -949,9 +953,6 @@ export default {
         folio: folio,
         numero_registro: numeroRegistro,
         lindero_norte: this.form.lindero_norte,
-        lindero_sur: this.form.lindero_sur,
-        lindero_este: this.form.lindero_este,
-        lindero_oeste: this.form.lindero_oeste, 
         propietario_anterior: this.form.propietario_anterior
       };
 
@@ -999,15 +1000,15 @@ export default {
     // Método para limpiar el formulario
     limpiarFormulario() {
       this.form = {
-        permite_ingreso: 'NO',
-        presenta_escritura: 'NO',
-        asentamiento_de_hecho: 'NO',
-        conflicto: 'NO',
+        permite_ingreso: false,
+        presenta_escritura: false,
+        asentamiento_de_hecho: false,
+        conflicto: false,
         porcentaje_participacion: '',
         id_forma_propiedad: null,
         id_propietario: null,
-        id_prov_protocol: null,
-        id_can_protocol: null,
+        id_prov_protocol: 17, // Siempre Pichincha
+        id_can_protocol: 1702, // Siempre cantón fijo Cayambe (ID: 1702)
         fecha_inscripcion: '',
         numero_notaria: '',
         area_registro: '',
@@ -1019,14 +1020,12 @@ export default {
         folio: '',
         numero_registro: '',
         lindero_norte: '',
-        lindero_sur: '',
-        lindero_este: '',
-        lindero_oeste: '', 
         propietario_anterior: '',     
         representante: 2,
       };
       // Cargar cantones de Pichincha después de limpiar
       this.cargaCantonesByProvinciaRegistro(17);
+      this.cargaCantonesByProvincia(17);
     },
 
     navigateToMenuUrbano() {
@@ -1058,6 +1057,32 @@ export default {
       this.dialogConsultaRegistro = false;
     },
 
+    // Métodos para gestionar el diálogo de nuevo ciudadano
+    abrirNuevoCiudadano() {
+      this.dialogCiudadano = true;
+    },
+
+    cerrarDialogCiudadano() {
+      this.dialogCiudadano = false;
+    },
+
+    onIframeLoaded() {
+      console.log('Iframe cargado correctamente');
+    },
+
+    async actualizarCiudadanos() {
+      try {
+        // Recargar la lista de ciudadanos
+        await this.cargaCiudadanoTenecia();
+        this.snackbarOk = 'Lista de ciudadanos actualizada';
+        this.snackbarOkPush = true;
+      } catch (error) {
+        console.error('Error al actualizar la lista de ciudadanos:', error);
+        this.snackbarError = 'Error al actualizar la lista de ciudadanos';
+        this.snackbarErrorPush = true;
+      }
+    },
+
     recibirDatosSincronizados(datos) {
       console.log('=== RECIBIR DATOS EN FORMULARIO TENENCIA ===');
       console.log('Datos recibidos completos:', datos);
@@ -1085,6 +1110,16 @@ export default {
         this.form.numero_registro = datos.numero_registro;
         console.log('Número registro asignado:', datos.numero_registro);
       }
+      
+      if (datos.lindero_norte) {
+        this.form.lindero_norte = datos.lindero_norte;
+        console.log('Linderos asignados:', datos.lindero_norte);
+      }
+      
+      if (datos.numero_notaria) {
+        this.form.numero_notaria = datos.numero_notaria;
+        console.log('Notaría asignada:', datos.numero_notaria);
+      }
 
       // Forzar reactividad de Vue
       this.$forceUpdate();
@@ -1100,7 +1135,8 @@ export default {
         fecha_inscripcion: this.form.fecha_inscripcion,
         repertorio: this.form.repertorio,
         folio: this.form.folio,
-        numero_registro: this.form.numero_registro
+        numero_registro: this.form.numero_registro,
+        numero_notaria: this.form.numero_notaria
       });
     },
     
@@ -1205,8 +1241,8 @@ export default {
       }
     },
     
-    // Método para convertir diferentes tipos de valores booleanos a 'SI' o 'NO'
-    convertirAOpcionSiNo(valor) {
+    // Método para convertir diferentes tipos de valores a booleanos
+    convertirABoolean(valor) {
       // Comprobar el tipo y valor para manejar todos los posibles casos
       if (valor === true || valor === 1 || valor === '1' || 
           valor === 'true' || valor === 'TRUE' || 
@@ -1215,9 +1251,26 @@ export default {
           valor === 's' || valor === 'S' || 
           valor === 'yes' || valor === 'YES' || 
           valor === 'y' || valor === 'Y') {
-        return 'SI';
+        return true;
       } else {
-        return 'NO';
+        return false;
+      }
+    },
+    
+    // Mantener el método original para compatibilidad con otras partes del código
+    convertirAOpcionSiNo(valor) {
+      return this.convertirABoolean(valor) ? 'SI' : 'NO';
+    },
+    
+    // Método auxiliar para procesar el valor del campo representante
+    procesarValorRepresentante(valor) {
+      // Si el valor es 1, true o alguna representación de verdadero, retornar 1
+      if (valor === 1 || valor === '1' || valor === true ||
+          valor === 'true' || valor === 'TRUE' ||
+          valor === 't' || valor === 'T') {
+        return 1;
+      } else {
+        return 2; // Valor por defecto (no representante)
       }
     }
   }
@@ -1235,8 +1288,10 @@ export default {
 }
 
 .titulo-pantalla {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #ffffff;
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .btn_app {
@@ -1250,12 +1305,13 @@ export default {
   align-items: center;
   width: 100%;
   text-align: center;
+  padding: 4px 0; /* Reducir el padding vertical */
 }
 
 .centered-title.urbano-title {
   background-color: #276E90;
   color: #F1ECE7;
-  font-size: 1rem;
+  font-size: 0.9rem; /* Reducir tamaño de fuente */
   font-weight: bold;
 }
 
@@ -1294,4 +1350,58 @@ export default {
   color: #4C7031;
 }
 
+/* Estilos para etiquetas más oscuras */
+:deep(.v-label) {
+  color: #333333 !important; 
+  font-weight: 500 !important;
+}
+
+/* Etiquetas en selects */
+:deep(.v-select .v-label) {
+  color: #2c2c2c !important;
+  font-weight: 500 !important;
+}
+
+/* Etiquetas cuando el campo está enfocado */
+:deep(.v-field--focused .v-label) {
+  color: #276E90 !important;
+  font-weight: 600 !important;
+}
+
+/* Mejorar legibilidad de texto en los campos */
+:deep(.v-field__input) {
+  color: #121212 !important;
+  font-weight: 500 !important;
+}
+
+/* Mejorar contraste de las etiquetas en diferentes estados */
+:deep(.v-field--variant-filled .v-label) {
+  opacity: 1 !important;
+  text-shadow: 0px 0px 0px rgba(0,0,0,0.1);
+}
+
+/* Clase para aplicar a campos específicos si es necesario */
+.dark-label :deep(.v-label) {
+  color: #222222 !important;
+  font-weight: 600 !important;
+}
+
+/* Estilos para reducir espacios en campos */
+:deep(.v-input--density-default) {
+  --v-input-padding-top: 8px;
+}
+
+:deep(.v-card-text) {
+  padding: 8px 16px;
+}
+
+:deep(.v-input__details) {
+  padding-inline: 8px;
+  min-height: 16px;
+}
+
+/* Reducir espacio entre checkboxes */
+:deep(.v-selection-control) {
+  min-height: 30px;
+}
 </style>

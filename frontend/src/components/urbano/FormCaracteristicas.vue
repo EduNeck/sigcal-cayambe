@@ -601,4 +601,40 @@ export default {
   font-weight: bold;
 }
 
+/* Estilos para etiquetas más oscuras */
+:deep(.v-label) {
+  color: #333333 !important; 
+  font-weight: 500 !important;
+}
+
+/* Etiquetas en selects */
+:deep(.v-select .v-label) {
+  color: #2c2c2c !important;
+  font-weight: 500 !important;
+}
+
+/* Etiquetas cuando el campo está enfocado */
+:deep(.v-field--focused .v-label) {
+  color: #276E90 !important;
+  font-weight: 600 !important;
+}
+
+/* Mejorar legibilidad de texto en los campos */
+:deep(.v-field__input) {
+  color: #121212 !important;
+  font-weight: 500 !important;
+}
+
+/* Mejorar contraste de las etiquetas en diferentes estados */
+:deep(.v-field--variant-filled .v-label) {
+  opacity: 1 !important;
+  text-shadow: 0px 0px 0px rgba(0,0,0,0.1);
+}
+
+/* Clase para aplicar a campos específicos si es necesario */
+.dark-label :deep(.v-label) {
+  color: #222222 !important;
+  font-weight: 600 !important;
+}
+
 </style>

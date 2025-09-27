@@ -8,6 +8,7 @@
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevo" v-if="canEdit">Nuevo</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!!idLindero" v-if="canEdit">Guardar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!idLindero" v-if="canEdit">Actualizar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-content-copy" @click="duplicarLindero" :disabled="!idLindero" v-if="canEdit">Duplicar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idLindero" v-if="canEdit">Eliminar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="cancelarEdicion" :disabled="!idLindero" v-if="canEdit">Cancelar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-refresh" @click="cargarLinderos">Refrescar</v-btn>
@@ -17,10 +18,23 @@
     <!-- Formulario de Datos del Lindero -->
     <v-card class="mb-3" :class="['block-color', tipoClaseBlock]">
       <v-card-title :class="['centered-title', tipoClaseTitle]">
-        {{ idLindero ? 'EDITANDO LINDERO' : 'DATOS DEL LINDERO' }}
+        {{ idLindero ? 'EDITANDO LINDERO' : (esDuplicado ? 'DUPLICANDO LINDERO' : 'DATOS DEL LINDERO') }}
         <v-chip v-if="idLindero" color="warning" size="small" class="ml-2">ID: {{ idLindero }}</v-chip>
+        <v-chip v-if="esDuplicado" color="info" size="small" class="ml-2">DUPLICANDO REGISTRO</v-chip>
       </v-card-title>
       <v-card-text>
+        <v-alert
+          v-if="esDuplicado && linderoOriginal"
+          type="info"
+          variant="tonal"
+          class="mb-3"
+          density="compact"
+        >
+          Duplicando el lindero ID: {{ linderoOriginal.id }} - {{ linderoOriginal.cardinalidad }}
+          ({{ linderoOriginal.clave_lindero }}).
+          Modifique los valores necesarios y luego presione "Guardar" para crear un nuevo registro.
+        </v-alert>
+
         <v-row>
           <v-col cols="12" sm="6" md="4">
             <v-text-field 
@@ -154,6 +168,8 @@ export default {
       },
       linderos: [],
       idLindero: null,
+      esDuplicado: false,  // Flag para indicar si estamos trabajando con un registro duplicado
+      linderoOriginal: null, // Guardar la referencia al lindero original que se está duplicando
       snackbarErrorPush: false,
       snackbarError: '',
       snackbarOkPush: false,
@@ -273,7 +289,8 @@ export default {
     },
 
     async guardar() {
-      console.log('Guardando lindero:', this.form);
+      const esDuplicacion = this.esDuplicado;
+      console.log(`${esDuplicacion ? 'Guardando lindero duplicado' : 'Guardando nuevo lindero'}:`, this.form);
 
       const nuevoLindero = {
         clave: this.form.clave_catastral || null, // Envía como 'clave' al backend
@@ -287,13 +304,20 @@ export default {
       try {
         const response = await axios.post(`${API_BASE_URL}/inserta_geo_lindero`, nuevoLindero);
         console.log('Lindero guardado con ID:', response.data.id);
-        this.snackbarOk = 'Lindero guardado exitosamente';
+        
+        // Personalizar mensaje según si es duplicación o nuevo registro
+        if (esDuplicacion) {
+          this.snackbarOk = 'Lindero duplicado guardado exitosamente con ID: ' + response.data.id;
+        } else {
+          this.snackbarOk = 'Lindero guardado exitosamente';
+        }
+        
         this.snackbarOkPush = true;
         await this.cargarLinderos();
-        this.limpiarFormulario();
+        this.limpiarFormulario(); // Esto también resetea esDuplicado y linderoOriginal
       } catch (error) {
         console.error('Error al guardar lindero:', error);
-        this.snackbarError = 'Error al guardar el lindero';
+        this.snackbarError = `Error al ${esDuplicacion ? 'guardar lindero duplicado' : 'guardar el lindero'}`;
         this.snackbarErrorPush = true;
       }
     },
@@ -361,6 +385,8 @@ export default {
         ord: null
       };
       this.idLindero = null;
+      this.esDuplicado = false; // Resetear el flag de duplicación
+      this.linderoOriginal = null; // Limpiar la referencia al lindero original
     },
 
     nuevo() {
@@ -378,8 +404,15 @@ export default {
 
     cancelarEdicion() {
       this.idLindero = null;
-      this.limpiarFormulario();
-      this.snackbarOk = 'Edición cancelada';
+      this.limpiarFormulario(); // También resetea esDuplicado y linderoOriginal
+      
+      // Personalizar el mensaje según el contexto
+      if (this.esDuplicado) {
+        this.snackbarOk = 'Duplicación cancelada';
+      } else {
+        this.snackbarOk = 'Edición cancelada';
+      }
+      
       this.snackbarOkPush = true;
     },
 
@@ -389,6 +422,45 @@ export default {
       if (rowData && rowData.item) {
         this.seleccionarLindero(rowData.item);
       }
+    },
+    
+    duplicarLindero() {
+      if (!this.idLindero) {
+        this.snackbarError = 'No hay un lindero seleccionado para duplicar';
+        this.snackbarErrorPush = true;
+        return;
+      }
+      
+      // Obtener el lindero seleccionado de la lista
+      const linderoSeleccionado = this.linderos.find(l => l.id === this.idLindero);
+      if (!linderoSeleccionado) {
+        this.snackbarError = 'No se pudo encontrar el lindero seleccionado';
+        this.snackbarErrorPush = true;
+        return;
+      }
+      
+      // Guardar referencia al lindero original
+      this.linderoOriginal = { ...linderoSeleccionado };
+      
+      // Copiar los datos al formulario, pero NO el ID
+      this.form = {
+        clave_catastral: this.getClaveCatastral || '', // Mantener la clave catastral actual del store
+        longitud: linderoSeleccionado.longitud || null,
+        clave_lindero: `${linderoSeleccionado.clave_lindero || ''}_COPIA`, // Añadir sufijo para indicar que es una copia
+        nombres: linderoSeleccionado.nombres || '',
+        cardinalidad: linderoSeleccionado.cardinalidad || '',
+        ord: linderoSeleccionado.ord || null
+      };
+      
+      // Marcar como duplicado para cambiar la UI y el comportamiento
+      this.esDuplicado = true;
+      
+      // Quitar el ID seleccionado para permitir guardar como nuevo registro
+      this.idLindero = null;
+      
+      // Notificar al usuario
+      this.snackbarOk = 'Lindero duplicado. Edite los campos y guarde para crear un nuevo registro';
+      this.snackbarOkPush = true;
     }
   }
 }
