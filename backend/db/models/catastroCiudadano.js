@@ -144,8 +144,9 @@ const recuperaCiudadanoTenencia = async () => {
   const query = 'SELECT id_ciudadano, nombres, numero_documento FROM public.catastro_ciudadano ORDER BY nombres ASC';
   try {
     const result = await db.query(query);
-    return result.rows;
-  }catch (err) {
+    // Filtrar ciudadanos con datos mínimos completos
+    return result.rows.filter(item => item.id_ciudadano && item.nombres && item.numero_documento);
+  } catch (err) {
     console.error('Error executing query', err.stack);
     throw err;
   }

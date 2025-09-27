@@ -15,7 +15,10 @@
       </v-col>
 
       <v-col cols="12" md="10" lg="9">
-        <v-card class="pa-4 neutral-card table-wrapper">
+        <v-card class="pa-4 neutral-card table-wrapper" style="position:relative;">
+          <v-overlay :value="loading" absolute>
+            <v-progress-circular indeterminate color="primary" size="64" />
+          </v-overlay>
           <v-data-table
             :headers="headers"
             :items="valoracionPatrimonio"
@@ -84,6 +87,7 @@ export default {
     return {
       search: '',
       valoracionPatrimonio: [],
+      loading: false,
       headers: [
         { title: 'Clave Catastral', value: 'clave_catastral' },
         { title: 'Propietario', value: 'propietario' },
@@ -101,11 +105,14 @@ export default {
   },
   methods: {
     async generaValoracion() {
+      this.loading = true;
       try {
         const response = await axios.get(`${API_BASE_URL}/valores_patrimonio_urb`);
         this.valoracionPatrimonio = response.data;
       } catch (error) {
         console.error('Error fetching valoracion patrimonio:', error);
+      } finally {
+        this.loading = false;
       }
     },
     navigateToMenu() {

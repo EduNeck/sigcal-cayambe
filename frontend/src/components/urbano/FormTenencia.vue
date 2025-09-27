@@ -107,7 +107,7 @@
               item-value="id"
               required
               clearable
-              @update:search="buscarPropietarios"
+              @update:search="buscarCiudadanos"
               :loading="buscandoPropietarios"
               return-object
               @update:model-value="seleccionarPropietario"
@@ -263,7 +263,7 @@
         <v-row>
           <v-col cols="12">
             <v-text-field label="Linderos" 
-            v-model="form.lindero_norte" type="text" >
+            v-model="form.linderos_registro" type="text" >
           </v-text-field>
           </v-col>
         </v-row>
@@ -363,7 +363,7 @@ export default {
         repertorio: '',
         folio: '',
         numero_registro: '',
-        lindero_norte: '',
+  linderos_registro: '',
         propietario_anterior: '',        
         representante: 2,
       },
@@ -631,79 +631,40 @@ export default {
       }      
     },
     
-    // Buscar propietarios por nombre o número de documento
-    async buscarPropietarios(texto) {
-      // Limpiar cualquier timeout anterior
+    // Buscar ciudadanos por API (optimizado)
+    async buscarCiudadanos(texto) {
       if (this.busquedaTimeout) {
         clearTimeout(this.busquedaTimeout);
       }
-      
-      // No buscar si el texto es muy corto
-      if (!texto || texto.length < 3) {
+      if (!texto || texto.length < 2) {
+        this.ciudadanoTenencia = [];
         return;
       }
-      
-      // Establecer un timeout para evitar demasiadas solicitudes
       this.busquedaTimeout = setTimeout(async () => {
+        this.buscandoPropietarios = true;
         try {
-          this.buscandoPropietarios = true;
-          
-          // Intenta primero buscar por número de documento (búsqueda exacta)
-          let response = await axios.get(`${API_BASE_URL}/recupera_ciudadano`, {
-            params: { numero_documento: texto }
+          const response = await axios.get(`${API_BASE_URL}/ciudadano_tenencia/buscar`, {
+            params: { q: texto }
           });
-          
-          // Si no hay resultados, hacemos una búsqueda local en todos los ciudadanos
-          if (response.data.length === 0) {
-            // Cargamos todos los ciudadanos para búsqueda local
-            const allCiudadanos = await axios.get(`${API_BASE_URL}/ciudadano_tenencia`);
-            
-            if (Array.isArray(allCiudadanos.data)) {
-              const busquedaTexto = texto.toLowerCase();
-              const palabrasBusqueda = busquedaTexto.split(/\s+/).filter(palabra => palabra.length > 1);
-              
-              // Filtrar ciudadanos que coincidan con cualquiera de las palabras de búsqueda
-              const ciudadanosFiltrados = allCiudadanos.data.filter(ciudadano => {
-                if (!ciudadano.nombres) return false;
-                
-                const nombreCompleto = ciudadano.nombres.toLowerCase();
-                // Verificar si al menos una palabra de búsqueda está en el nombre
-                return palabrasBusqueda.some(palabra => nombreCompleto.includes(palabra));
-              });
-              
-              // Ordenar resultados por relevancia (número de coincidencias)
-              const resultadosOrdenados = ciudadanosFiltrados.sort((a, b) => {
-                const nombreA = a.nombres.toLowerCase();
-                const nombreB = b.nombres.toLowerCase();
-                
-                // Contar coincidencias para cada ciudadano
-                const coincidenciasA = palabrasBusqueda.filter(palabra => nombreA.includes(palabra)).length;
-                const coincidenciasB = palabrasBusqueda.filter(palabra => nombreB.includes(palabra)).length;
-                
-                // Ordenar por número de coincidencias (mayor primero)
-                return coincidenciasB - coincidenciasA;
-              });
-              
-              response = { data: resultadosOrdenados };
-            }
-          }
-          
-          // Transformar los resultados al formato necesario
           if (Array.isArray(response.data)) {
-            this.ciudadanoTenencia = response.data.map(item => ({
-              ...item,
-              title: `${item.nombres} - ${item.numero_documento}`,
-              id: item.id_ciudadano || item.id
-            }));
+            this.ciudadanoTenencia = response.data
+              .filter(item => item && item.id_ciudadano && item.nombres)
+              .map(item => ({
+                ...item,
+                title: `${item.nombres} - ${item.numero_documento}`,
+                id: item.id_ciudadano,
+              }));
+          } else {
+            this.ciudadanoTenencia = [];
           }
         } catch (error) {
-          console.error('Error al buscar propietarios:', error);
-          this.snackbarError = 'Error al buscar propietarios';
+          console.error('Error buscando ciudadanos:', error);
+          this.snackbarError = 'Error buscando ciudadanos';
           this.snackbarErrorPush = true;
         } finally {
           this.buscandoPropietarios = false;
         }
-      }, 500); // Esperar 500ms antes de ejecutar la búsqueda
+      }, 400);
     },
     
     // Manejar la selección de un propietario
@@ -787,7 +748,7 @@ export default {
         this.form.folio = this.validarNumero(tenencia.folio);
         this.form.numero_registro = this.validarNumero(tenencia.numero_registro);
         
-        this.form.lindero_norte = tenencia.lindero_norte;
+  this.form.linderos_registro = tenencia.linderos_registro;
         this.form.propietario_anterior = tenencia.propietario_anterior;
         
         // Procesar y asignar el valor de representante
@@ -876,7 +837,7 @@ export default {
         repertorio: repertorio,
         folio: folio,
         numero_registro: numeroRegistro,
-        lindero_norte: this.form.lindero_norte || null,
+  linderos_registro: this.form.linderos_registro || null,
         propietario_anterior: this.form.propietario_anterior || null
       }
       console.log('Datos a guardar', nuevaTenencia);
@@ -952,7 +913,7 @@ export default {
         repertorio: repertorio,
         folio: folio,
         numero_registro: numeroRegistro,
-        lindero_norte: this.form.lindero_norte,
+  linderos_registro: this.form.linderos_registro,
         propietario_anterior: this.form.propietario_anterior
       };
 
@@ -1019,7 +980,7 @@ export default {
         repertorio: '',
         folio: '',
         numero_registro: '',
-        lindero_norte: '',
+  linderos_registro: '',
         propietario_anterior: '',     
         representante: 2,
       };
@@ -1111,9 +1072,9 @@ export default {
         console.log('Número registro asignado:', datos.numero_registro);
       }
       
-      if (datos.lindero_norte) {
-        this.form.lindero_norte = datos.lindero_norte;
-        console.log('Linderos asignados:', datos.lindero_norte);
+      if (datos.linderos_registro) {
+        this.form.linderos_registro = datos.linderos_registro;
+        console.log('Linderos asignados:', datos.linderos_registro);
       }
       
       if (datos.numero_notaria) {

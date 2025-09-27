@@ -310,7 +310,7 @@ export default {
         repertorio: this.seleccionado.NUM_REPERTORIO || '',
         folio: this.seleccionado.NUM_FOLIO || '',
         numero_registro: this.seleccionado.NUM_INSCRPCION || '',
-        lindero_norte: this.seleccionado.LINDEROS || '',
+        linderos_registro: this.seleccionado.LINDEROS || '',
         numero_notaria: this.seleccionado.NOTARIA || '',
         clave_catastral: this.seleccionado.CLAVE_CATASTRAL || ''
       };
