@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const catastroTenencia = require('../db/models/catastroTenencia');
 
+// Función para convertir diferentes tipos de valores a booleanos
+function convertirABoolean(valor) {
+  // Comprobar el tipo y valor para manejar todos los posibles casos
+  if (valor === true || valor === 1 || valor === '1' || 
+      valor === 'true' || valor === 'TRUE' || 
+      valor === 't' || valor === 'T' || 
+      valor === 'si' || valor === 'SI' || 
+      valor === 's' || valor === 'S' || 
+      valor === 'yes' || valor === 'YES' || 
+      valor === 'y' || valor === 'Y') {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // Insertar nuevo registro en catastro_tenencia
 router.post('/inserta_tenencia', async (req, res) => {
   try {
@@ -17,7 +33,20 @@ router.post('/inserta_tenencia', async (req, res) => {
 router.put('/actualiza_tenencia/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const updatedRecord = await catastroTenencia.updateCatastroTenencia(id, req.body);
+    console.log('[BACKEND] PUT /actualiza_tenencia/:id - Datos recibidos:', JSON.stringify(req.body, null, 2));
+    
+    // Procesar campos booleanos para asegurar que sean valores booleanos correctos
+    const datosProcesados = {
+      ...req.body,
+      permite_ingreso: convertirABoolean(req.body.permite_ingreso),
+      presenta_escritura: convertirABoolean(req.body.presenta_escritura),
+      asentamiento_de_hecho: convertirABoolean(req.body.asentamiento_de_hecho),
+      conflicto: convertirABoolean(req.body.conflicto)
+    };
+    
+    console.log('[BACKEND] Datos procesados para actualizar:', JSON.stringify(datosProcesados, null, 2));
+    
+    const updatedRecord = await catastroTenencia.updateCatastroTenencia(id, datosProcesados);
     res.json(updatedRecord);
   } catch (err) {
     console.error('Error updating catastro_tenencia:', err);

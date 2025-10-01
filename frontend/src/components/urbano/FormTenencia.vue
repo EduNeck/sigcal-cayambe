@@ -5,11 +5,11 @@
         <h2 class="titulo-pantalla">Tenencia Propiedad</h2>
       </v-col>
       <v-col cols="auto" class="d-flex justify-center py-1">
-        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevo" :disabled="!getIdPredio" v-if="canEdit">Nuevo</v-btn>
-        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!getIdPredio || !!idTenencia" v-if="canEdit">Guardar</v-btn>
-        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizaTenencia" :disabled="!idTenencia" v-if="canEdit">Actualizar</v-btn>
-        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idTenencia" v-if="canEdit">Eliminar</v-btn>
-        <v-btn density="compact" size="small" :class="['btn_app', tipoClaseButton]" append-icon="mdi-file-document" @click="consultarRegistroPropiedad" :disabled="!getIdPredio">Reg. Prop.</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevo" :disabled="!getIdPredio" v-if="canEdit">Nuevo</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="!getIdPredio || !!idTenencia" v-if="canEdit">Guardar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizaTenencia" :disabled="!idTenencia" v-if="canEdit">Actualizar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-delete" @click="eliminar" :disabled="!idTenencia" v-if="canEdit">Eliminar</v-btn>
+        <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file-document" @click="consultarRegistroPropiedad" :disabled="!getIdPredio">Reg. Prop.</v-btn>
       </v-col>
 
     </v-row>              
@@ -21,39 +21,43 @@
           <v-card-text>
             <v-row>
               <v-col cols="12" sm="6" md="3">
-                <v-checkbox
-                  :model-value="form.permite_ingreso === true || form.permite_ingreso === 'SI'"
-                  @update:model-value="val => form.permite_ingreso = val"
+                <v-select
+                  v-model="form.permite_ingreso"
+                  :items="items"
                   label="Permite Ingreso"
-                  color="primary"
-                ></v-checkbox>                
+                  item-text="text"
+                  item-value="value"
+                ></v-select>               
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-checkbox 
-                  :model-value="form.presenta_escritura === true || form.presenta_escritura === 'SI'" 
-                  @update:model-value="val => form.presenta_escritura = val" 
-                  label="Presenta Escritura" 
-                  color="primary"                   
-                ></v-checkbox>
+                <v-select
+                  v-model="form.presenta_escritura"
+                  :items="items"
+                  label="Presenta Escritura"
+                  item-text="text"
+                  item-value="value"
+                ></v-select> 
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-checkbox 
-                  :model-value="form.asentamiento_de_hecho === true || form.asentamiento_de_hecho === 'SI'" 
-                  @update:model-value="val => form.asentamiento_de_hecho = val" 
-                  label="Asent. de Hecho" 
-                  color="primary"                  
-                ></v-checkbox>
+                <v-select
+                  v-model="form.asentamiento_de_hecho"
+                  :items="items"
+                  label="Asent. de Hecho"
+                  item-text="text"
+                  item-value="value"
+                ></v-select> 
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-checkbox 
-                  :model-value="form.conflicto === true || form.conflicto === 'SI'" 
-                  @update:model-value="val => form.conflicto = val" 
-                  label="Conflicto" 
-                  color="primary"                  
-                ></v-checkbox>
+                <v-select
+                  v-model="form.conflicto"
+                  :items="items"
+                  label="Permite Ingreso"
+                  item-text="text"
+                  item-value="value"
+                ></v-select> 
               </v-col>
               
             </v-row>
@@ -209,19 +213,24 @@
         <v-row>
 
           <v-col cols="12" sm="6" md="2">                  
-            <v-text-field               
-              label="Pichincha"   
-              value="Pichincha"  
-              disabled                                                 
-            ></v-text-field>
+            <v-select
+              v-model="form.id_provincia"
+              :items="provincias"
+              item-text="title"
+              item-value="id"
+              label="Provincia"
+              @change="onProvinciaRegistro"
+            ></v-select>
           </v-col>
 
           <v-col cols="12" sm="6" md="2">
-            <v-text-field               
-              label="Cayambe" 
-              value="Cayambe"
-              disabled
-            ></v-text-field>
+            <v-select
+              v-model="form.id_canton"
+              :items="cantones"
+              item-text="title"
+              item-value="id"
+              label="Cantón"              
+            ></v-select>
           </v-col>
 
           <v-col cols="12" sm="6" md="2">
@@ -363,7 +372,7 @@ export default {
         repertorio: '',
         folio: '',
         numero_registro: '',
-  linderos_registro: '',
+        linderos_registro: '',
         propietario_anterior: '',        
         representante: 2,
       },
@@ -423,17 +432,17 @@ export default {
     await this.cargaProvincias();   
     await this.cargaCiudadanoTenecia();
 
-    // Establecer Pichincha como provincia por defecto para registro
+
     this.form.id_provincia = 17;
-    this.form.id_canton = 1702; // Establecer cantón fijo
-    // Establecer Pichincha como provincia por defecto para protocolización
+    this.form.id_canton = 1702; 
     this.form.id_prov_protocol = 17;
-    this.form.id_can_protocol = 1702; // Establecer cantón fijo
-    // Cargar cantones de Pichincha automáticamente para registro y protocolización
+    this.form.id_can_protocol = 1702; 
+    
     await this.cargaCantonesByProvinciaRegistro(17);
     await this.cargaCantonesByProvincia(17);
 
     console.log('Componente TabTenencia montado');
+    
     // Validar idPredio
     if (!this.getIdPredio) {
       this.snackbarError = 'No se ha definido un predio para el ingreso de Tenencia'; 
@@ -456,16 +465,13 @@ export default {
       this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
     }
 
-    // 🏠 Listener para reactividad de tenencias
-    this.onTenenciaUpdated(() => {
-      console.log('🏠 Evento de tenencia actualizado detectado');
+    this.onTenenciaUpdated(() => {     
       // Actualizar el porcentaje acumulado cuando cambian las tenencias
       this.obtenerPorcentajeAcumulado();
     });
   },
   methods: {
-    ...mapActions(['updateIdTenencia', 'incrementTenenciasCount']),
-    
+    ...mapActions(['updateIdTenencia', 'incrementTenenciasCount']),    
     async cargarDatosPropietario(id_propietario) {
       try {
         const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
@@ -746,9 +752,8 @@ export default {
         // Validar campos numéricos
         this.form.repertorio = this.validarNumero(tenencia.repertorio);
         this.form.folio = this.validarNumero(tenencia.folio);
-        this.form.numero_registro = this.validarNumero(tenencia.numero_registro);
-        
-  this.form.linderos_registro = tenencia.linderos_registro;
+        this.form.numero_registro = this.validarNumero(tenencia.numero_registro);        
+        this.form.linderos_registro = tenencia.linderos_registro;
         this.form.propietario_anterior = tenencia.propietario_anterior;
         
         // Procesar y asignar el valor de representante
@@ -803,9 +808,6 @@ export default {
         this.snackbarErrorPush = true;
         return;
       }
-      
-      // Ya tenemos valores booleanos, no necesitamos conversión
-      // this.form.permite_ingreso, this.form.presenta_escritura, etc. ya son booleanos
 
       // Validar campos numéricos para asegurar que sean números o null, excepto notaría que es texto
       const numeroNotaria = this.form.numero_notaria === '' ? null : this.form.numero_notaria;
@@ -837,7 +839,7 @@ export default {
         repertorio: repertorio,
         folio: folio,
         numero_registro: numeroRegistro,
-  linderos_registro: this.form.linderos_registro || null,
+        linderos_registro: this.form.linderos_registro || null,
         propietario_anterior: this.form.propietario_anterior || null
       }
       console.log('Datos a guardar', nuevaTenencia);
@@ -851,9 +853,9 @@ export default {
         console.log('ID TENENCIA: ', this.idTenencia);               
         this.snackbarOk = 'Tenencia creada con éxito';
         this.snackbarOkPush = true;
-        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
-        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
-        // Actualizar el porcentaje original para futuras validaciones
+        this.emitTenenciaUpdated(); 
+        this.incrementTenenciasCount(); 
+        
         this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
       } catch (error) {     
         console.error('Error al guardar tenencia:', error);
@@ -876,9 +878,6 @@ export default {
         return;
       }
 
-      // Ya tenemos valores booleanos, no necesitamos conversión
-      // this.form.permite_ingreso, this.form.presenta_escritura, etc. ya son booleanos
-
       // Corregido: usar `this.form` en lugar de `data`
       const fecha_escritura = this.form.fecha_escritura || null;
       const fecha_inscripcion = this.form.fecha_inscripcion || null;
@@ -890,7 +889,28 @@ export default {
       const folio = this.form.folio === '' ? null : Number(this.form.folio);
       const numeroRegistro = this.form.numero_registro === '' ? null : Number(this.form.numero_registro);
       const porcentajeParticipacion = this.form.porcentaje_participacion === '' ? null : Number(this.form.porcentaje_participacion);
+
+      // Validar campos booleanos para asegurar que sean de tipo booleano
+      console.log('Valores booleanos antes de conversión:', {
+        permite_ingreso: this.form.permite_ingreso,
+        presenta_escritura: this.form.presenta_escritura,
+        asentamiento_de_hecho: this.form.asentamiento_de_hecho,
+        conflicto: this.form.conflicto
+      });
       
+      // Usar el método convertirABoolean para todos los campos booleanos
+      this.form.permite_ingreso = this.convertirABoolean(this.form.permite_ingreso);
+      this.form.presenta_escritura = this.convertirABoolean(this.form.presenta_escritura);
+      this.form.asentamiento_de_hecho = this.convertirABoolean(this.form.asentamiento_de_hecho);
+      this.form.conflicto = this.convertirABoolean(this.form.conflicto);
+      
+      console.log('Valores booleanos después de conversión:', {
+        permite_ingreso: this.form.permite_ingreso,
+        presenta_escritura: this.form.presenta_escritura,
+        asentamiento_de_hecho: this.form.asentamiento_de_hecho,
+        conflicto: this.form.conflicto
+      });
+
       const tenenciaActualizada = {
         id_predio: this.idPredio, 
         permite_ingreso: this.form.permite_ingreso,
@@ -913,7 +933,7 @@ export default {
         repertorio: repertorio,
         folio: folio,
         numero_registro: numeroRegistro,
-  linderos_registro: this.form.linderos_registro,
+        linderos_registro: this.form.linderos_registro,
         propietario_anterior: this.form.propietario_anterior
       };
 
@@ -924,9 +944,9 @@ export default {
         console.log('Respuesta de actualización:', response.data);
         this.snackbarOk = 'Tenencia actualizada con éxito';
         this.snackbarOkPush = true;
-        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
-        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
-        // Actualizar el porcentaje original para futuras validaciones
+        this.emitTenenciaUpdated(); 
+        this.incrementTenenciasCount(); 
+        
         this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
       } catch (error) {
         console.error('Error al actualizar la tenencia:', error.message || error);
@@ -947,10 +967,10 @@ export default {
         await axios.delete(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
         this.snackbarOk = 'Tenencia eliminada exitosamente';
         this.snackbarOkPush = true;
-        this.emitTenenciaUpdated(); // 🏠 Emitir evento de tenencia actualizada
-        this.incrementTenenciasCount(); // 🏠 Incrementar contador en store
-        this.nuevo(); // Limpiar el formulario después de eliminar
-        this.updateIdTenencia(null); // Establecer idTenencia a null después de eliminar
+        this.emitTenenciaUpdated(); 
+        this.incrementTenenciasCount(); 
+        this.nuevo(); 
+        this.updateIdTenencia(null); 
       } catch (error) {
         console.error('Error al eliminar el tenencia:', error);
         this.snackbarError = 'Error al eliminar el tenencia';
@@ -968,8 +988,8 @@ export default {
         porcentaje_participacion: '',
         id_forma_propiedad: null,
         id_propietario: null,
-        id_prov_protocol: 17, // Siempre Pichincha
-        id_can_protocol: 1702, // Siempre cantón fijo Cayambe (ID: 1702)
+        id_prov_protocol: null,
+        id_can_protocol: null,
         fecha_inscripcion: '',
         numero_notaria: '',
         area_registro: '',
@@ -980,7 +1000,7 @@ export default {
         repertorio: '',
         folio: '',
         numero_registro: '',
-  linderos_registro: '',
+        linderos_registro: '',
         propietario_anterior: '',     
         representante: 2,
       };
