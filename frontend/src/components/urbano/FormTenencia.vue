@@ -103,7 +103,7 @@
               :items="ciudadanoTenencia" 
               label="Propietario (buscar por nombre, apellido o documento)" 
               v-model="form.id_propietario" 
-              item-text="title" 
+              item-title="title" 
               item-value="id"
               required
               clearable
@@ -111,12 +111,43 @@
               :loading="buscandoPropietarios"
               return-object
               @update:model-value="seleccionarPropietario"
-              hint="Puede buscar por nombre, apellido o número de documento sin importar el orden"
+              hint="Puede buscar por nombre, apellido, tipo o número de documento"
               persistent-hint
               auto-select-first
-              :menu-props="{ auto: true }"
+              :menu-props="{ maxHeight: '400px' }"
               :no-data-text="'Sin resultados. Intente otra búsqueda'"
-            ></v-autocomplete>
+            >
+              <!-- Personalizar la apariencia de los elementos de la lista -->
+              <template v-slot:item="{ item, props }">
+                <v-list-item
+                  v-bind="props"
+                  :title="undefined"
+                >
+                  <template v-slot:prepend>
+                    <v-avatar color="primary" size="36">
+                      <span class="text-h6 white--text">{{ item.raw.nombres.charAt(0) }}</span>
+                    </v-avatar>
+                  </template>
+                  <template v-slot:title>
+                    <span v-html="item.raw.html"></span>
+                  </template>
+                </v-list-item>
+              </template>
+              
+              <!-- Mejorar la apariencia cuando no hay resultados -->
+              <template v-slot:no-data>
+                <v-list-item>
+                  <v-list-item-title>
+                    <v-icon class="mr-2">mdi-account-search</v-icon>
+                    <span v-if="buscandoPropietarios">Buscando...</span>
+                    <span v-else>No se encontraron coincidencias</span>
+                  </v-list-item-title>
+                  <v-list-item-subtitle v-if="!buscandoPropietarios">
+                    Intente otra búsqueda o cree un nuevo propietario
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
           </v-col>
           <v-col cols="12" sm="6" md="1" class="d-flex align-center">
             <v-btn 
@@ -672,31 +703,46 @@ export default {
     },
 
 
-    // Cargar Ciudadano
+    // Cargar Ciudadano - Método optimizado
     async cargaCiudadanoTenecia() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/ciudadano_tenencia`);
-        console.log('Datos obtenidos para ciudadano:', response.data);
-        if (Array.isArray(response.data)) {
-          this.ciudadanoTenencia = response.data.map(item => {
-            if (item.id_ciudadano && item.nombres) {
-              return {
-                ...item,                
-                title: `${item.nombres} - ${item.numero_documento}`,
-                id: item.id_ciudadano,                
-              };              
-            } else {
-              console.warn('Elemento con datos incompletos:', item);
-              return null;
-            }
-          }).filter(item => item !== null);
+        // Si estamos editando un registro existente, solo cargar el propietario actual
+        if (this.form.id_propietario) {
+          const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${this.form.id_propietario}`);
+          if (response.data) {
+            // Crear un array con solo el propietario actual
+            this.ciudadanoTenencia = [{
+              ...response.data,
+              title: `${response.data.nombres} - ${response.data.numero_documento || 'Sin documento'}`,
+              id: response.data.id_ciudadano
+            }];
+            console.log('Propietario actual cargado:', this.ciudadanoTenencia[0]);
+          }
         } else {
-          throw new Error('La respuesta de la API no es un array');
+          // Si es un nuevo registro, solo cargar los ciudadanos más recientes (limitado a 20)
+          const response = await axios.get(`${API_BASE_URL}/ciudadano_tenencia`, {
+            params: { limit: 20 }
+          });
+          if (Array.isArray(response.data)) {
+            this.ciudadanoTenencia = response.data
+              .filter(item => item && item.id_ciudadano && item.nombres)
+              .map(item => ({
+                ...item,
+                title: `${item.nombres} - ${item.numero_documento || 'Sin documento'}`,
+                id: item.id_ciudadano,
+                html: `<div>
+                        <div class="font-weight-bold">${item.nombres}</div>
+                        <div class="text-caption">${item.numero_documento || 'Sin documento'}</div>
+                        <div class="text-caption grey--text">${item.id_tipo_documento || ''}</div>
+                      </div>`
+              }));
+            console.log('Ciudadanos recientes cargados:', this.ciudadanoTenencia.length);
+          }
         }
       } catch (error) {
-        console.error('Error fetching ciudadano:', error);
+        console.error('Error cargando ciudadanos:', error);
         this.ciudadanoTenencia = [];
-      }      
+      }
     },
     
     // Buscar ciudadanos por API (optimizado)
@@ -704,35 +750,66 @@ export default {
       if (this.busquedaTimeout) {
         clearTimeout(this.busquedaTimeout);
       }
+      
+      // No realizar búsqueda si hay menos de 2 caracteres
       if (!texto || texto.length < 2) {
-        this.ciudadanoTenencia = [];
         return;
       }
+      
       this.busquedaTimeout = setTimeout(async () => {
         this.buscandoPropietarios = true;
+        
         try {
+          // Enviar la búsqueda al servidor
           const response = await axios.get(`${API_BASE_URL}/ciudadano_tenencia/buscar`, {
-            params: { q: texto }
+            params: { 
+              q: texto,
+              limit: 25 // Limitar resultados para mejor rendimiento
+            }
           });
+          
           if (Array.isArray(response.data)) {
+            // Formatear y asignar resultados
             this.ciudadanoTenencia = response.data
               .filter(item => item && item.id_ciudadano && item.nombres)
-              .map(item => ({
-                ...item,
-                title: `${item.nombres} - ${item.numero_documento}`,
-                id: item.id_ciudadano,
-              }));
+              .map(item => {
+                // Intentar resaltar el texto buscado en el nombre y documento
+                let nombreResaltado = item.nombres;
+                let documentoResaltado = item.numero_documento || 'Sin documento';
+                
+                try {
+                  const regex = new RegExp(`(${texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                  nombreResaltado = item.nombres.replace(regex, '<strong>$1</strong>');
+                  if (item.numero_documento) {
+                    documentoResaltado = item.numero_documento.replace(regex, '<strong>$1</strong>');
+                  }
+                } catch (e) {
+                  // Si hay error en el regex, usar el texto sin resaltar
+                  console.warn('Error al resaltar texto de búsqueda:', e);
+                }
+                
+                return {
+                  ...item,
+                  title: `${item.nombres} - ${item.numero_documento || 'Sin documento'}`,
+                  id: item.id_ciudadano,
+                  html: `<div>
+                          <div class="font-weight-bold">${nombreResaltado}</div>
+                          <div class="text-caption">${documentoResaltado}</div>
+                          <div class="text-caption grey--text">${item.id_tipo_documento || ''}</div>
+                        </div>`
+                };
+              });
           } else {
             this.ciudadanoTenencia = [];
           }
         } catch (error) {
           console.error('Error buscando ciudadanos:', error);
-          this.snackbarError = 'Error buscando ciudadanos';
+          this.snackbarError = 'Error al buscar ciudadanos';
           this.snackbarErrorPush = true;
         } finally {
           this.buscandoPropietarios = false;
         }
-      }, 400);
+      }, 400); // 400ms de debounce
     },
     
     // Manejar la selección de un propietario

@@ -48,13 +48,30 @@ router.put('/actualiza_ciudadano/:id', async (req, res) => {
   }
 });
 
-// Obtener ciudadanos para tenencia
+// Obtener ciudadanos para tenencia (con soporte para límite)
 router.get('/ciudadano_tenencia', async (req, res) => {
   try {
-    const data = await catastroCiudadanoModel.recuperaCiudadanoTenencia();
+    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
+    const data = await catastroCiudadanoModel.recuperaCiudadanoTenencia(limit);
     res.json(data);
   } catch (err) {
     console.error('Error al obtener ciudadanos para tenencia:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// Buscar ciudadanos para autocompletado
+router.get('/ciudadano_tenencia/buscar', async (req, res) => {
+  try {
+    const { q, limit } = req.query;
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+    const limitNum = limit ? parseInt(limit) : 25;
+    const data = await catastroCiudadanoModel.buscarCiudadanoTenencia(q, limitNum);
+    res.json(data);
+  } catch (err) {
+    console.error('Error al buscar ciudadanos:', err);
     res.status(500).send('Server Error');
   }
 });

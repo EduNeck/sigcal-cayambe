@@ -139,15 +139,154 @@ const actualizaCiudadanoByid = async (id, data) => {
   }
 };
 
-// Función para obtener los registros de la tabla `catastro_ciudadano`
-const recuperaCiudadanoTenencia = async () => {
-  const query = 'SELECT id_ciudadano, nombres, numero_documento FROM public.catastro_ciudadano ORDER BY nombres ASC';
+// Función para obtener los registros de la tabla `catastro_ciudadano` con límite opcional
+const recuperaCiudadanoTenencia = async (limit) => {
+  let query = `
+    SELECT 
+      id_ciudadano, 
+      nombres, 
+      numero_documento, 
+      id_tipo_documento,
+      fecha_actualizacion_aud
+    FROM 
+      public.catastro_ciudadano 
+    WHERE 
+      nombres IS NOT NULL AND numero_documento IS NOT NULL
+    ORDER BY 
+      fecha_actualizacion_aud DESC NULLS LAST
+  `;
+
+  // Si se proporciona un límite, agregarlo a la consulta
+  if (limit && !isNaN(limit)) {
+    query += ` LIMIT ${limit}`;
+  }
+
   try {
     const result = await db.query(query);
-    // Filtrar ciudadanos con datos mínimos completos
-    return result.rows.filter(item => item.id_ciudadano && item.nombres && item.numero_documento);
+    return result.rows;
   } catch (err) {
-    console.error('Error executing query', err.stack);
+    console.error('Error executing query for recuperaCiudadanoTenencia:', err.stack);
+    throw err;
+  }
+};
+
+// Función para buscar ciudadanos por nombre o documento para autocompletado
+const buscarCiudadanoTenencia = async (searchText, limit = 25) => {
+  // Eliminar acentos y normalizar el texto de búsqueda
+  const normalizedSearch = searchText
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+    .toLowerCase();
+
+  // Dividir el texto en palabras para búsqueda por múltiples términos
+  const searchTerms = normalizedSearch
+    .split(/\s+/)
+    .filter(term => term.length > 0)
+    .map(term => term.trim());
+
+  // Crear condiciones para cada término de búsqueda
+  let whereConditions = [];
+  const queryParams = [];
+
+  searchTerms.forEach(term => {
+    queryParams.push(`%${term}%`);
+    const paramIndex = queryParams.length;
+    
+    // Buscar en nombres y número de documento
+    whereConditions.push(`(
+      unaccent(lower(nombres)) ILIKE unaccent($${paramIndex}) OR
+      numero_documento ILIKE $${paramIndex}
+    )`);
+  });
+
+  // Si no hay términos de búsqueda, devolver un array vacío
+  if (whereConditions.length === 0) {
+    return [];
+  }
+
+  // Construir la consulta final
+  const query = `
+    SELECT 
+      id_ciudadano, 
+      nombres, 
+      numero_documento, 
+      id_tipo_documento
+    FROM 
+      public.catastro_ciudadano
+    WHERE 
+      ${whereConditions.join(' AND ')}
+    ORDER BY 
+      nombres ASC
+    LIMIT $${queryParams.length + 1}
+  `;
+
+  try {
+    // Agregar el límite como último parámetro
+    queryParams.push(limit);
+    
+    console.log('Consulta de búsqueda:', query);
+    console.log('Parámetros:', queryParams);
+    
+    // Ejecutar la consulta
+    const result = await db.query(query, queryParams);
+    return result.rows;
+  } catch (err) {
+    console.error('Error executing query for buscarCiudadanoTenencia:', err);
+    
+    // Si ocurre un error (como falta de extensión unaccent), intentar con una versión simplificada
+    if (err.message && err.message.includes('unaccent')) {
+      console.log('Retrying search without unaccent function');
+      return buscarCiudadanoTenenciaSinUnaccent(searchText, limit);
+    }
+    throw err;
+  }
+};
+
+// Versión de respaldo sin usar unaccent (por si la extensión no está disponible)
+const buscarCiudadanoTenenciaSinUnaccent = async (searchText, limit = 25) => {
+  const searchTerms = searchText
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(term => term.length > 0)
+    .map(term => term.trim());
+
+  let whereConditions = [];
+  const queryParams = [];
+
+  searchTerms.forEach(term => {
+    queryParams.push(`%${term}%`);
+    const paramIndex = queryParams.length;
+    whereConditions.push(`(
+      lower(nombres) ILIKE $${paramIndex} OR
+      numero_documento ILIKE $${paramIndex}
+    )`);
+  });
+
+  if (whereConditions.length === 0) {
+    return [];
+  }
+
+  const query = `
+    SELECT 
+      id_ciudadano, 
+      nombres, 
+      numero_documento, 
+      id_tipo_documento
+    FROM 
+      public.catastro_ciudadano
+    WHERE 
+      ${whereConditions.join(' AND ')}
+    ORDER BY 
+      nombres ASC
+    LIMIT $${queryParams.length + 1}
+  `;
+
+  try {
+    queryParams.push(limit);
+    const result = await db.query(query, queryParams);
+    return result.rows;
+  } catch (err) {
+    console.error('Error executing simplified search query:', err);
     throw err;
   }
 };
@@ -172,5 +311,6 @@ module.exports = {
   insertaCiudadano, 
   actualizaCiudadanoByid,
   recuperaCiudadanoTenencia,
+  buscarCiudadanoTenencia,
   eliminaCiudadanoById
 };
