@@ -172,22 +172,89 @@ const getTenenciaById = async (id_tenencia) => {
 
 // Función para eliminar un registro de la tabla de tenencia por id
 const deleteCatastroTenencia = async (id) => {
-    const query = `
-        DELETE FROM public.catastro_tenencia WHERE id_tenencia = $1 RETURNING id_tenencia;
-    `;
-    const values = [id];
-
+    // Asegurarse de que el ID es numérico, pero mantenerlo como string para la query
+    const idNumerico = parseInt(id, 10);
+    if (isNaN(idNumerico)) {
+        console.error(`❌ ID no válido: ${id}. Debe ser un número.`);
+        throw new Error(`ID de tenencia no válido: ${id}`);
+    }
+    
+    console.log(`🔍 Intentando eliminar tenencia con ID: ${id} (valor numérico: ${idNumerico})`);
+    
+    // Primero verificar si la tenencia existe
+    const verificaQuery = `SELECT id_tenencia FROM public.catastro_tenencia WHERE id_tenencia = $1;`;
+    
     try {
-        const result = await db.query(query, values);
-        if (result.rowCount === 0) {
-            console.warn(`⚠ No se encontró ninguna tenencia con id: ${id}`);
+        // Verificar existencia
+        const verificaResult = await db.query(verificaQuery, [idNumerico]);
+        if (verificaResult.rowCount === 0) {
+            console.warn(`⚠ Verificación previa: No se encontró ninguna tenencia con id: ${idNumerico}`);
             return null;
         }
-        console.log(`✅ Tenencia con id: ${id} eliminada con éxito`);
+        
+        console.log(`✅ Verificación previa: Tenencia con id: ${idNumerico} encontrada, procediendo a eliminar`);
+        
+        // Verificar si la tenencia está referenciada en otras tablas
+        try {
+            // Consulta para identificar posibles restricciones de clave foránea
+            const checkFKQuery = `
+                SELECT conrelid::regclass AS tabla_con_fk
+                FROM pg_constraint 
+                WHERE confrelid = 'public.catastro_tenencia'::regclass::oid
+                AND contype = 'f';
+            `;
+            const fkResult = await db.query(checkFKQuery);
+            if (fkResult.rows.length > 0) {
+                console.log(`🔍 La tabla catastro_tenencia tiene referencias de clave foránea desde:`, 
+                    fkResult.rows.map(row => row.tabla_con_fk).join(", "));
+            }
+        } catch (fkErr) {
+            console.log(`No se pudieron verificar las referencias FK: ${fkErr.message}`);
+        }
+
+        // Intentar la eliminación con transacción explícita
+        const client = await db.pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Proceder con la eliminación usando un cliente de transacción
+            const query = `
+                DELETE FROM public.catastro_tenencia WHERE id_tenencia = $1 RETURNING id_tenencia;
+            `;
+            
+            const result = await client.query(query, [idNumerico]);
+            
+            if (result.rowCount === 0) {
+                await client.query('ROLLBACK');
+                console.warn(`⚠ No se pudo eliminar la tenencia con id: ${idNumerico}, aunque existía previamente`);
+                return null;
+            }
+            
+            await client.query('COMMIT');
+            console.log(`🔍 Eliminación completada en transacción`);
+            
+            return result.rows[0];
+        } catch (deleteErr) {
+            await client.query('ROLLBACK');
+            console.error(`❌ Error en transacción de eliminación: ${deleteErr.message}`, deleteErr);
+            
+            // Si el error está relacionado con violación de restricción de integridad referencial
+            if (deleteErr.code === '23503') {
+                console.error(`🚫 Violación de restricción de clave foránea: ${deleteErr.detail}`);
+                throw new Error(`No se puede eliminar la tenencia porque está siendo utilizada en otras partes del sistema. Detalles: ${deleteErr.detail}`);
+            }
+            
+            throw deleteErr;
+        } finally {
+            client.release();
+        }
+        
+        console.log(`✅ Tenencia con id: ${idNumerico} eliminada con éxito`);
         return result.rows[0];
     } catch (err) {
-        console.error(`❌ Error al eliminar la tenencia con id: ${id}`, err.message);
-        throw new Error('Error al eliminar la tenencia en la base de datos');
+        console.error(`❌ Error al eliminar la tenencia con id: ${idNumerico}`, err.message);
+        console.error(`Detalles del error:`, err);
+        throw new Error(`Error al eliminar la tenencia en la base de datos: ${err.message}`);
     }
 };
 
@@ -217,6 +284,19 @@ const insertMultiplesTenenciasBasicas = async (tenencias) => {
   }
 };
 
+// Función para obtener el representante de un predio
+const getRepresentanteByPredioId = async (id_predio) => {
+  const query = `SELECT representante FROM public.catastro_tenencia WHERE id_predio = $1 and representante = 1;`;
+  const values = [id_predio];
+
+  try {
+    const result = await db.query(query, values);
+    return result.rows;
+  } catch (err) {
+    console.error('❌ Error al obtener representante del predio:', err.message);
+    throw err;
+  }
+};
 
 module.exports = {
     insertCatastroTenencia,
@@ -226,5 +306,6 @@ module.exports = {
     getTenenciaById,
     deleteCatastroTenencia,
     insertMultiplesTenenciasBasicas,
-    getPorcentajeAcumuladoByPredio
+    getPorcentajeAcumuladoByPredio,
+    getRepresentanteByPredioId
 }

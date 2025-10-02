@@ -119,4 +119,20 @@ router.put('/inserta-certificado-catastral', async (req, res) => {
   }
 });
 
+// Obtener valoración por clave catastral
+router.get('/valoracion-por-clave/:claveCatastral', async (req, res) => {
+  const { claveCatastral } = req.params;
+  try {
+    const data = await valoracionModel.getValoracionByClave(claveCatastral);
+    if (data && data.length > 0) {
+      res.json(data);
+    } else {
+      res.status(404).json({ error: 'No se encontraron valoraciones para la clave catastral proporcionada' });
+    }
+  } catch (err) {
+    console.error('Error al obtener valoración por clave catastral:', err);
+    res.status(500).json({ error: 'Error al consultar la valoración por clave catastral' });
+  }
+});
+
 module.exports = router;

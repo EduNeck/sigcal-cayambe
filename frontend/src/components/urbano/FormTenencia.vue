@@ -21,43 +21,39 @@
           <v-card-text>
             <v-row>
               <v-col cols="12" sm="6" md="3">
-                <v-select
+                <v-checkbox
                   v-model="form.permite_ingreso"
-                  :items="items"
                   label="Permite Ingreso"
-                  item-text="text"
-                  item-value="value"
-                ></v-select>               
+                  color="primary"
+                  hide-details
+                ></v-checkbox>
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select
+                <v-checkbox
                   v-model="form.presenta_escritura"
-                  :items="items"
                   label="Presenta Escritura"
-                  item-text="text"
-                  item-value="value"
-                ></v-select> 
+                  color="primary"
+                  hide-details
+                ></v-checkbox>
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select
+                <v-checkbox
                   v-model="form.asentamiento_de_hecho"
-                  :items="items"
-                  label="Asent. de Hecho"
-                  item-text="text"
-                  item-value="value"
-                ></v-select> 
+                  label="Asentamiento de Hecho"
+                  color="primary"
+                  hide-details
+                ></v-checkbox>
               </v-col>
 
               <v-col cols="12" sm="6" md="3">
-                <v-select
+                <v-checkbox
                   v-model="form.conflicto"
-                  :items="items"
-                  label="Permite Ingreso"
-                  item-text="text"
-                  item-value="value"
-                ></v-select> 
+                  label="Conflicto"
+                  color="primary"
+                  hide-details
+                ></v-checkbox>
               </v-col>
               
             </v-row>
@@ -134,12 +130,24 @@
             </v-btn>
           </v-col>
           <v-col cols="12" sm="6" md="4">
-            <v-checkbox
-              :model-value="form.representante === 1"
-              @update:model-value="val => form.representante = val ? 1 : 2"
-              label="¿Representante?"
-              color="primary"
-            ></v-checkbox>
+            <div>
+              <v-checkbox
+                :model-value="form.representante === 1"
+                @update:model-value="val => form.representante = val ? 1 : 2"
+                label="¿Representante?"
+                color="primary"
+                :disabled="representanteDisabled && form.representante !== 1"
+              ></v-checkbox>
+              <div v-if="representanteExiste" 
+                   :class="['text-caption ml-4', {'text-error': representanteDisabled, 'text-info': !representanteDisabled}]"
+                   :style="{
+                     color: representanteDisabled ? 'red' : 'blue', 
+                     marginTop: '-15px',
+                     fontSize: '12px'
+                   }">
+                {{ representanteMensaje }}
+              </div>
+            </div>
           </v-col>          
         </v-row>
       </v-card-text>
@@ -218,7 +226,6 @@
               :items="provincias"
               item-text="title"
               item-value="id"
-              label="Provincia"
               @change="onProvinciaRegistro"
             ></v-select>
           </v-col>
@@ -366,8 +373,8 @@ export default {
         numero_notaria: '',
         area_registro: '',
         id_unidad: null,
-        id_provincia: 17, 
-        id_canton: 1702, 
+        id_provincia: null, 
+        id_canton: null, 
         fecha_escritura: '',
         repertorio: '',
         folio: '',
@@ -378,8 +385,12 @@ export default {
       },
       buscandoPropietarios: false,
       busquedaTimeout: null,
+      representanteExiste: false,
+      representanteDisabled: false,
+      representanteMensaje: '',
+      verificandoRepresentante: false,
       // Listados
-      items: ['SI', 'NO'],
+      // La propiedad 'items' ya no es necesaria para los checkboxes
       formaPropiedad: [],
       provincias: [],
       cantones: [],
@@ -432,15 +443,6 @@ export default {
     await this.cargaProvincias();   
     await this.cargaCiudadanoTenecia();
 
-
-    this.form.id_provincia = 17;
-    this.form.id_canton = 1702; 
-    this.form.id_prov_protocol = 17;
-    this.form.id_can_protocol = 1702; 
-    
-    await this.cargaCantonesByProvinciaRegistro(17);
-    await this.cargaCantonesByProvincia(17);
-
     console.log('Componente TabTenencia montado');
     
     // Validar idPredio
@@ -456,6 +458,9 @@ export default {
 
     // Cargar porcentaje acumulado
     await this.obtenerPorcentajeAcumulado();
+    
+    // Verificar si ya existe un representante para este predio
+    await this.verificarRepresentanteExistente();
 
     // Cargar datos de la tenencia si existe idTenencia
     if (this.idTenencia) {
@@ -468,10 +473,67 @@ export default {
     this.onTenenciaUpdated(() => {     
       // Actualizar el porcentaje acumulado cuando cambian las tenencias
       this.obtenerPorcentajeAcumulado();
+      // Verificar representante cuando cambian las tenencias
+      this.verificarRepresentanteExistente();
     });
   },
   methods: {
-    ...mapActions(['updateIdTenencia', 'incrementTenenciasCount']),    
+    ...mapActions(['updateIdTenencia', 'incrementTenenciasCount']),
+    
+    // Método para verificar si ya existe un representante para este predio
+    async verificarRepresentanteExistente() {
+      if (!this.idPredio) return;
+      
+      this.verificandoRepresentante = true;
+      try {
+        const response = await axios.get(`${API_BASE_URL}/representante/${this.idPredio}`);
+        
+        // Verificamos si hay algún registro con representante=1, excluyendo el registro actual si estamos editando
+        const representantesConValor1 = response.data.filter(r => r.representante === 1);
+        
+        if (representantesConValor1.length > 0) {
+          console.log('Representantes encontrados con valor 1:', representantesConValor1);
+          
+          // Si estamos editando un registro que ya es representante, no mostrar mensaje
+          if (this.idTenencia) {
+            const tenenciaActual = await axios.get(`${API_BASE_URL}/tenencia_by_id/${this.idTenencia}`);
+            if (tenenciaActual.data && tenenciaActual.data.representante === 1) {
+              // Si el registro actual es el representante, no mostramos mensaje y permitimos editar
+              this.representanteExiste = false;
+              this.representanteDisabled = false;
+              this.representanteMensaje = '';
+              return;
+            }
+          }
+          
+          // Si hay otro registro que es representante, mostramos mensaje y deshabilitamos
+          this.representanteExiste = true;
+          this.representanteDisabled = true;
+          this.representanteMensaje = 'Ya existe un representante seleccionado para este predio';
+        } else {
+          // No hay representantes, permitir seleccionar y mostrar mensaje informativo
+          this.representanteExiste = true; // Mostramos el mensaje aunque no exista representante
+          this.representanteDisabled = false; // Pero permitimos seleccionar
+          this.representanteMensaje = 'No existe representante asignado';
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // La API devolvió un 404, lo que significa que no hay representantes
+          this.representanteExiste = true;
+          this.representanteDisabled = false;
+          this.representanteMensaje = 'No existe representante asignado';
+        } else {
+          console.error('Error al verificar representantes:', error);
+          // En caso de otro tipo de error, permitimos la selección por defecto
+          this.representanteExiste = true;
+          this.representanteDisabled = false;
+          this.representanteMensaje = 'No existe representante asignado';
+        }
+      } finally {
+        this.verificandoRepresentante = false;
+      }
+    },
+        
     async cargarDatosPropietario(id_propietario) {
       try {
         const response = await axios.get(`${API_BASE_URL}/recupera_ciudadano_by_id/${id_propietario}`);
@@ -854,9 +916,11 @@ export default {
         this.snackbarOk = 'Tenencia creada con éxito';
         this.snackbarOkPush = true;
         this.emitTenenciaUpdated(); 
-        this.incrementTenenciasCount(); 
-        
+        this.incrementTenenciasCount();         
         this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
+        
+        // Verificar nuevamente el estado del representante
+        await this.verificarRepresentanteExistente();
       } catch (error) {     
         console.error('Error al guardar tenencia:', error);
         this.snackbarError = 'Error al guardar la tenencia';
@@ -912,7 +976,7 @@ export default {
       });
 
       const tenenciaActualizada = {
-        id_predio: this.idPredio, 
+        id_predio: Number(this.idPredio), 
         permite_ingreso: this.form.permite_ingreso,
         presenta_escritura: this.form.presenta_escritura,
         asentamiento_de_hecho: this.form.asentamiento_de_hecho,
@@ -948,6 +1012,9 @@ export default {
         this.incrementTenenciasCount(); 
         
         this.porcentajeOriginal = parseFloat(this.form.porcentaje_participacion) || 0;
+        
+        // Verificar nuevamente el estado del representante
+        await this.verificarRepresentanteExistente();
       } catch (error) {
         console.error('Error al actualizar la tenencia:', error.message || error);
         this.snackbarError = 'Error al actualizar la tenencia';
@@ -963,20 +1030,46 @@ export default {
         this.snackbarErrorPush = true;
         return;
       }
+      
       try {
-        await axios.delete(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
+        console.log(`[FRONTEND] Enviando solicitud para eliminar tenencia con ID: ${this.idTenencia}`);
+        const response = await axios.delete(`${API_BASE_URL}/elimina_tenencia_by_id/${this.idTenencia}`);
+        console.log(`[FRONTEND] Respuesta de eliminación recibida:`, response.data);
+        
         this.snackbarOk = 'Tenencia eliminada exitosamente';
         this.snackbarOkPush = true;
         this.emitTenenciaUpdated(); 
-        this.incrementTenenciasCount(); 
+        this.incrementTenenciasCount();
+        await this.verificarRepresentanteExistente();
         this.nuevo(); 
         this.updateIdTenencia(null); 
       } catch (error) {
-        console.error('Error al eliminar el tenencia:', error);
-        this.snackbarError = 'Error al eliminar el tenencia';
+        console.error('[FRONTEND] Error al eliminar la tenencia:', error);
+        
+        // Extraer información detallada del error
+        let mensajeError = 'Error al eliminar la tenencia';
+        
+        if (error.response) {
+          // El servidor respondió con un código de error
+          console.error('[FRONTEND] Detalles del error de servidor:', error.response.data);
+          
+          if (error.response.status === 404) {
+            mensajeError = `Tenencia con ID ${this.idTenencia} no encontrada en la base de datos`;
+          } else if (error.response.data && error.response.data.error) {
+            mensajeError = `Error: ${error.response.data.error}`;
+            if (error.response.data.mensaje) {
+              mensajeError += ` - ${error.response.data.mensaje}`;
+            }
+          }
+        } else if (error.request) {
+          // La solicitud fue hecha pero no se recibió respuesta
+          mensajeError = 'No se recibió respuesta del servidor. Verifique su conexión.';
+        } 
+        
+        this.snackbarError = mensajeError;
         this.snackbarErrorPush = true;
       }
-    },    
+    },
 
     // Método para limpiar el formulario
     limpiarFormulario() {
@@ -994,8 +1087,8 @@ export default {
         numero_notaria: '',
         area_registro: '',
         id_unidad: null,
-        id_provincia: 17, // Siempre Pichincha
-        id_canton: 1702, // Siempre cantón fijo (ID: 1702)
+        id_provincia: null, 
+        id_canton: null,
         fecha_escritura: '',
         repertorio: '',
         folio: '',
@@ -1004,9 +1097,6 @@ export default {
         propietario_anterior: '',     
         representante: 2,
       };
-      // Cargar cantones de Pichincha después de limpiar
-      this.cargaCantonesByProvinciaRegistro(17);
-      this.cargaCantonesByProvincia(17);
     },
 
     navigateToMenuUrbano() {
@@ -1017,11 +1107,13 @@ export default {
     },
 
     // Método para limpiar el formulario y preparar para una nueva entrada
-    nuevo() {
+    async nuevo() {
       this.limpiarFormulario();
       this.idTenencia = null;
       // Actualizar la lista de ciudadanos
-      this.cargaCiudadanoTenecia();
+      await this.cargaCiudadanoTenecia();
+      // Verificar si ya existe un representante
+      await this.verificarRepresentanteExistente();
       // Asegurar que el propietario está limpio
       this.$nextTick(() => {
         this.form.id_propietario = null;

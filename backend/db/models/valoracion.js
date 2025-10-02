@@ -188,6 +188,46 @@ const insertaCertificadoCatastral = async ( tipo, anio, clave, usuario, codigo )
     }
 }
 
+// Función para obtener la valoración de un predio por su clave catastral
+const getValoracionByClave = async (claveCatastral) => {
+    const query = `
+    SELECT 
+        tipo_predio, 
+        ph, 
+        clave_catastral, 
+        clave_anterior, 
+        parroquia, 
+        numero_documento, 
+        alicuota, 
+        porcentaje_participacion, 
+        area_suelo_porcentual, 
+        area_construcciones_porcentual, 
+        valor_suelo_porcentual, 
+        valor_construcciones_porcentual, 
+        valor_instalaciones_porcentual, 
+        valor_adicionales_porcentual, 
+        avaluo_predio_porcentual, 
+        anio_proceso, 
+        id_tenencia_propiedad, 
+        id_predio, 
+        propietario, 
+        fecha_proceso
+    FROM valores_reportes.vista_patrimonio_urbano v
+    WHERE v.clave_catastral = $1
+      AND v.anio_proceso = (
+            SELECT MAX(anio_proceso)
+            FROM valores_reportes.vista_patrimonio_urbano
+            WHERE clave_catastral = v.clave_catastral
+        );
+    `;
+    try {
+        const result = await db.query(query, [claveCatastral]);
+        return result.rows;
+    } catch (err) {
+        console.error('Error executing query', err.stack);
+        throw err;
+    }
+}
 
 
 module.exports = {
@@ -201,5 +241,6 @@ module.exports = {
     getAllValoresComercialesPeritaje,
     ejecutaValoracion,
     certificadoCatastralGeografico,
-    insertaCertificadoCatastral
+    insertaCertificadoCatastral,
+    getValoracionByClave
 };

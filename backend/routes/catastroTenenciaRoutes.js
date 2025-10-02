@@ -93,16 +93,42 @@ router.delete('/elimina_tenencia_by_id/:id', async (req, res) => {
     return res.status(400).json({ error: 'ID no proporcionado' });
   }
 
+  console.log(`[BACKEND] Recibida solicitud para eliminar tenencia con id: ${id}`);
+
+  // Verificar si existe la tenencia antes de intentar eliminarla
   try {
+    const tenencia = await catastroTenencia.getCatastroTenenciaById(id);
+    if (!tenencia) {
+      console.log(`[BACKEND] Tenencia con id ${id} no encontrada en verificación previa`);
+      return res.status(404).json({ 
+        error: 'Tenencia no encontrada en verificación previa', 
+        id: id,
+        tip: 'Verifique que el ID existe y es correcto' 
+      });
+    }
+    
+    console.log(`[BACKEND] Tenencia con id ${id} encontrada, procediendo a eliminar:`, tenencia);
+    
+    // Proceder con la eliminación
     const data = await catastroTenencia.deleteCatastroTenencia(id);
     if (data) {
+      console.log(`[BACKEND] Tenencia eliminada con éxito:`, data);
       res.json({ message: 'Tenencia eliminada con éxito', data });
     } else {
-      res.status(404).json({ error: 'Tenencia no encontrada' });
+      console.error(`[BACKEND] Error en la eliminación: no se devolvieron datos pero tampoco hubo error`);
+      res.status(404).json({ 
+        error: 'Tenencia no pudo ser eliminada', 
+        id: id,
+        mensaje: 'El registro fue encontrado pero no pudo ser eliminado' 
+      });
     }
   } catch (err) {
-    console.error('Error eliminando tenencia:', err);
-    res.status(500).json({ error: 'Error del servidor. Inténtalo de nuevo más tarde.' });
+    console.error('[BACKEND] Error eliminando tenencia:', err);
+    res.status(500).json({ 
+      error: 'Error del servidor al eliminar tenencia', 
+      mensaje: err.message,
+      id: id
+    });
   }
 });
 
@@ -129,6 +155,23 @@ router.get('/porcentaje_acumulado_predio/:id_predio', async (req, res) => {
     res.json({ porcentaje_acumulado: porcentajeAcumulado });
   } catch (err) {
     console.error('Error al obtener porcentaje acumulado:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Obtener el representante de un predio
+router.get('/representante/:id_predio', async (req, res) => {
+  const { id_predio } = req.params;
+  
+  try {
+    const representantes = await catastroTenencia.getRepresentanteByPredioId(id_predio);
+    if (representantes && representantes.length > 0) {
+      res.json(representantes);
+    } else {
+      res.status(404).json({ message: 'No se encontraron representantes para este predio' });
+    }
+  } catch (err) {
+    console.error('Error al obtener representante del predio:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

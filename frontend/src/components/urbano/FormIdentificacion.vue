@@ -10,7 +10,9 @@
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-plus" @click="nuevoRegistro" v-if="canEdit">Nuevo</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-check" @click="guardar" :disabled="Boolean(Boolean(getIdPredio))" v-if="canEdit">Guardar</v-btn>
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-pencil" @click="actualizar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Actualizar</v-btn>       
+        <!-- Botón de valoración 
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-file" @click="valorar" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Valorar</v-btn>
+        -->
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-printer" @click="imprimirFicha" :disabled="!Boolean(getIdPredio)" v-if="canEdit">Imprimir Ficha</v-btn>
         <!-- Botón de eliminar oculto -->
         <v-btn :class="['btn_app', tipoClaseButton]" append-icon="mdi-close" @click="navegaMenuPrincipal">Salir</v-btn>        
@@ -268,7 +270,63 @@
         </v-row>
       </v-card-text>
     </v-card> 
-     <!-- Quito Bloque Ejes Viales-->
+     <!-- Bloque Valoración de Predio -->
+    <v-card :class="[tipoClaseBlock]" class="fill-width">
+      <v-card-title class="centered-title">VALORACIÓN DE PREDIO</v-card-title>
+      <v-card-text>
+        <!-- Grid de datos de valoración -->
+        <div v-if="valoracionCargada && datosValoracion.length > 0">
+          <v-card-subtitle class="pb-0 font-weight-bold">
+            <v-row>
+              <v-col cols="12" sm="6">Año de Proceso: {{ anioProceso }}</v-col>
+              <v-col cols="12" sm="6" class="text-sm-right">Fecha de Proceso: {{ fechaProceso }}</v-col>
+            </v-row>
+          </v-card-subtitle>
+          <v-data-table
+            :headers="[
+              { title: 'Concepto', key: 'concepto', align: 'start', width: '60%' },
+              { title: 'Valor ($)', key: 'valor', align: 'end', width: '40%' }
+            ]"
+            :items="datosValoracion"
+            :items-per-page="5"
+            class="elevation-1 valoracion-table"
+            hide-default-footer
+          >
+            <template v-slot:item.valor="{ item }">
+              <span :class="{'font-weight-bold': item.concepto.includes('Total'), 'green--text text--darken-2': item.concepto.includes('Total')}">
+                {{ formatCurrency(item.valor) }}
+              </span>
+            </template>
+          </v-data-table>
+          
+          <!-- Botón para refrescar valoración -->
+          <div class="d-flex justify-end mt-2">
+            <v-btn
+              :class="['btn_app', tipoClaseButton]"
+              small
+              @click="cargarValoracion(form.clave_catastral)"
+              :disabled="!form.clave_catastral"
+              prepend-icon="mdi-refresh"
+            >
+              Refrescar valoración
+            </v-btn>
+          </div>
+        </div>
+        <div v-else class="text-center py-5">
+          <p class="text-subtitle-1 font-italic">{{ form.clave_catastral ? 'No hay datos de valoración disponibles para este predio.' : 'Seleccione un predio para cargar los datos de valoración.' }}</p>
+          <v-btn
+            v-if="form.clave_catastral"
+            :class="['btn_app', tipoClaseButton, 'mt-3']"
+            @click="valorar"
+            prepend-icon="mdi-calculator"
+          >
+            Valorar Predio
+          </v-btn>
+        </div>
+      </v-card-text>
+    </v-card>
+    
+    <!-- Bloque Ejes Viales-->
     <v-card :class="[tipoClaseBlock]" class="fill-width">
       <v-card-title class="centered-title">EJES VIALES</v-card-title>
       <v-card-text>
@@ -379,7 +437,15 @@ export default {
         actualizador: '',
         fecha_actualizacion: '',        
         direccion_principal: '',
+        avaluo_terreno: 0,
+        avaluo_construccion: 0,
+        avaluo_adicionales: 0,
+        avaluo_total: 0,
       },
+      datosValoracion: [],
+      valoracionCargada: false,
+      anioProceso: '',
+      fechaProceso: '',
       // Catálogos
       tipoPredios: [],
       regimens: [],
@@ -537,6 +603,31 @@ export default {
 
   // Métodos del componente
   methods: {
+    formatCurrency(value) {
+      return new Intl.NumberFormat('es-EC', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(value);
+    },
+    
+    formatearFecha(fecha) {
+      if (!fecha) return '';
+      
+      try {
+        // Si la fecha viene en formato ISO o similar, la convertimos a objeto Date
+        const fechaObj = new Date(fecha);
+        // Formato: DD/MM/YYYY
+        return fechaObj.toLocaleDateString('es-EC', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      } catch (error) {
+        console.error('Error al formatear fecha:', error);
+        return fecha.toString(); // Devolvemos la fecha original como string en caso de error
+      }
+    },
     ...mapActions([
     'updateIdPredio','updateIdTenencia','updateIdVia','updateIdBloque','updateIdMejora', 'updateIdFoto', 
     'resetIdPredio','resetIdTenencia','resetIdVia','resetIdBloque','resetIdMejora', 'resetIdFoto',
@@ -848,6 +939,10 @@ export default {
           sector: predio.sector,
           area_grafica: predio.area_grafica,
           direccion_principal: predio.direccion_principal,
+          avaluo_terreno: 0,
+          avaluo_construccion: 0,
+          avaluo_adicionales: 0,
+          avaluo_total: 0,
         };
 
         this.idPredio = idPredio;
@@ -861,9 +956,72 @@ export default {
 
         // (opcional) Cargar área geográfica
         await this.caragaAreaGeo(predio.area_grafica);
+        
+        // ✅ Cargar datos de valoración
+        if (this.form.clave_catastral) {
+          await this.cargarValoracion(this.form.clave_catastral);
+        }
 
       } catch (error) {
         console.error('Error fetching predio:', error);
+      }
+    },
+    
+    // Método para cargar la valoración por clave catastral
+    async cargarValoracion(claveCatastral) {
+      try {
+        console.log('Cargando valoración para clave catastral:', claveCatastral);
+        const response = await axios.get(`${API_BASE_URL}/valoracion-por-clave/${claveCatastral}`);
+        if (response.data && response.data.length > 0) {
+          const valoracion = response.data[0];
+          console.log('Datos de valoración obtenidos:', valoracion);
+          
+          // Guardar el año y la fecha de proceso
+          this.anioProceso = valoracion.anio_proceso || '';
+          this.fechaProceso = valoracion.fecha_proceso ? this.formatearFecha(valoracion.fecha_proceso) : '';
+          
+          // Guardar los datos en la tabla de valoración
+          this.datosValoracion = [
+            { concepto: 'Valor del Terreno', valor: valoracion.valor_suelo_porcentual || 0 },
+            { concepto: 'Valor de Construcciones', valor: valoracion.valor_construcciones_porcentual || 0 },
+            { concepto: 'Valor de Adicionales', valor: valoracion.valor_adicionales_porcentual || 0 },
+            { concepto: 'Valor de Instalaciones', valor: valoracion.valor_instalaciones_porcentual || 0 },
+            { concepto: 'Avalúo Total del Predio', valor: valoracion.avaluo_predio_porcentual || 0 }
+          ];
+          
+          // También actualizar los campos del formulario para mostrarlos en la sección de valoración
+          this.form.avaluo_terreno = valoracion.valor_suelo_porcentual || 0;
+          this.form.avaluo_construccion = valoracion.valor_construcciones_porcentual || 0;
+          this.form.avaluo_adicionales = (parseFloat(valoracion.valor_adicionales_porcentual || 0) + 
+                                       parseFloat(valoracion.valor_instalaciones_porcentual || 0));
+          this.form.avaluo_total = valoracion.avaluo_predio_porcentual || 0;
+          
+          this.valoracionCargada = true;
+        } else {
+          console.log('No se encontraron datos de valoración para la clave catastral');
+          this.valoracionCargada = false;
+          this.datosValoracion = [];
+          this.anioProceso = '';
+          this.fechaProceso = '';
+          
+          // Limpiar los campos de valoración
+          this.form.avaluo_terreno = 0;
+          this.form.avaluo_construccion = 0;
+          this.form.avaluo_adicionales = 0;
+          this.form.avaluo_total = 0;
+        }
+      } catch (error) {
+        console.error('Error al cargar la valoración:', error);
+        this.valoracionCargada = false;
+        this.datosValoracion = [];
+        this.anioProceso = '';
+        this.fechaProceso = '';
+        
+        // Limpiar los campos de valoración en caso de error
+        this.form.avaluo_terreno = 0;
+        this.form.avaluo_construccion = 0;
+        this.form.avaluo_adicionales = 0;
+        this.form.avaluo_total = 0;
       }
     },
 
@@ -1156,9 +1314,9 @@ export default {
   
       const payload = {
         pr_anio: new Date().getFullYear(), // Año actual
-        var_tipo: 1, // Tipo 1: Urbano
+        var_tipo: this.form.id_tipo_predio || 1, // Tipo 1: Urbano por defecto
         pr_clave: this.form.clave_catastral, // Clave catastral
-        var_usuario: this.form.usuario // Nombre del usuario
+        var_usuario: this.userName // Nombre del usuario
       };
   
       console.log('Datos enviados a la API para valoración:', JSON.stringify(payload, null, 2));
@@ -1168,6 +1326,9 @@ export default {
         console.log('Respuesta de la API:', response.data);
         this.snackbarOk = 'Valoración generada correctamente';
         this.snackbarOkPush = true;
+        
+        // Recargar los datos de valoración después de ejecutar la valoración
+        await this.cargarValoracion(this.form.clave_catastral);
       } catch (error) {
         console.error('Error al ejecutar la valoración:', error);
         this.snackbarError = 'Error al generar la valoración';
@@ -1190,6 +1351,46 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos para la tabla de valoración */
+.valoracion-table {
+  border: 3px solid #276E90;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.valoracion-table :deep(.v-data-table__wrapper) {
+  background-color: #f8f8f8;
+}
+
+.valoracion-table :deep(.v-data-table__tbody tr:nth-of-type(odd)) {
+  background-color: #f2f9fc;
+}
+
+.valoracion-table :deep(.v-data-table__tbody tr) {
+  height: 50px;
+  font-size: 1.05rem;
+}
+
+.valoracion-table :deep(.v-data-table__tbody tr:last-child) {
+  font-weight: bold;
+  background-color: #e5f3fa;
+  border-top: 2px solid #276E90;
+  height: 60px;
+}
+
+.valoracion-table :deep(.v-data-table__thead) {
+  background-color: #276E90;
+}
+
+.valoracion-table :deep(.v-data-table__thead th) {
+  color: white !important;
+  font-weight: bold;
+  font-size: 1.1rem;
+  height: 60px;
+}
 
 .window-title {
   font-size: 1.5rem;
