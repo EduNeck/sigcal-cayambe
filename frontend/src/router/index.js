@@ -22,6 +22,9 @@ import consultaWsRoutes from './wsRegistro';
 import geoRoutes from './geo';
 import administracionRoutes from './administracion';
 
+// Componente para página offline
+import OfflinePage from '@/components/OfflinePage.vue';
+
 // Definición de rutas
 const routes = [
   {
@@ -31,6 +34,13 @@ const routes = [
       { path: '', component: LoginSistema },
       { path: '/login', component: LoginSistema },
     ]
+  },
+  // Ruta para página sin conexión - no requiere autenticación ni conexión a Internet
+  {
+    path: '/offline',
+    name: 'offline',
+    component: OfflinePage,
+    meta: { requiresConnection: false }
   },
   {
     path: '/',

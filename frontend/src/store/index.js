@@ -28,6 +28,12 @@ export default createStore({
       valoraRur: '',
       priv_admin: 'N',
       active: 'N'
+    },
+    pwa: {
+      updateAvailable: false,
+      registration: null,
+      isOnline: navigator.onLine,
+      offlineReady: false
     }
   },
   mutations: {
@@ -91,6 +97,19 @@ export default createStore({
     },
     setTipoPredio(state, tipo) {
       state.tipoPredio = tipo;
+    },
+    // Mutations para PWA
+    'pwa/setUpdateAvailable'(state, value) {
+      state.pwa.updateAvailable = value;
+    },
+    'pwa/setRegistration'(state, registration) {
+      state.pwa.registration = registration;
+    },
+    'pwa/setOfflineReady'(state, value) {
+      state.pwa.offlineReady = value;
+    },
+    'pwa/setNetworkStatus'(state, status) {
+      state.pwa.isOnline = status;
     }
   },
   actions: {
@@ -122,7 +141,18 @@ export default createStore({
     incrementBloquesCount({ commit }) { commit('incrementBloquesCount'); }, // 🏗️ Action para incrementar contador
     resetBloquesCount({ commit }) { commit('resetBloquesCount'); }, // 🏗️ Action para resetear contador
     incrementMejorasCount({ commit }) { commit('incrementMejorasCount'); }, // 🔧 Action para incrementar contador
-    resetMejorasCount({ commit }) { commit('resetMejorasCount'); } // 🔧 Action para resetear contador
+    resetMejorasCount({ commit }) { commit('resetMejorasCount'); }, // 🔧 Action para resetear contador
+    
+    // Acciones para PWA
+    updateServiceWorker({ state }) {
+      if (state.pwa.registration && state.pwa.registration.waiting) {
+        state.pwa.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        window.location.reload();
+      }
+    },
+    refreshApp() {
+      window.location.reload();
+    }
   },
   getters: {
     getIdPredio: (state) => state.idPredio,
@@ -180,5 +210,11 @@ export default createStore({
       (state.user.priv_tipo_sec === 'R' && ['C', 'E'].includes(state.user.priv_rol_sec)),
 
     isAdmin: (state) => state.user.priv_admin === 'Y',
+    
+    // Getters para PWA
+    pwaUpdateAvailable: (state) => state.pwa.updateAvailable,
+    pwaRegistration: (state) => state.pwa.registration,
+    isOnline: (state) => state.pwa.isOnline,
+    isOfflineReady: (state) => state.pwa.offlineReady,
   }
 });
