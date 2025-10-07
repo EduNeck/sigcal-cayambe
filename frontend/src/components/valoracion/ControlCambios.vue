@@ -157,35 +157,6 @@
       </v-card-text>
     </v-card>
 
-    <!-- Estadísticas -->
-    <v-card class="mb-4" v-if="estadisticas.length > 0">
-      <v-card-title class="bg-grey-lighten-4">
-        <v-icon left>mdi-chart-bar</v-icon>
-        Estadísticas del Período
-      </v-card-title>
-      
-      <v-card-text>
-        <v-row>
-          <v-col 
-            v-for="stat in estadisticas" 
-            :key="stat.accion_actividad"
-            cols="12" 
-            md="3"
-          >
-            <v-card outlined>
-              <v-card-text class="text-center">
-                <h3 class="text-h6">{{ stat.accion_actividad }}</h3>
-                <div class="text-h4 primary--text">{{ stat.total_cambios }}</div>
-                <div class="text-caption">
-                  {{ stat.predios_afectados }} predios | {{ stat.usuarios_involucrados }} usuarios
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
-
     <!-- Grid de datos -->
     <v-card>
       <v-card-title class="bg-grey-lighten-4 d-flex align-center">
@@ -285,24 +256,6 @@
         </v-chip>
       </v-card-title>
 
-      <!-- Estadísticas geográficas -->
-      <v-card-subtitle v-if="estadisticasGeo.length > 0" class="pa-4">
-        <div class="d-flex flex-wrap gap-2">
-          <v-chip
-            v-for="stat in estadisticasGeo"
-            :key="stat.accion_actividad"
-            :color="stat.accion_actividad === 'INSERT' ? 'success' : 'info'"
-            small
-            outlined
-          >
-            <v-icon left small>
-              {{ stat.accion_actividad === 'INSERT' ? 'mdi-plus' : 'mdi-pencil' }}
-            </v-icon>
-            {{ stat.accion_actividad }}: {{ stat.total_cambios }}
-          </v-chip>
-        </div>
-      </v-card-subtitle>
-
       <v-data-table
         :headers="headers"
         :items="cambiosGeo"
@@ -383,14 +336,12 @@ const router = useRouter();
 const loading = ref(false);
 const cambios = ref([]);
 const accionesDisponibles = ref([]);
-const estadisticas = ref([]);
 const totalRegistros = ref(0);
 
 // Variables reactivas - GEOGRÁFICOS
 const loadingGeo = ref(false);
 const cambiosGeo = ref([]);
 const accionesGeograficasDisponibles = ref([]);
-const estadisticasGeo = ref([]);
 const totalRegistrosGeo = ref(0);
 
 // Opciones para filtros
@@ -537,11 +488,6 @@ const buscarCambios = async () => {
     if (data.success) {
       cambios.value = data.data;
       totalRegistros.value = data.pagination.total;
-      
-      // Obtener estadísticas si hay fechas
-      if (fechasValidas.value) {
-        await obtenerEstadisticas();
-      }
     } else {
       console.error('Error al obtener cambios:', data.message);
       alert('Error al obtener los datos: ' + data.message);
@@ -564,29 +510,6 @@ const obtenerAccionesDisponibles = async () => {
     }
   } catch (error) {
     console.error('Error al obtener acciones:', error);
-  }
-};
-
-const obtenerEstadisticas = async () => {
-  if (!fechasValidas.value) return;
-
-  try {
-    const params = new URLSearchParams({
-      fecha_inicio: filtros.fecha_inicio,
-      fecha_fin: filtros.fecha_fin,
-      id_tipo_predio: tipoPredioActual.value // Incluir filtro de tipo
-    });
-
-    console.log('📊 Obteniendo estadísticas para tipo:', tipoPredioActual.value);
-
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/estadisticas-cambios?${params}`);
-    const data = await response.json();
-
-    if (data.success) {
-      estadisticas.value = data.data;
-    }
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
   }
 };
 
@@ -631,11 +554,6 @@ const buscarCambiosGeograficos = async () => {
     if (data.success) {
       cambiosGeo.value = data.data;
       totalRegistrosGeo.value = data.pagination.total;
-      
-      // Obtener estadísticas geográficas si hay fechas
-      if (fechasValidas.value) {
-        await obtenerEstadisticasGeograficas();
-      }
     } else {
       console.error('Error al obtener cambios geográficos:', data.message);
       alert('Error al obtener los datos geográficos: ' + data.message);
@@ -661,31 +579,6 @@ const obtenerAccionesGeograficasDisponibles = async () => {
   }
 };
 
-const obtenerEstadisticasGeograficas = async () => {
-  if (!fechasValidas.value) return;
-
-  try {
-    const tipoPredioTexto = tipoPredioActual.value === 1 ? 'URBANO' : 'RURAL';
-    
-    const params = new URLSearchParams({
-      fecha_inicio: filtros.fecha_inicio,
-      fecha_fin: filtros.fecha_fin,
-      id_tipo_predio: tipoPredioTexto // Tipo como texto para geográficos
-    });
-
-    console.log('📊 Obteniendo estadísticas geográficas para tipo:', tipoPredioTexto);
-
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/estadisticas-cambios-geograficos?${params}`);
-    const data = await response.json();
-
-    if (data.success) {
-      estadisticasGeo.value = data.data;
-    }
-  } catch (error) {
-    console.error('Error al obtener estadísticas geográficas:', error);
-  }
-};
-
 const limpiarFiltros = () => {
   Object.keys(filtros).forEach(key => {
     if (key !== 'id_tipo_predio') { // No limpiar el tipo de predio automático
@@ -695,7 +588,6 @@ const limpiarFiltros = () => {
   filtros.accion_actividad = null;
   // filtros.id_tipo_predio se mantiene para el filtro automático
   cambios.value = [];
-  estadisticas.value = [];
   totalRegistros.value = 0;
   paginacion.page = 1;
 };
