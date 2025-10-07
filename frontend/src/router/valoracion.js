@@ -9,6 +9,7 @@ export default [
   { path: '/valoracion-piso-factores', component: () => import('@/components/valoracion/ValoracionPisoFactores.vue'), meta: { requiresAuth: true } },
   { path: '/valoracion-resultados', component: () => import('@/components/valoracion/ValoracionResultados.vue'), meta: { requiresAuth: true } },
   { path: '/valoracion-suelo-factores', component: () => import('@/components/valoracion/ValoracionSueloFactores.vue'), meta: { requiresAuth: true } },    
-  { path: '/valores-comerciales', component: () => import('@/components/valoracion/ValoresComercialesPeritaje.vue'), meta: { requiresAuth: true } },       
+  { path: '/valores-comerciales', component: () => import('@/components/valoracion/ValoresComercialesPeritaje.vue'), meta: { requiresAuth: true } }, 
+  { path: '/control-cambios', component: () => import('@/components/valoracion/ControlCambios.vue'), meta: { requiresAuth: true } }      
 ];
 

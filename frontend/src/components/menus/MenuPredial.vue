@@ -91,6 +91,7 @@ export default {
         {
           titulo: 'VALORACIÓN',
           items: [
+            { title: 'Control Cambios', route: '/control-cambios' },
             { title: 'Genera Valoración', route: '/genera-valoracion' },
             { title: 'Valores Comerciales', route: '/valores-comerciales' },
             { title: 'Factores Suelo', route: '/valoracion-suelo-factores' },
