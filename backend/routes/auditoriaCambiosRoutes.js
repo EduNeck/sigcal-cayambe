@@ -193,4 +193,114 @@ router.get('/estadisticas-cambios-geograficos', async (req, res) => {
   }
 });
 
+// ========================================
+// RUTAS PARA CAMBIOS TOTALES (PREDIOS + GEOGRÁFICOS)
+// ========================================
+
+/**
+ * @route GET /api/auditoria/cambios-total
+ * @desc Obtener todos los cambios (predios + geográficos) desde view_cambios_total
+ * @access Public (solo lectura)
+ * @params {string} fecha_inicio - Fecha de inicio (YYYY-MM-DD)
+ * @params {string} fecha_fin - Fecha de fin (YYYY-MM-DD)
+ * @params {string} clave_catastral - Filtro por clave catastral (opcional)
+ * @params {string} usuario_actividad - Filtro por usuario (opcional)
+ * @params {string} accion_actividad - Filtro por acción (opcional)
+ * @params {number} id_tipo_predio - Filtro por tipo de predio: 1=Urbano, 2=Rural (opcional)
+ * @params {number} page - Número de página (opcional, default: 1)
+ * @params {number} pageSize - Tamaño de página (opcional, default: 50)
+ * @params {string} sortField - Campo de ordenación (opcional, default: fecha_actividad)
+ * @params {string} sortOrder - Orden ASC/DESC (opcional, default: DESC)
+ */
+router.get('/cambios-total', async (req, res) => {
+  try {
+    console.log('🔍 Consultando cambios totales (predios + geográficos):', req.query);
+    
+    const result = await auditoriaCambios.obtenerCambiosTotal(req.query);
+    
+    res.json({
+      success: true,
+      data: result.items,
+      pagination: result.pagination,
+      message: `Se encontraron ${result.pagination.total} registros de cambios totales`
+    });
+  } catch (error) {
+    console.error('❌ Error al consultar cambios totales:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al consultar los cambios totales',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/auditoria/acciones-totales-disponibles
+ * @desc Obtener lista de acciones disponibles desde la vista total
+ * @access Public (solo lectura)
+ */
+router.get('/acciones-totales-disponibles', async (req, res) => {
+  try {
+    console.log('🔍 Obteniendo acciones totales disponibles');
+    
+    const acciones = await auditoriaCambios.obtenerAccionesTotalesDisponibles();
+    
+    res.json({
+      success: true,
+      data: acciones,
+      message: `Se encontraron ${acciones.length} tipos de acciones totales`
+    });
+  } catch (error) {
+    console.error('❌ Error al obtener acciones totales disponibles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las acciones totales disponibles',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/auditoria/estadisticas-cambios-total
+ * @desc Obtener estadísticas de todos los cambios por período
+ * @access Public (solo lectura)
+ * @params {string} fecha_inicio - Fecha de inicio (YYYY-MM-DD) - Obligatorio
+ * @params {string} fecha_fin - Fecha de fin (YYYY-MM-DD) - Obligatorio
+ * @params {number} id_tipo_predio - Filtro por tipo de predio (opcional)
+ */
+router.get('/estadisticas-cambios-total', async (req, res) => {
+  try {
+    console.log('📊 Obteniendo estadísticas de cambios totales:', req.query);
+    
+    const { fecha_inicio, fecha_fin, id_tipo_predio } = req.query;
+    
+    if (!fecha_inicio || !fecha_fin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Los parámetros fecha_inicio y fecha_fin son obligatorios'
+      });
+    }
+    
+    const estadisticas = await auditoriaCambios.obtenerEstadisticasCambiosTotal(
+      fecha_inicio, 
+      fecha_fin,
+      id_tipo_predio
+    );
+    
+    res.json({
+      success: true,
+      data: estadisticas,
+      periodo: { fecha_inicio, fecha_fin, id_tipo_predio },
+      message: `Estadísticas totales generadas para el período ${fecha_inicio} - ${fecha_fin}${id_tipo_predio ? ` (Tipo: ${id_tipo_predio})` : ''}`
+    });
+  } catch (error) {
+    console.error('❌ Error al generar estadísticas totales:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar las estadísticas de cambios totales',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -157,13 +157,13 @@
       </v-card-text>
     </v-card>
 
-    <!-- Grid de datos -->
+    <!-- Grid de datos unificado -->
     <v-card>
-      <v-card-title class="bg-grey-lighten-4 d-flex align-center">
-        <v-icon left>mdi-table</v-icon>
-        Cambios de Predios
+      <v-card-title class="bg-primary text-white d-flex align-center">
+        <v-icon left color="white">mdi-table</v-icon>
+        Control de Cambios - {{ tituloTipoPredio }}
         <v-spacer></v-spacer>
-        <v-chip color="info" outlined v-if="totalRegistros > 0">
+        <v-chip color="white" text-color="primary" v-if="totalRegistros > 0">
           {{ totalRegistros }} registros encontrados
         </v-chip>
       </v-card-title>
@@ -184,7 +184,9 @@
       >
         <!-- Slot personalizado para fecha -->
         <template v-slot:item.fecha_actividad="{ item }">
-          <span>{{ formatearFecha(item.fecha_actividad) }}</span>
+          <v-chip color="info" small>
+            {{ formatearFecha(item.fecha_actividad) }}
+          </v-chip>
         </template>
 
         <!-- Slot personalizado para clave catastral -->
@@ -201,17 +203,23 @@
             dark 
             small
           >
-            {{ item.id_tipo_predio === 1 ? 'URB' : 'RUR' }}
+            <v-icon left small>
+              {{ item.id_tipo_predio === 1 ? 'mdi-city' : 'mdi-pine-tree' }}
+            </v-icon>
+            {{ item.id_tipo_predio === 1 ? 'URBANO' : 'RURAL' }}
           </v-chip>
         </template>
 
         <!-- Slot personalizado para acción -->
         <template v-slot:item.accion_actividad="{ item }">
           <v-chip 
-            :color="getColorAccion(item.accion_actividad)" 
+            :color="getChipColor(item.accion_actividad)" 
             dark 
             small
           >
+            <v-icon left small>
+              {{ getActionIcon(item.accion_actividad) }}
+            </v-icon>
             {{ item.accion_actividad }}
           </v-chip>
         </template>
@@ -222,6 +230,20 @@
             <v-icon left small>mdi-account</v-icon>
             {{ item.usuario_actividad }}
           </div>
+        </template>
+
+        <!-- Slot personalizado para fuente -->
+        <template v-slot:item.fuente="{ item }">
+          <v-chip 
+            :color="getFuenteColor(item.fuente)" 
+            dark 
+            small
+          >
+            <v-icon left small>
+              {{ getFuenteIcon(item.fuente) }}
+            </v-icon>
+            {{ getFuenteLabel(item.fuente) }}
+          </v-chip>
         </template>
 
         <!-- Estado vacío -->
@@ -244,80 +266,6 @@
         </template>
       </v-data-table>
     </v-card>
-
-    <!-- SECCIÓN DE CAMBIOS GEOGRÁFICOS -->
-    <v-card class="mt-6">
-      <v-card-title class="bg-success text-white d-flex align-center">
-        <v-icon left>mdi-map</v-icon>
-        Cambios Geográficos
-        <v-spacer></v-spacer>
-        <v-chip color="white" text-color="black" small>
-          Total: {{ totalRegistrosGeo }}
-        </v-chip>
-      </v-card-title>
-
-      <v-data-table
-        :headers="headers"
-        :items="cambiosGeo"
-        :loading="loadingGeo"
-        :server-items-length="totalRegistrosGeo"
-        v-model:page="paginacion.page"
-        v-model:items-per-page="paginacion.pageSize"
-        @update:options="actualizarTablaGeografica"
-        class="elevation-1"
-        :footer-props="{
-          'items-per-page-text': 'Registros por página:',
-          'page-text': '{0}-{1} de {2}',
-          'items-per-page-options': [10, 25, 50, 100]
-        }"
-        no-data-text="No se encontraron cambios geográficos"
-        loading-text="Cargando cambios geográficos..."
-        :items-per-page="25"
-      >
-        <!-- Slot personalizado para la columna de fecha -->
-        <template v-slot:item.fecha_actividad="{ item }">
-          <v-chip color="info" small>
-            {{ new Date(item.fecha_actividad).toLocaleString('es-ES') }}
-          </v-chip>
-        </template>
-
-        <!-- Slot personalizado para la columna de tipo -->
-        <template v-slot:item.id_tipo_predio="{ item }">
-          <v-chip 
-            :color="item.id_tipo_predio === 'URBANO' ? 'blue' : 'green'" 
-            dark 
-            small
-          >
-            <v-icon left small>
-              {{ item.id_tipo_predio === 'URBANO' ? 'mdi-city' : 'mdi-pine-tree' }}
-            </v-icon>
-            {{ item.id_tipo_predio }}
-          </v-chip>
-        </template>
-
-        <!-- Slot personalizado para la columna de acción -->
-        <template v-slot:item.accion_actividad="{ item }">
-          <v-chip 
-            :color="item.accion_actividad === 'INSERT' ? 'success' : 'warning'" 
-            dark 
-            small
-          >
-            <v-icon left small>
-              {{ item.accion_actividad === 'INSERT' ? 'mdi-plus' : 'mdi-pencil' }}
-            </v-icon>
-            {{ item.accion_actividad }}
-          </v-chip>
-        </template>
-
-        <!-- Loading personalizado -->
-        <template v-slot:loading>
-          <div class="text-center pa-4">
-            <v-progress-circular indeterminate color="success"></v-progress-circular>
-            <div class="text-body-2 mt-2">Cargando cambios geográficos...</div>
-          </div>
-        </template>
-      </v-data-table>
-    </v-card>
   </v-container>
 </template>
 
@@ -332,17 +280,11 @@ const store = useStore();
 const router = useRouter();
 
 // Estado reactivo
-// Variables reactivas - PREDIOS
+// Variables reactivas unificadas
 const loading = ref(false);
 const cambios = ref([]);
 const accionesDisponibles = ref([]);
 const totalRegistros = ref(0);
-
-// Variables reactivas - GEOGRÁFICOS
-const loadingGeo = ref(false);
-const cambiosGeo = ref([]);
-const accionesGeograficasDisponibles = ref([]);
-const totalRegistrosGeo = ref(0);
 
 // Opciones para filtros
 const tiposPredio = [
@@ -443,7 +385,12 @@ const tituloTipoPredio = computed(() => {
 
 // Métodos
 const buscarCambios = async () => {
-  if (!fechasValidas.value) {
+  console.log('🔍 Iniciando búsqueda unificada de cambios...');
+  console.log('📅 Fechas válidas:', fechasValidas.value);
+  console.log('📊 Filtros actuales:', filtros);
+  
+  if (!filtros.fecha_inicio || !filtros.fecha_fin) {
+    console.log('❌ Fechas no válidas:', { inicio: filtros.fecha_inicio, fin: filtros.fecha_fin });
     alert('Las fechas de inicio y fin son obligatorias');
     return;
   }
@@ -473,7 +420,7 @@ const buscarCambios = async () => {
       }
     });
     
-    console.log('🔍 Buscando cambios para tipo:', filtrosConTipo.id_tipo_predio === 1 ? 'URBANO' : 'RURAL');
+    console.log('🔍 Buscando cambios totales para tipo:', filtrosConTipo.id_tipo_predio === 1 ? 'URBANO' : 'RURAL');
 
     // Remover parámetros vacíos
     Object.keys(filtros).forEach(key => {
@@ -482,14 +429,30 @@ const buscarCambios = async () => {
       }
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/cambios-predios?${params}`);
+    const url = `${API_BASE_URL}/api/auditoria/cambios-total?${params}`;
+    console.log('🌐 URL de consulta:', url);
+    console.log('📨 Parámetros enviados:', params.toString());
+
+    const response = await fetch(url);
+    console.log('📥 Respuesta del servidor:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('📦 Datos recibidos:', data);
 
     if (data.success) {
-      cambios.value = data.data;
-      totalRegistros.value = data.pagination.total;
+      cambios.value = data.data || []; // Asegurar array vacío si no hay datos
+      totalRegistros.value = data.pagination?.total || 0;
+      
+      console.log('✅ Datos asignados:', { 
+        totalCambios: cambios.value.length, 
+        totalRegistros: totalRegistros.value 
+      });
     } else {
-      console.error('Error al obtener cambios:', data.message);
+      console.error('❌ Error en respuesta del servidor:', data.message);
       alert('Error al obtener los datos: ' + data.message);
     }
   } catch (error) {
@@ -502,80 +465,15 @@ const buscarCambios = async () => {
 
 const obtenerAccionesDisponibles = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/acciones-disponibles`);
+    const response = await fetch(`${API_BASE_URL}/api/auditoria/acciones-totales-disponibles`);
     const data = await response.json();
     
     if (data.success) {
       accionesDisponibles.value = data.data;
+      console.log('✅ Acciones totales disponibles cargadas:', data.data);
     }
   } catch (error) {
-    console.error('Error al obtener acciones:', error);
-  }
-};
-
-// ========================================
-// FUNCIONES PARA CAMBIOS GEOGRÁFICOS
-// ========================================
-
-const buscarCambiosGeograficos = async () => {
-  if (!fechasValidas.value) {
-    alert('Las fechas de inicio y fin son obligatorias');
-    return;
-  }
-
-  loadingGeo.value = true;
-  
-  try {
-    // Para cambios geográficos, el tipo de predio también es numérico
-    // Aplicar filtros para cambios geográficos
-    const filtrosGeo = {
-      ...filtros,
-      id_tipo_predio: tipoPredioActual.value, // Tipo de predio como número
-      page: paginacion.page,
-      pageSize: paginacion.pageSize,
-      sortField: paginacion.sortField,
-      sortOrder: paginacion.sortOrder
-    };
-    
-    const params = new URLSearchParams();
-    
-    // Agregar parámetros
-    Object.keys(filtrosGeo).forEach(key => {
-      if (filtrosGeo[key] !== null && filtrosGeo[key] !== '' && filtrosGeo[key] !== undefined) {
-        params.append(key, filtrosGeo[key]);
-      }
-    });
-    
-    console.log('🗺️ Buscando cambios geográficos para tipo:', tipoPredioActual.value === 1 ? 'URBANO' : 'RURAL');
-
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/cambios-geograficos?${params}`);
-    const data = await response.json();
-
-    if (data.success) {
-      cambiosGeo.value = data.data;
-      totalRegistrosGeo.value = data.pagination.total;
-    } else {
-      console.error('Error al obtener cambios geográficos:', data.message);
-      alert('Error al obtener los datos geográficos: ' + data.message);
-    }
-  } catch (error) {
-    console.error('Error de conexión geográfica:', error);
-    alert('Error de conexión al servidor para datos geográficos');
-  } finally {
-    loadingGeo.value = false;
-  }
-};
-
-const obtenerAccionesGeograficasDisponibles = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/auditoria/acciones-geograficas-disponibles`);
-    const data = await response.json();
-    
-    if (data.success) {
-      accionesGeograficasDisponibles.value = data.data;
-    }
-  } catch (error) {
-    console.error('Error al obtener acciones geográficas:', error);
+    console.error('Error al obtener acciones totales:', error);
   }
 };
 
@@ -605,19 +503,6 @@ const actualizarTabla = (options) => {
   }
 };
 
-const actualizarTablaGeografica = (options) => {
-  if (options.page) paginacion.page = options.page;
-  if (options.itemsPerPage) paginacion.pageSize = options.itemsPerPage;
-  if (options.sortBy && options.sortBy.length > 0) {
-    paginacion.sortField = options.sortBy[0].key;
-    paginacion.sortOrder = options.sortBy[0].order === 'asc' ? 'ASC' : 'DESC';
-  }
-  
-  if (fechasValidas.value) {
-    buscarCambiosGeograficos();
-  }
-};
-
 const formatearFecha = (fecha) => {
   if (!fecha) return '';
   return new Date(fecha).toLocaleDateString('es-ES', {
@@ -636,6 +521,28 @@ const getColorAccion = (accion) => {
     'DELETE': 'error',
     'CREATE': 'info',
     'MODIFY': 'orange'
+  };
+  return colores[accion] || 'grey';
+};
+
+const getActionIcon = (accion) => {
+  const iconos = {
+    'INSERT': 'mdi-plus',
+    'UPDATE': 'mdi-pencil',
+    'DELETE': 'mdi-delete',
+    'CREATE': 'mdi-plus-circle',
+    'MODIFY': 'mdi-pencil-circle'
+  };
+  return iconos[accion] || 'mdi-help-circle';
+};
+
+const getChipColor = (accion) => {
+  const colores = {
+    'INSERT': 'success',
+    'UPDATE': 'info',
+    'DELETE': 'error',
+    'CREATE': 'primary',
+    'MODIFY': 'warning'
   };
   return colores[accion] || 'grey';
 };
@@ -668,6 +575,58 @@ const salir = () => {
   router.push('/menu-predial');
 };
 
+// Funciones helper para fuentes
+const getFuenteColor = (fuente) => {
+  const fuentesGeograficas = ['geo_predio', 'geo_bloque', 'geo_manzana', 'geo_limite', 'geo_construccion'];
+  const fuentesPredios = ['predios', 'predio', 'avaluos', 'tenencia', 'mejoras'];
+  const fuentesVias = ['vias', 'via'];
+  
+  if (fuentesGeograficas.includes(fuente)) {
+    return 'teal';
+  } else if (fuentesPredios.includes(fuente)) {
+    return 'orange';
+  } else if (fuentesVias.includes(fuente)) {
+    return 'purple';
+  } else {
+    return 'grey';
+  }
+};
+
+const getFuenteIcon = (fuente) => {
+  const fuentesGeograficas = ['geo_predio', 'geo_bloque', 'geo_manzana', 'geo_limite', 'geo_construccion'];
+  const fuentesPredios = ['predios', 'predio', 'avaluos', 'tenencia', 'mejoras'];
+  const fuentesVias = ['vias', 'via'];
+  
+  if (fuentesGeograficas.includes(fuente)) {
+    return 'mdi-map';
+  } else if (fuentesPredios.includes(fuente)) {
+    return 'mdi-home';
+  } else if (fuentesVias.includes(fuente)) {
+    return 'mdi-road';
+  } else {
+    return 'mdi-database';
+  }
+};
+
+const getFuenteLabel = (fuente) => {
+  const labels = {
+    'geo_predio': 'GEO PREDIO',
+    'geo_bloque': 'GEO BLOQUE',
+    'geo_manzana': 'GEO MANZANA',
+    'geo_limite': 'GEO LÍMITE',
+    'geo_construccion': 'GEO CONSTRUCCIÓN',
+    'predios': 'PREDIOS',
+    'predio': 'PREDIO',
+    'avaluos': 'AVALÚOS',
+    'tenencia': 'TENENCIA',
+    'mejoras': 'MEJORAS',
+    'vias': 'VÍAS',
+    'via': 'VÍA'
+  };
+  
+  return labels[fuente] || fuente.toUpperCase();
+};
+
 // Watchers
 watch(() => paginacion.pageSize, () => {
   paginacion.page = 1;
@@ -682,7 +641,6 @@ watch(() => tipoPredioActual.value, (nuevoTipo) => {
   filtros.id_tipo_predio = nuevoTipo;
   if (fechasValidas.value) {
     buscarCambios();
-    buscarCambiosGeograficos();
   }
 });
 
@@ -703,13 +661,9 @@ onMounted(async () => {
   console.log('📅 Configurado para el día actual:', fechaHoy);
   console.log('🎯 Filtro automático aplicado:', filtros.id_tipo_predio === 1 ? 'URBANO' : 'RURAL');
   
-  // Cargar datos iniciales para PREDIOS
+  // Cargar datos iniciales unificados
   await obtenerAccionesDisponibles();
   await buscarCambios();
-  
-  // Cargar datos iniciales para GEOGRÁFICOS
-  await obtenerAccionesGeograficasDisponibles();
-  await buscarCambiosGeograficos();
 });
 </script>
 
