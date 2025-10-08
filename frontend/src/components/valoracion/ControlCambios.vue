@@ -144,6 +144,16 @@
               </v-btn>
 
               <v-btn
+                color="orange"
+                @click="abrirValoracion"
+                :disabled="loading || registrosSeleccionados.length === 0"
+                prepend-icon="mdi-calculator"
+                class="mr-2"
+              >
+                Valoración
+              </v-btn>
+
+              <v-btn
                 color="error"
                 @click="salir"
                 :disabled="loading"
@@ -166,6 +176,15 @@
         <v-chip color="white" text-color="primary" v-if="totalRegistros > 0">
           {{ totalRegistros }} registros encontrados
         </v-chip>
+        <v-chip 
+          color="orange" 
+          text-color="white" 
+          v-if="registrosSeleccionados.length > 0"
+          class="ml-2"
+        >
+          <v-icon left small>mdi-check-circle</v-icon>
+          {{ registrosSeleccionados.length }} seleccionados
+        </v-chip>
       </v-card-title>
 
       <v-data-table
@@ -175,6 +194,10 @@
         :server-items-length="totalRegistros"
         v-model:page="paginacion.page"
         v-model:items-per-page="paginacion.pageSize"
+        v-model:selected="registrosSeleccionados"
+        show-select
+        item-value="indice_actividad"
+        return-object
         @update:options="actualizarTabla"
         class="elevation-1"
         :footer-props="{
@@ -267,6 +290,25 @@
       </v-data-table>
     </v-card>
   </v-container>
+
+  <!-- Snackbar para mensajes -->
+  <v-snackbar
+    v-model="snackbar.show"
+    :color="snackbar.color"
+    :timeout="snackbar.timeout"
+    location="top right"
+  >
+    {{ snackbar.message }}
+    <template v-slot:actions>
+      <v-btn
+        color="white"
+        variant="text"
+        @click="snackbar.show = false"
+      >
+        Cerrar
+      </v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <script setup>
@@ -285,6 +327,18 @@ const loading = ref(false);
 const cambios = ref([]);
 const accionesDisponibles = ref([]);
 const totalRegistros = ref(0);
+
+// Variables para selección
+const registrosSeleccionados = ref([]);
+const seleccionarTodos = ref(false);
+
+// Variables para snackbar
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'info',
+  timeout: 4000
+});
 
 // Opciones para filtros
 const tiposPredio = [
@@ -391,7 +445,7 @@ const buscarCambios = async () => {
   
   if (!filtros.fecha_inicio || !filtros.fecha_fin) {
     console.log('❌ Fechas no válidas:', { inicio: filtros.fecha_inicio, fin: filtros.fecha_fin });
-    alert('Las fechas de inicio y fin son obligatorias');
+    mostrarSnackbar('Las fechas de inicio y fin son obligatorias', 'warning');
     return;
   }
 
@@ -453,11 +507,11 @@ const buscarCambios = async () => {
       });
     } else {
       console.error('❌ Error en respuesta del servidor:', data.message);
-      alert('Error al obtener los datos: ' + data.message);
+      mostrarSnackbar('Error al obtener los datos: ' + data.message, 'error');
     }
   } catch (error) {
     console.error('Error de conexión:', error);
-    alert('Error de conexión al servidor');
+    mostrarSnackbar('Error de conexión al servidor', 'error');
   } finally {
     loading.value = false;
   }
@@ -570,6 +624,56 @@ const exportarDatos = () => {
   window.URL.revokeObjectURL(url);
 };
 
+// Funciones de selección
+const limpiarSeleccion = () => {
+  registrosSeleccionados.value = [];
+};
+
+const seleccionarTodosVisible = () => {
+  registrosSeleccionados.value = [...cambios.value];
+};
+
+const exportarSeleccionados = () => {
+  if (registrosSeleccionados.value.length === 0) return;
+
+  const csv = [
+    // Header
+    headers.map(h => h.title).join(','),
+    // Data
+    ...registrosSeleccionados.value.map(item => 
+      headers.map(h => item[h.key] || '').join(',')
+    )
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cambios_seleccionados_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+
+// Función helper para mostrar snackbar
+const mostrarSnackbar = (message, color = 'info') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+    timeout: 4000
+  };
+};
+
+const abrirValoracion = () => {
+  if (registrosSeleccionados.value.length === 0) return;  
+  // Extraer las claves catastrales únicas de los registros seleccionados
+  const clavesCatastrales = [...new Set(registrosSeleccionados.value.map(item => item.clave_catastral))];  
+  mostrarSnackbar(`Abriendo valoración para ${clavesCatastrales.length} predios: ${clavesCatastrales.join(', ')}`, 'success');
+
+};
+
 const salir = () => {
   // Navegar al menú predial usando el router
   router.push('/menu-predial');
@@ -633,6 +737,16 @@ watch(() => paginacion.pageSize, () => {
   if (fechasValidas.value) {
     buscarCambios();
   }
+});
+
+// Limpiar selección cuando cambien los datos
+watch(() => cambios.value, () => {
+  registrosSeleccionados.value = [];
+});
+
+// Limpiar selección cuando cambie la página
+watch(() => paginacion.page, () => {
+  registrosSeleccionados.value = [];
 });
 
 // Watcher para detectar cambios en el tipo de predio
