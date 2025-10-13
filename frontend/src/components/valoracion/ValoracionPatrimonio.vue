@@ -121,6 +121,22 @@
               </v-chip>
             </template>
 
+            <!-- Slot personalizado para fecha de proceso -->
+            <template v-slot:item.fecha_proceso="{ item }">
+              <v-chip 
+                v-if="item.fecha_proceso"
+                size="small" 
+                color="info" 
+                variant="outlined"
+              >
+                <v-icon start size="14">mdi-calendar-clock</v-icon>
+                {{ formatearFechaProceso(item.fecha_proceso) }}
+              </v-chip>
+              <span v-else class="text-grey text-caption">
+                Sin fecha
+              </span>
+            </template>
+
             <!-- Estado sin datos mejorado -->
             <template v-slot:no-data>
               <div class="text-center pa-8">
@@ -279,6 +295,13 @@ export default {
           width: '100px',
           align: 'center'
         },
+        { 
+          title: 'Fecha Proceso', 
+          key: 'fecha_proceso',
+          sortable: true,
+          width: '140px',
+          align: 'center'
+        },
         { title: 'Expandir', value: 'data-table-expand' },
       ],
     };
@@ -377,6 +400,29 @@ export default {
       }
       
       return value;
+    },
+
+    formatearFechaProceso(fecha) {
+      if (!fecha) return '';
+      
+      try {
+        const fechaObj = new Date(fecha);
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fechaObj.getTime())) {
+          return fecha; // Retornar el valor original si no se puede parsear
+        }
+        
+        // Formatear fecha en formato DD/MM/YYYY
+        return fechaObj.toLocaleDateString('es-EC', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      } catch (error) {
+        console.warn('Error al formatear fecha de proceso:', error);
+        return fecha; // Retornar el valor original en caso de error
+      }
     },
   },
   created() {

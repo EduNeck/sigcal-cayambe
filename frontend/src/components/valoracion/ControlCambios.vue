@@ -153,16 +153,6 @@
                 Valoración ({{ registrosSeleccionados.length }})
               </v-btn>
 
-              <!-- Botón temporal de debug -->
-              <v-btn
-                color="purple"
-                @click="debugSeleccion"
-                size="small"
-                class="mr-2"
-              >
-                Debug
-              </v-btn>
-
               <v-btn
                 color="error"
                 @click="salir"
@@ -194,6 +184,23 @@
         >
           <v-icon left small>mdi-check-circle</v-icon>
           {{ registrosSeleccionados.length }} seleccionados
+        </v-chip>
+        
+        <!-- Indicador de carga de valoraciones -->
+        <v-chip 
+          color="info" 
+          text-color="white" 
+          v-if="loadingValoraciones"
+          class="ml-2"
+        >
+          <v-progress-circular 
+            indeterminate 
+            color="white" 
+            size="16" 
+            width="2" 
+            class="mr-2"
+          ></v-progress-circular>
+          Cargando valoraciones...
         </v-chip>
       </v-card-title>
 
@@ -234,6 +241,44 @@
           <v-chip color="info" small>
             {{ formatearFecha(item.fecha_actividad) }}
           </v-chip>
+        </template>
+
+        <!-- Slot personalizado para fecha de última valoración -->
+        <template v-slot:item.fecha_ultima_valoracion="{ item }">
+          <div class="d-flex align-center">
+            <v-progress-circular 
+              v-if="loadingValoraciones && !item.fecha_ultima_valoracion"
+              indeterminate 
+              color="primary" 
+              size="16"
+              width="2"
+              class="mr-2"
+            ></v-progress-circular>
+            
+            <v-chip 
+              v-if="item.fecha_ultima_valoracion"
+              color="success" 
+              variant="outlined"
+              size="small"
+            >
+              <v-icon start size="14">mdi-calendar-check</v-icon>
+              {{ formatearFecha(item.fecha_ultima_valoracion) }}
+            </v-chip>
+            
+            <v-chip 
+              v-else-if="!loadingValoraciones"
+              color="warning" 
+              variant="outlined"
+              size="small"
+            >
+              <v-icon start size="14">mdi-calendar-remove</v-icon>
+              Sin valoración
+            </v-chip>
+            
+            <span v-else class="text-caption text-grey">
+              Cargando...
+            </span>
+          </div>
         </template>
 
         <!-- Slot personalizado para clave catastral -->
@@ -532,6 +577,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 import { API_BASE_URL } from '../../main.js';
 
 // Store de Vuex y Router
@@ -548,6 +594,10 @@ const totalRegistros = ref(0);
 // Variables para selección
 const registrosSeleccionados = ref([]);
 const seleccionarTodos = ref(false);
+
+// Variables para gestión de fechas de valoración
+const cacheValoraciones = ref(new Map()); // Cache para evitar consultas repetidas
+const loadingValoraciones = ref(false);
 
 // Variables para snackbar
 const snackbar = ref({
@@ -614,6 +664,12 @@ const headers = [
     key: 'fecha_actividad',
     sortable: true,
     width: '150px'
+  },
+  {
+    title: 'Última Valoración',
+    key: 'fecha_ultima_valoracion',
+    sortable: true,
+    width: '160px'
   },
   {
     title: 'Tipo',
@@ -694,6 +750,141 @@ const headersConSeleccion = computed(() => [
 ]);
 
 // Métodos
+
+// Función para obtener fecha de última valoración de una clave catastral
+const obtenerFechaValoracion = async (claveCatastral) => {
+  try {
+    // Verificar si ya tenemos la información en cache
+    if (cacheValoraciones.value.has(claveCatastral)) {
+      const fechaCache = cacheValoraciones.value.get(claveCatastral);
+      return fechaCache;
+    }
+
+    // Usar axios con configuración para manejar 404 de manera silenciosa
+    const response = await axios.get(`${API_BASE_URL}/api/valoracion-por-clave/${claveCatastral}`, {
+      validateStatus: function (status) {
+        // Considerar tanto 200 como 404 como respuestas válidas
+        return status === 200 || status === 404;
+      }
+    });
+
+    // Si es 404, significa que no hay valorización para esta clave
+    if (response.status === 404) {
+      cacheValoraciones.value.set(claveCatastral, null);
+      return null;
+    }
+    
+    // Si llegamos aquí, es una respuesta 200
+    if (response.data && response.data.length > 0) {
+      // Verificar que tengan el campo fecha_proceso
+      const valoracionesValidas = response.data.filter(v => v.fecha_proceso);
+      
+      if (valoracionesValidas.length > 0) {
+        // Ordenar por fecha_proceso y tomar la más reciente
+        const valoraciones = valoracionesValidas.sort((a, b) => new Date(b.fecha_proceso) - new Date(a.fecha_proceso));
+        const fechaUltima = valoraciones[0].fecha_proceso;
+        
+        // Guardar en cache
+        cacheValoraciones.value.set(claveCatastral, fechaUltima);
+        return fechaUltima;
+      } else {
+        cacheValoraciones.value.set(claveCatastral, null);
+        return null;
+      }
+    } else {
+      // Guardar en cache que no hay valoración
+      cacheValoraciones.value.set(claveCatastral, null);
+      return null;
+    }
+  } catch (error) {
+    // Solo errores inesperados (no 404) llegan aquí
+    console.warn(`Error inesperado al obtener valoración para clave ${claveCatastral}:`, error.message);
+    // Guardar en cache que hubo error (tratado como sin valoración)
+    cacheValoraciones.value.set(claveCatastral, null);
+    return null;
+  }
+};
+
+// Función para obtener fechas de valoración en lotes (optimizado)
+const obtenerFechasValoracionBatch = async (clavesCatastrales) => {
+  loadingValoraciones.value = true;
+  const resultados = new Map();
+  
+  try {
+    // Filtrar claves que no están en cache
+    const clavesNoEnCache = clavesCatastrales.filter(clave => !cacheValoraciones.value.has(clave));
+    const clavesEnCache = clavesCatastrales.filter(clave => cacheValoraciones.value.has(clave));
+    
+    // Agregar datos del cache
+    clavesEnCache.forEach(clave => {
+      resultados.set(clave, cacheValoraciones.value.get(clave));
+    });
+    
+    // Hacer consultas en paralelo para las claves no cacheadas (máximo 5 simultáneas)
+    if (clavesNoEnCache.length > 0) {
+      const chunks = [];
+      for (let i = 0; i < clavesNoEnCache.length; i += 5) {
+        chunks.push(clavesNoEnCache.slice(i, i + 5));
+      }
+      
+      for (let chunk of chunks) {
+        const promesas = chunk.map(clave => obtenerFechaValoracion(clave));
+        const fechas = await Promise.all(promesas);
+        
+        chunk.forEach((clave, index) => {
+          resultados.set(clave, fechas[index]);
+        });
+      }
+    }
+    
+    return resultados;
+  } catch (error) {
+    console.error('Error al obtener fechas de valoración:', error);
+    return resultados;
+  } finally {
+    loadingValoraciones.value = false;
+  }
+};
+
+// Función para enriquecer los datos con fechas de valoración
+const enriquecerConFechasValoracion = async (datosOriginales) => {
+  if (!datosOriginales || datosOriginales.length === 0) {
+    return datosOriginales;
+  }
+  
+  // Extraer claves catastrales únicas
+  const clavesCatastrales = [...new Set(datosOriginales.map(item => item.clave_catastral))];
+  
+  // Obtener fechas de valoración
+  const fechasValoracion = await obtenerFechasValoracionBatch(clavesCatastrales);
+  
+  // Enriquecer los datos originales
+  return datosOriginales.map(item => ({
+    ...item,
+    fecha_ultima_valoracion: fechasValoracion.get(item.clave_catastral)
+  }));
+};
+
+// Función para refrescar valoración de una clave específica
+const refrescarValoracionClave = async (claveCatastral) => {
+  console.log(`🔄 Refrescando valoración para clave: ${claveCatastral}`);
+  
+  // Limpiar cache
+  cacheValoraciones.value.delete(claveCatastral);
+  
+  // Obtener nueva fecha
+  const nuevaFecha = await obtenerFechaValoracion(claveCatastral);
+  
+  // Actualizar el grid si la clave está presente
+  const index = cambios.value.findIndex(item => item.clave_catastral === claveCatastral);
+  if (index >= 0) {
+    cambios.value[index].fecha_ultima_valoracion = nuevaFecha;
+    console.log(`✅ Grid actualizado para ${claveCatastral}:`, nuevaFecha);
+  }
+  
+  return nuevaFecha;
+};
+
 const buscarCambios = async () => {
   console.log('🔍 Iniciando búsqueda unificada de cambios...');
   console.log('📅 Fechas válidas:', fechasValidas.value);
@@ -754,13 +945,43 @@ const buscarCambios = async () => {
     console.log('📦 Datos recibidos:', data);
 
     if (data.success) {
-      cambios.value = data.data || []; // Asegurar array vacío si no hay datos
+      const datosOriginales = data.data || []; // Asegurar array vacío si no hay datos
       totalRegistros.value = data.pagination?.total || 0;
       
-      console.log('✅ Datos asignados:', { 
-        totalCambios: cambios.value.length, 
+      console.log('✅ Datos base obtenidos:', { 
+        totalCambios: datosOriginales.length, 
         totalRegistros: totalRegistros.value 
       });
+
+      // Enriquecer con fechas de valoración
+      if (datosOriginales.length > 0) {
+        console.log('🔄 Enriqueciendo datos con fechas de valoración...');
+        mostrarSnackbar(`Cargando fechas de valoración para ${datosOriginales.length} registros...`, 'info');
+        
+        try {
+          const datosEnriquecidos = await enriquecerConFechasValoracion(datosOriginales);
+          cambios.value = datosEnriquecidos;
+          
+          const clavesCongValoracion = datosEnriquecidos.filter(item => item.fecha_ultima_valoracion).length;
+          console.log('✅ Datos enriquecidos:', { 
+            total: datosEnriquecidos.length,
+            conValoracion: clavesCongValoracion,
+            sinValoracion: datosEnriquecidos.length - clavesCongValoracion
+          });
+          
+          mostrarSnackbar(
+            `✅ Cargados ${datosEnriquecidos.length} registros (${clavesCongValoracion} con valoración)`, 
+            'success'
+          );
+        } catch (error) {
+          console.error('Error al enriquecer con valoraciones:', error);
+          cambios.value = datosOriginales; // Usar datos originales si falla el enriquecimiento
+          mostrarSnackbar('Datos cargados sin fechas de valoración', 'warning');
+        }
+      } else {
+        cambios.value = datosOriginales;
+        mostrarSnackbar('No se encontraron registros para el período seleccionado', 'info');
+      }
     } else {
       console.error('❌ Error en respuesta del servidor:', data.message);
       mostrarSnackbar('Error al obtener los datos: ' + data.message, 'error');
@@ -1023,25 +1244,6 @@ const ejecutarProcesovaloracion = async () => {
     modalValoracion.value.loading = false;
     mostrarSnackbar('Error inesperado durante el proceso de valoración', 'error');
   }
-};
-
-const debugSeleccion = () => {
-  console.log('🔍 === DEBUG SELECCIÓN ===');
-  console.log('Registros seleccionados:', registrosSeleccionados.value);
-  console.log('Cantidad:', registrosSeleccionados.value.length);
-  console.log('Tipo de dato:', typeof registrosSeleccionados.value);
-  console.log('Array?:', Array.isArray(registrosSeleccionados.value));
-  console.log('Cambios disponibles:', cambios.value.length);
-  console.log('Muestra de cambios:', cambios.value.slice(0, 2));
-  
-  // Verificar campos disponibles en los datos
-  if (cambios.value.length > 0) {
-    console.log('Campos disponibles en el primer registro:', Object.keys(cambios.value[0]));
-    console.log('Primer registro completo:', cambios.value[0]);
-  }
-  
-  // Mostrar en snackbar también
-  mostrarSnackbar(`Debug: ${registrosSeleccionados.value.length} registros seleccionados de ${cambios.value.length} disponibles`, 'info');
 };
 
 const onSelectionChange = (selected) => {
