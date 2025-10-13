@@ -150,7 +150,17 @@
                 prepend-icon="mdi-calculator"
                 class="mr-2"
               >
-                Valoración
+                Valoración ({{ registrosSeleccionados.length }})
+              </v-btn>
+
+              <!-- Botón temporal de debug -->
+              <v-btn
+                color="purple"
+                @click="debugSeleccion"
+                size="small"
+                class="mr-2"
+              >
+                Debug
               </v-btn>
 
               <v-btn
@@ -188,23 +198,37 @@
       </v-card-title>
 
       <v-data-table
-        :headers="headers"
+        :headers="headersConSeleccion"
         :items="cambios"
         :loading="loading"
-        :server-items-length="totalRegistros"
-        v-model:page="paginacion.page"
-        v-model:items-per-page="paginacion.pageSize"
-        v-model:selected="registrosSeleccionados"
-        show-select
-        item-value="indice_actividad"
-        return-object
-        @update:options="actualizarTabla"
         class="elevation-1"
+        :items-per-page="10"
         :footer-props="{
           'items-per-page-text': 'Registros por página:',
           'items-per-page-options': [10, 25, 50, 100]
         }"
       >
+        <!-- Header personalizado para selección -->
+        <template v-slot:header.seleccion>
+          <v-checkbox
+            :model-value="registrosSeleccionados.length === cambios.length && cambios.length > 0"
+            :indeterminate="registrosSeleccionados.length > 0 && registrosSeleccionados.length < cambios.length"
+            @click="toggleTodosVisible"
+            hide-details
+            density="compact"
+          ></v-checkbox>
+        </template>
+
+        <!-- Slot personalizado para selección individual -->
+        <template v-slot:item.seleccion="{ item }">
+          <v-checkbox
+            :model-value="isRegistroSeleccionado(item)"
+            @click="toggleRegistro(item)"
+            hide-details
+            density="compact"
+          ></v-checkbox>
+        </template>
+
         <!-- Slot personalizado para fecha -->
         <template v-slot:item.fecha_actividad="{ item }">
           <v-chip color="info" small>
@@ -291,6 +315,199 @@
     </v-card>
   </v-container>
 
+  <!-- Modal de Valoración -->
+  <v-dialog
+    v-model="modalValoracion.show"
+    max-width="800px"
+    persistent
+  >
+    <v-card>
+      <v-card-title class="bg-orange text-white d-flex align-center">
+        <v-icon left color="white">mdi-calculator</v-icon>
+        Valoración de Predios
+        <v-spacer></v-spacer>
+        <v-btn
+          icon
+          color="white"
+          @click="cerrarModalValoracion"
+          :disabled="modalValoracion.loading"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+
+      <v-card-text class="pa-6">
+        <!-- Configuración inicial -->
+        <div v-if="!modalValoracion.completado">
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="modalValoracion.anioSeleccionado"
+                :items="aniosDisponibles"
+                label="Año de Valoración"
+                outlined
+                dense
+                prepend-inner-icon="mdi-calendar"
+                :disabled="modalValoracion.loading"
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-chip
+                :color="tipoPredioActual === 1 ? 'blue' : 'green'"
+                dark
+                class="mt-2"
+              >
+                <v-icon left small>mdi-home-group</v-icon>
+                Tipo: {{ tituloTipoPredio }}
+              </v-chip>
+            </v-col>
+          </v-row>
+
+          <!-- Lista de claves a procesar -->
+          <v-card variant="outlined" class="mb-4">
+            <v-card-subtitle class="bg-grey-lighten-4">
+              <v-icon left small>mdi-format-list-bulleted</v-icon>
+              Claves Catastrales a Valorar ({{ modalValoracion.clavesCatastrales.length }})
+            </v-card-subtitle>
+            <v-card-text class="pa-2">
+              <v-chip-group column>
+                <v-chip
+                  v-for="clave in modalValoracion.clavesCatastrales"
+                  :key="clave"
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                >
+                  {{ clave }}
+                </v-chip>
+              </v-chip-group>
+            </v-card-text>
+          </v-card>
+
+          <!-- Progreso de valoración -->
+          <div v-if="modalValoracion.loading">
+            <v-card variant="outlined">
+              <v-card-text>
+                <div class="d-flex align-center mb-3">
+                  <v-icon color="orange" class="mr-2">mdi-cog</v-icon>
+                  <span class="text-h6">Procesando Valoraciones...</span>
+                </div>
+                
+                <v-progress-linear
+                  v-model="modalValoracion.progreso.porcentaje"
+                  height="20"
+                  color="orange"
+                  class="mb-2"
+                >
+                  <template v-slot:default="{ value }">
+                    <strong>{{ Math.ceil(value) }}%</strong>
+                  </template>
+                </v-progress-linear>
+                
+                <div class="text-center">
+                  <span class="text-body-2">
+                    {{ modalValoracion.progreso.actual }} de {{ modalValoracion.progreso.total }} predios procesados
+                  </span>
+                </div>
+
+                <!-- Log de resultados en tiempo real -->
+                <v-expansion-panels v-if="modalValoracion.resultados.length > 0" class="mt-4">
+                  <v-expansion-panel>
+                    <v-expansion-panel-title>
+                      <v-icon left>mdi-text-box-outline</v-icon>
+                      Ver Log de Proceso
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <div class="log-container" style="max-height: 200px; overflow-y: auto;">
+                        <div
+                          v-for="(resultado, index) in modalValoracion.resultados"
+                          :key="index"
+                          class="d-flex align-center mb-1"
+                        >
+                          <v-icon
+                            :color="resultado.success ? 'success' : 'error'"
+                            size="small"
+                            class="mr-2"
+                          >
+                            {{ resultado.success ? 'mdi-check-circle' : 'mdi-alert-circle' }}
+                          </v-icon>
+                          <span class="text-body-2">
+                            {{ resultado.clave }}: {{ resultado.mensaje }}
+                          </span>
+                        </div>
+                      </div>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-card-text>
+            </v-card>
+          </div>
+        </div>
+
+        <!-- Resultados finales -->
+        <div v-if="modalValoracion.completado && !modalValoracion.loading">
+          <v-alert
+            type="success"
+            icon="mdi-check-circle"
+            title="¡Valoración Completada!"
+            text="El proceso de valoración ha finalizado exitosamente."
+            class="mb-4"
+          ></v-alert>
+
+          <!-- Resumen de resultados -->
+          <v-card variant="outlined">
+            <v-card-subtitle>Resumen de Resultados</v-card-subtitle>
+            <v-card-text>
+              <v-row>
+                <v-col cols="6">
+                  <div class="text-center">
+                    <div class="text-h4 font-weight-bold">{{ modalValoracion.resultados.length }}</div>
+                    <div class="text-subtitle-1 text-grey">Total Procesados</div>
+                  </div>
+                </v-col>
+                <v-col cols="6">
+                  <div class="text-center">
+                    <div class="text-h4 font-weight-bold text-success">
+                      {{ modalValoracion.resultados.filter(r => r.success).length }}
+                    </div>
+                    <div class="text-subtitle-1 text-grey">Exitosos</div>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </div>
+      </v-card-text>
+
+      <v-card-actions class="pa-4">
+        <v-spacer></v-spacer>
+        <v-btn
+          v-if="!modalValoracion.loading && !modalValoracion.completado"
+          color="grey"
+          @click="cerrarModalValoracion"
+        >
+          Cancelar
+        </v-btn>
+        <v-btn
+          v-if="!modalValoracion.loading && !modalValoracion.completado"
+          color="orange"
+          @click="ejecutarProcesovaloracion"
+        >
+          <v-icon left>mdi-play</v-icon>
+          Iniciar Valoración
+        </v-btn>
+        <v-btn
+          v-if="modalValoracion.completado"
+          color="success"
+          @click="cerrarModalValoracion"
+        >
+          <v-icon left>mdi-check</v-icon>
+          Finalizar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <!-- Snackbar para mensajes -->
   <v-snackbar
     v-model="snackbar.show"
@@ -338,6 +555,21 @@ const snackbar = ref({
   message: '',
   color: 'info',
   timeout: 4000
+});
+
+// Variables para modal de valoración
+const modalValoracion = ref({
+  show: false,
+  loading: false,
+  anioSeleccionado: new Date().getFullYear(),
+  clavesCatastrales: [],
+  progreso: {
+    actual: 0,
+    total: 0,
+    porcentaje: 0
+  },
+  resultados: [],
+  completado: false
 });
 
 // Opciones para filtros
@@ -436,6 +668,30 @@ const tipoPredioActual = computed(() => {
 const tituloTipoPredio = computed(() => {
   return tipoPredioActual.value === 1 ? 'URBANO' : 'RURAL';
 });
+
+const aniosDisponibles = computed(() => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  // Generar años desde 2020 hasta el año actual + 1
+  for (let year = 2020; year <= currentYear + 1; year++) {
+    years.push({
+      title: year.toString(),
+      value: year
+    });
+  }
+  return years.reverse(); // Más recientes primero
+});
+
+// Headers con columna de selección manual
+const headersConSeleccion = computed(() => [
+  {
+    title: '',
+    key: 'seleccion',
+    sortable: false,
+    width: '50px'
+  },
+  ...headers
+]);
 
 // Métodos
 const buscarCambios = async () => {
@@ -666,12 +922,188 @@ const mostrarSnackbar = (message, color = 'info') => {
   };
 };
 
-const abrirValoracion = () => {
-  if (registrosSeleccionados.value.length === 0) return;  
-  // Extraer las claves catastrales únicas de los registros seleccionados
-  const clavesCatastrales = [...new Set(registrosSeleccionados.value.map(item => item.clave_catastral))];  
-  mostrarSnackbar(`Abriendo valoración para ${clavesCatastrales.length} predios: ${clavesCatastrales.join(', ')}`, 'success');
+// Funciones del modal de valoración
+const cerrarModalValoracion = () => {
+  if (!modalValoracion.value.loading) {
+    modalValoracion.value = {
+      show: false,
+      loading: false,
+      anioSeleccionado: new Date().getFullYear(),
+      clavesCatastrales: [],
+      progreso: {
+        actual: 0,
+        total: 0,
+        porcentaje: 0
+      },
+      resultados: [],
+      completado: false
+    };
+  }
+};
 
+const ejecutarProcesovaloracion = async () => {
+  if (modalValoracion.value.clavesCatastrales.length === 0) {
+    mostrarSnackbar('No hay claves catastrales seleccionadas', 'warning');
+    return;
+  }
+
+  modalValoracion.value.loading = true;
+  modalValoracion.value.completado = false;
+  modalValoracion.value.resultados = [];
+  modalValoracion.value.progreso.actual = 0;
+  modalValoracion.value.progreso.total = modalValoracion.value.clavesCatastrales.length;
+  modalValoracion.value.progreso.porcentaje = 0;
+
+  const usuario = store.state.usuario || 'sistema'; // Obtener usuario del store
+  
+  try {
+    for (let i = 0; i < modalValoracion.value.clavesCatastrales.length; i++) {
+      const clave = modalValoracion.value.clavesCatastrales[i];
+      
+      try {
+        // Llamar al API de valoración
+        const response = await fetch(`${API_BASE_URL}/api/ejecuta_valoracion`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pr_anio: modalValoracion.value.anioSeleccionado,
+            var_tipo: tipoPredioActual.value,
+            pr_clave: clave,
+            var_usuario: usuario
+          })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          modalValoracion.value.resultados.push({
+            clave: clave,
+            success: true,
+            mensaje: 'Valoración ejecutada correctamente'
+          });
+        } else {
+          modalValoracion.value.resultados.push({
+            clave: clave,
+            success: false,
+            mensaje: result.error || 'Error desconocido'
+          });
+        }
+      } catch (error) {
+        console.error(`Error valorando ${clave}:`, error);
+        modalValoracion.value.resultados.push({
+          clave: clave,
+          success: false,
+          mensaje: 'Error de conexión'
+        });
+      }
+
+      // Actualizar progreso
+      modalValoracion.value.progreso.actual = i + 1;
+      modalValoracion.value.progreso.porcentaje = ((i + 1) / modalValoracion.value.progreso.total) * 100;
+      
+      // Pequeña pausa para permitir que la UI se actualice
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    modalValoracion.value.loading = false;
+    modalValoracion.value.completado = true;
+    
+    const exitosos = modalValoracion.value.resultados.filter(r => r.success).length;
+    const total = modalValoracion.value.resultados.length;
+    
+    mostrarSnackbar(
+      `Proceso completado: ${exitosos}/${total} valoraciones exitosas`, 
+      exitosos === total ? 'success' : 'warning'
+    );
+
+  } catch (error) {
+    console.error('Error general en el proceso de valoración:', error);
+    modalValoracion.value.loading = false;
+    mostrarSnackbar('Error inesperado durante el proceso de valoración', 'error');
+  }
+};
+
+const debugSeleccion = () => {
+  console.log('🔍 === DEBUG SELECCIÓN ===');
+  console.log('Registros seleccionados:', registrosSeleccionados.value);
+  console.log('Cantidad:', registrosSeleccionados.value.length);
+  console.log('Tipo de dato:', typeof registrosSeleccionados.value);
+  console.log('Array?:', Array.isArray(registrosSeleccionados.value));
+  console.log('Cambios disponibles:', cambios.value.length);
+  console.log('Muestra de cambios:', cambios.value.slice(0, 2));
+  
+  // Verificar campos disponibles en los datos
+  if (cambios.value.length > 0) {
+    console.log('Campos disponibles en el primer registro:', Object.keys(cambios.value[0]));
+    console.log('Primer registro completo:', cambios.value[0]);
+  }
+  
+  // Mostrar en snackbar también
+  mostrarSnackbar(`Debug: ${registrosSeleccionados.value.length} registros seleccionados de ${cambios.value.length} disponibles`, 'info');
+};
+
+const onSelectionChange = (selected) => {
+  console.log('🔄 Evento de cambio de selección detectado:', selected);
+  console.log('Cantidad seleccionada:', selected?.length || 0);
+};
+
+// Funciones de selección manual
+const toggleRegistro = (registro) => {
+  const index = registrosSeleccionados.value.findIndex(r => r.indice_actividad === registro.indice_actividad);
+  if (index >= 0) {
+    registrosSeleccionados.value.splice(index, 1);
+  } else {
+    registrosSeleccionados.value.push(registro);
+  }
+  console.log('✅ Registro toggleado:', registro.clave_catastral);
+  console.log('📊 Total seleccionados:', registrosSeleccionados.value.length);
+};
+
+const isRegistroSeleccionado = (registro) => {
+  return registrosSeleccionados.value.some(r => r.indice_actividad === registro.indice_actividad);
+};
+
+const toggleTodosVisible = () => {
+  if (registrosSeleccionados.value.length === cambios.value.length) {
+    // Si todos están seleccionados, deseleccionar todos
+    registrosSeleccionados.value = [];
+  } else {
+    // Si no todos están seleccionados, seleccionar todos
+    registrosSeleccionados.value = [...cambios.value];
+  }
+  console.log('🔄 Toggle todos - Total seleccionados:', registrosSeleccionados.value.length);
+};
+
+const abrirValoracion = () => {
+  console.log('🧮 Función abrirValoracion ejecutada');
+  console.log('📊 Registros seleccionados:', registrosSeleccionados.value);
+  console.log('📊 Cantidad de registros seleccionados:', registrosSeleccionados.value.length);
+  
+  if (registrosSeleccionados.value.length === 0) {
+    console.log('❌ No hay registros seleccionados, saliendo...');
+    return;
+  }
+  
+  // Con return-object, registrosSeleccionados contiene objetos completos
+  const clavesCatastrales = [...new Set(registrosSeleccionados.value.map(item => item.clave_catastral))];  
+  console.log('🔑 Claves catastrales extraídas:', clavesCatastrales);
+  
+  // Configurar y abrir el modal de valoración
+  modalValoracion.value = {
+    show: true,
+    loading: false,
+    anioSeleccionado: new Date().getFullYear(),
+    clavesCatastrales: clavesCatastrales,
+    progreso: {
+      actual: 0,
+      total: clavesCatastrales.length,
+      porcentaje: 0
+    },
+    resultados: [],
+    completado: false
+  };
 };
 
 const salir = () => {
@@ -739,15 +1171,23 @@ watch(() => paginacion.pageSize, () => {
   }
 });
 
-// Limpiar selección cuando cambien los datos
-watch(() => cambios.value, () => {
-  registrosSeleccionados.value = [];
-});
+// Limpiar selección cuando cambien los datos - TEMPORALMENTE DESACTIVADO PARA DEBUG
+// watch(() => cambios.value, () => {
+//   registrosSeleccionados.value = [];
+// });
 
-// Limpiar selección cuando cambie la página
-watch(() => paginacion.page, () => {
-  registrosSeleccionados.value = [];
-});
+// Limpiar selección cuando cambie la página - TEMPORALMENTE DESACTIVADO PARA DEBUG
+// watch(() => paginacion.page, () => {
+//   registrosSeleccionados.value = [];
+// });
+
+// Watcher para debug de selección
+watch(() => registrosSeleccionados.value, (newVal, oldVal) => {
+  console.log('🔄 Cambio en registrosSeleccionados:');
+  console.log('   Anterior:', oldVal?.length || 0);
+  console.log('   Nuevo:', newVal?.length || 0);
+  console.log('   Datos:', newVal);
+}, { deep: true });
 
 // Watcher para detectar cambios en el tipo de predio
 watch(() => tipoPredioActual.value, (nuevoTipo) => {
