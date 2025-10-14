@@ -31,14 +31,14 @@
   <v-container class="pdf-wrapper modern-bg" fluid>
     <div id="certificado" class="a4-container modern-document" ref="pdfRef">
       <!-- Encabezado con logo y título institucional -->
-      <v-card flat class="header-card mb-6">
-        <v-row class="align-center justify-center">
-          <v-col cols="2" class="d-flex align-center justify-center">
+      <v-card flat class="header-card mb-3">
+        <v-row class="align-center justify-center no-gutters">
+          <v-col cols="2" class="d-flex align-center justify-center pa-2">
             <div class="logo-container">
               <img :src="logo" class="logo" />
             </div>
           </v-col>
-          <v-col cols="8">
+          <v-col cols="8" class="pa-2">
             <div class="header-text">
               <h3 class="header-title">
                 Gobierno Autónomo Descentralizado
@@ -53,8 +53,8 @@
       </v-card>
 
       <!-- Título del certificado -->
-      <v-card flat color="primary" class="certificate-title-card mb-6">
-        <v-card-title class="text-center text-white">
+      <v-card flat color="primary" class="certificate-title-card mb-3">
+        <v-card-title class="text-center text-white py-2">
           Certificado de Linderos
         </v-card-title>
       </v-card>
@@ -63,20 +63,20 @@
         <v-form @submit.prevent="buscarDatos" class="form-certificado">
 
           <!-- BLOQUE 1: Introducción -->
-          <v-card flat class="intro-card mb-4" variant="outlined">
-            <v-card-text class="text-justify modern-text">
-              <p>La Jefatura de Avalúvos y Catastros Urbanos tiene a bien certificar, el informe de áreas y linderos, de acuerdo al Art. 98 de la Primera Reforma a la Ordenanza de Administración y Control del Territorio del cantón CAYAMBE, y en concordancia con los Art. 139 y 196 del COOTAD tiene a bien manifestar que la propiedad con los antecedentes mencionados y en correlación con los Registros Catastrales, se le emite la siguiente certificación de Linderos:</p>
+          <v-card flat class="intro-card mb-2" variant="outlined">
+            <v-card-text class="text-justify modern-text pa-3">
+              <p class="mb-2">La Jefatura de Avalúos y Catastros Urbanos tiene a bien certificar, el informe de áreas y linderos, de acuerdo al Art. 98 de la Primera Reforma a la Ordenanza de Administración y Control del Territorio del cantón CAYAMBE, y en concordancia con los Art. 139 y 196 del COOTAD tiene a bien manifestar que la propiedad con los antecedentes mencionados y en correlación con los Registros Catastrales, se le emite la siguiente certificación de Linderos:</p>
             </v-card-text>
           </v-card>
 
           <!-- BLOQUE 2: Datos -->
-          <v-card flat class="mb-6 data-card" variant="outlined">
-            <v-card-title class="py-2 px-4 bg-primary-lighten-5 subtitle-section">
+          <v-card flat class="mb-2 data-card" variant="outlined">
+            <v-card-title class="py-1 px-3 bg-primary-lighten-5 subtitle-section">
               <v-icon icon="mdi-home-search" class="mr-2" />
               Información del Predio
             </v-card-title>
-            <v-card-text class="pa-4">
-              <v-row>
+            <v-card-text class="pa-3">
+              <v-row dense>
                 <v-col cols="12">
                   <v-text-field
                     label="Clave Catastral"
@@ -85,7 +85,7 @@
                     required
                     class="modern-input"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     bg-color="surface"
                     readonly-if="!!route.query.clave_catastral"
                     prepend-inner-icon="mdi-key-variant"
@@ -95,12 +95,12 @@
             </v-card-text>
           </v-card>
           
-          <v-card flat class="mb-6 data-card" variant="outlined">
-            <v-card-title class="py-2 px-4 bg-primary-lighten-5 subtitle-section">
+          <v-card flat class="mb-2 data-card" variant="outlined">
+            <v-card-title class="py-1 px-3 bg-primary-lighten-5 subtitle-section">
               <v-icon icon="mdi-account-details" class="mr-2" />
               Datos del Propietario y Predio
             </v-card-title>
-            <v-card-text class="pa-4">
+            <v-card-text class="pa-3">
               <v-row dense>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -110,7 +110,7 @@
                     variant="outlined"
                     class="modern-input" 
                     prepend-inner-icon="mdi-account"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -120,7 +120,7 @@
                     variant="outlined"
                     class="modern-input"
                     prepend-inner-icon="mdi-card-account-details"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -130,7 +130,7 @@
                     variant="outlined"
                     class="modern-input"
                     prepend-inner-icon="mdi-map-marker"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -140,7 +140,7 @@
                     variant="outlined"
                     class="modern-input"
                     prepend-inner-icon="mdi-cash"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -150,7 +150,7 @@
                     variant="outlined"
                     class="modern-input"
                     prepend-inner-icon="mdi-city"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field 
@@ -160,15 +160,15 @@
                     variant="outlined"
                     class="modern-input"
                     prepend-inner-icon="mdi-ruler-square"
-                    density="comfortable"/>
+                    density="compact"/>
                 </v-col>
               </v-row>
             </v-card-text>
           </v-card>
 
           <!-- BLOQUE 2.1: Linderos -->
-          <v-card flat class="mb-6 linderos-card" variant="outlined">
-            <v-card-title class="py-2 px-4 bg-primary-lighten-5 subtitle-section no-break">
+          <v-card flat class="mb-2 linderos-card" variant="outlined">
+            <v-card-title class="py-1 px-3 bg-primary-lighten-5 subtitle-section no-break">
               <v-icon icon="mdi-map" class="mr-2" />
               Detalle de Linderos ({{ linderos.length }} registros)
             </v-card-title>
@@ -185,16 +185,16 @@
                   </thead>
                   <tbody>
                     <tr v-for="(item, index) in linderos" :key="index" class="lindero-row">
-                      <td>
+                      <td class="compact-cell">
                         <span class="table-data">{{ item.clave_lindero || '' }}</span>
                       </td>
-                      <td>
+                      <td class="compact-cell">
                         <span class="table-data">{{ item.longitud || '' }} m</span>
                       </td>
-                      <td>
+                      <td class="compact-cell">
                         <span class="table-data">{{ item.nombres || '' }}</span>
                       </td>
-                      <td>
+                      <td class="compact-cell">
                         <span class="table-data">{{ item.cardinalidad || '' }}</span>
                       </td>
                     </tr>
@@ -214,24 +214,23 @@
 
 
           <!-- BLOQUE 3: Clausula -->
-          <v-card flat class="mb-6 clausula-card" variant="outlined">
-            <v-card-title class="py-2 px-4 bg-primary-lighten-5 subtitle-section">
+          <v-card flat class="mb-2 clausula-card" variant="outlined">
+            <v-card-title class="py-1 px-3 bg-primary-lighten-5 subtitle-section">
               <v-icon icon="mdi-gavel" class="mr-2" />
               Cláusula Legal
             </v-card-title>
-            <v-card-text class="pa-4 text-justify modern-text">
-              <p>
+            <v-card-text class="pa-3 text-justify modern-text">
+              <p class="mb-2">
                 Se remite toda la documentación legal a este expediente de la Dirección de Planificación, si se comprobare que ha presentado datos falsos o representaciones gráficas erróneas de cualquier clase el GADIP-Municipal revocará el presente informe de Certificación de Áreas y Linderos. El Área y Linderos es de exclusiva responsabilidad del Propietario y Proyectista que suscribe los Planos y demás documentos.
               </p>
-              <p>
+              <p class="mb-0">
                 Particular que comunico a usted para los fines pertinentes.
               </p>
             </v-card-text>
           </v-card>
 
           <!-- BLOQUE 4: Firmas -->
-          <div class="page-break-before"></div>
-          <v-card flat class="mb-6 firmas-card no-break" variant="outlined">
+          <v-card flat class="mb-2 firmas-card no-break" variant="outlined">
             <v-card-title class="py-2 px-4 bg-primary-lighten-5 subtitle-section">
               <v-icon icon="mdi-account-check" class="mr-2" />
               Firma de Responsabilidad
@@ -382,29 +381,18 @@ const buscarDatosDeLinderos = async () => {
     
     console.log(`Cargando linderos para la clave catastral: ${claveCatastral.value}`);
     
-    // Intentamos primero con geo_linderos_by_clave (igual que GeoLinderos.vue)
-    try {
-      const response = await axios.get(`${API_BASE_URL}/geo_linderos_by_clave/${claveCatastral.value}`);
-      if (response.data && response.data.length > 0) {
-        console.log(`Cargados ${response.data.length} linderos geográficos`);
-        linderos.value = response.data;
-        return;
-      }
-    } catch (geoError) {
-      console.log('No se encontraron linderos geográficos, intentando con certificado-linderos:', geoError);
-    }
-    
-    // Si no hay resultados, intentamos con la ruta certificado-linderos
-    const responseLinderos = await axios.get(`${API_BASE_URL}/certificado-linderos/${claveCatastral.value}`);
-    if (responseLinderos.data && responseLinderos.data.length > 0) {
-      console.log(`Cargados ${responseLinderos.data.length} linderos de certificado`);
-      linderos.value = responseLinderos.data || [];
+    // Cargar linderos usando solo geo_linderos_by_clave
+    const response = await axios.get(`${API_BASE_URL}/geo_linderos_by_clave/${claveCatastral.value}`);
+    if (response.data && response.data.length > 0) {
+      console.log(`Cargados ${response.data.length} linderos geográficos`);
+      linderos.value = response.data;
     } else {
-      console.log('No se encontraron linderos para el certificado');
+      console.log('No se encontraron linderos para esta clave catastral');
       linderos.value = [];
     }
   } catch (error) {
     console.error('Error al consultar linderos:', error);
+    console.log('No se pudieron cargar los linderos para esta clave catastral');
     linderos.value = [];
   }
 }
@@ -440,24 +428,23 @@ const actualizaLinderos = async () => {
       };
       
       try {
-        // Primero intentamos actualizar como geo_lindero (igual que en GeoLinderos.vue)
+        // Actualizar solo usando geo_lindero si existe un ID
         if (item.id) {
           await axios.put(`${API_BASE_URL}/actualiza_geo_lindero/${item.id}`, linderoActualizado);
-          console.log(`Lindero ${item.id} actualizado como geo_lindero`);
+          console.log(`Lindero ${item.id} actualizado correctamente`);
         } else {
-          // Si no hay ID, intentamos con la API actualiza-linderos
-          await axios.put(`${API_BASE_URL}/actualiza-linderos/${claveCatastral.value}?id=${item.id}`, item);
-          console.log(`Lindero actualizado mediante actualiza-linderos`);
+          console.log('Lindero sin ID, se omite la actualización');
         }
       } catch (itemError) {
         console.warn(`Error al actualizar lindero ${item.id || 'sin ID'}:`, itemError);
       }
     }
     
-    console.log('Linderos actualizados correctamente');
+    console.log('Proceso de actualización de linderos completado');
   } catch (error) {
     console.error('Error general al actualizar linderos:', error);
-    alert('No se pudo actualizar la información de linderos');
+    // No mostrar alerta para no interrumpir la generación del PDF
+    console.warn('Continuando con la generación del PDF sin actualizar linderos');
   }
 }
 
