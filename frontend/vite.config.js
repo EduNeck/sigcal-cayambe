@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'fs'
 
 export default defineConfig({
   plugins: [
@@ -89,6 +90,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // <- permite que se acceda desde otra IP
     port: 5173,
+    https: {
+      key: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+3-key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+3.pem'))
+    },
     proxy: {
       // '/api': { target: 'http://172.28.64.1:3001',  changeOrigin: true,     },
     },
