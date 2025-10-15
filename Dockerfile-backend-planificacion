@@ -1,0 +1,29 @@
+# Dockerfile para Backend Planificación
+FROM node:18-alpine
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar package.json y package-lock.json
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci --only=production
+
+# Copiar código fuente
+COPY . .
+
+# Crear usuario no-root por seguridad
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodeuser -u 1001
+USER nodeuser
+
+# Exponer puerto 4001 (diferente al backend principal)
+EXPOSE 4001
+
+# Variables de entorno por defecto
+ENV NODE_ENV=production
+ENV PORT=4001
+
+# Comando para iniciar la aplicación
+CMD ["node", "index.js"]
