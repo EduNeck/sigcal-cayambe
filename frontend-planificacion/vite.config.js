@@ -44,8 +44,8 @@ export default defineConfig({
     open: true,
     cors: true,
     https: {
-      key: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+3-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+3.pem'))
+      key: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+2-key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, 'certs', 'localhost+2.pem'))
     }
   },
   build: {

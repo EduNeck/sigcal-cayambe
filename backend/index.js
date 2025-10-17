@@ -17,21 +17,20 @@ app.use(cors({
     // URLs de desarrollo
     'http://localhost',
     'http://localhost:5173',
+    'https://localhost:5173',  // Frontend HTTPS
     'http://localhost:3001',
-    // URLs de red local
-    'http://192.168.3.3',
-    'http://192.168.3.3:5173',
-    'http://192.168.3.3:3001',
     // URLs de producción
     'http://172.23.7.55:8090',   // Frontend en producción
+    'https://172.23.7.55:8090',  // Frontend en producción HTTPS
     'http://172.23.7.55:3001',   // Backend en producción
     'http://servidor-produccion',
     'http://servidor-produccion:5173',
+    'https://servidor-produccion:5173',
     'http://servidor-produccion:3001',
     // Dominio real de producción si lo tienes
     'https://sigcal.cayambe.gob.ec'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Añadido OPTIONS para preflight
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
